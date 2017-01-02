@@ -2,7 +2,9 @@ package me.shadaj.scalapy.py
 
 import jep.Jep
 
-trait ObjectReader[+T] {
+import scala.reflect.ClassTag
+
+trait ObjectReader[T] {
   def read(r: Ref)(implicit jep: Jep): T
 }
 
@@ -11,8 +13,22 @@ object ObjectReader extends ObjectTupleReaders {
     def read(r: Ref)(implicit jep: Jep): Ref = r
   }
 
+  implicit def refDynReader = new ObjectReader[DynamicRef] {
+    def read(r: Ref)(implicit jep: Jep): DynamicRef = Ref(r.expr).asInstanceOf[DynamicRef]
+  }
+
   implicit def wrapperReader = new ObjectReader[Object] {
     def read(r: Ref)(implicit jep: Jep): Object = r.toObject
+  }
+
+  implicit def fascadeReader[T <: ObjectFascade](implicit classTag: ClassTag[T]): ObjectReader[T] = new ObjectReader[T] {
+    def read(r: Ref)(implicit jep: Jep): T = {
+      classTag.runtimeClass.getConstructor(classOf[Object], classOf[Jep]).newInstance(r.toObject, jep).asInstanceOf[T]
+    }
+  }
+
+  implicit def wrapperDynReader = new ObjectReader[DynamicObject] {
+    def read(r: Ref)(implicit jep: Jep): DynamicObject = r.toObject.asInstanceOf[DynamicObject]
   }
 
   def toInt(value: Any): Int = {
@@ -32,8 +48,9 @@ object ObjectReader extends ObjectTupleReaders {
       case i: Int => i
       case d: Double => d
       case f: Float => f
+      case s: String => s.toDouble
       case _ =>
-        throw new IllegalArgumentException(s"Unknown type: ${value.getClass}")
+        throw new IllegalArgumentException(s"Unknown type: ${value.getClass} for value $value")
     }
   }
 
@@ -83,6 +100,6 @@ object ObjectReader extends ObjectTupleReaders {
   }
 
   implicit def seqReader[T](implicit reader: ObjectReader[T]): ObjectReader[Seq[T]] = new ObjectReader[Seq[T]] {
-    def read(r: Ref)(implicit jep: Jep) = new NativeSeq[T](r)
+    def read(r: Ref)(implicit jep: Jep) = new NativeSeq[T](r)(reader, jep)
   }
 }

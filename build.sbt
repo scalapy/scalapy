@@ -11,7 +11,8 @@ sourceGenerators in Compile <+= baseDirectory map { dir =>
   val methods = (2 to 22).map { n =>
     s"""implicit def tuple${n}Reader[${(1 to n).map(t => s"T$t").mkString(", ")}](implicit ${(1 to n).map(t => s"r$t: ObjectReader[T$t]").mkString(", ")}): ObjectReader[(${(1 to n).map(t => s"T$t").mkString(", ")})] = {
        |  new ObjectReader[(${(1 to n).map(t => s"T$t").mkString(", ")})] {
-       |    override def read(r: Ref)(implicit jep: Jep) = {
+       |    override def read(or: Ref)(implicit jep: Jep) = {
+       |      val r = Ref(or.expr).asInstanceOf[DynamicRef]
        |      (${(1 to n).map(t => s"r.arrayAccess(${t - 1}).as[T$t]").mkString(", ")})
        |    }
        |  }
@@ -22,6 +23,31 @@ sourceGenerators in Compile <+= baseDirectory map { dir =>
     s"""package me.shadaj.scalapy.py
        |import jep.Jep
        |trait ObjectTupleReaders {
+       |${methods.mkString("\n")}
+       |}""".stripMargin
+
+  IO.write(fileToWrite, toWrite)
+  Seq(fileToWrite)
+}
+
+sourceGenerators in Compile <+= baseDirectory map { dir =>
+  val fileToWrite = dir / "src" / "gen" / "scala" / "me/shadaj/scalapy/py" / "ObjectTupleWriters.scala"
+  val methods = (2 to 22).map { n =>
+    s"""implicit def tuple${n}Writer[${(1 to n).map(t => s"T$t").mkString(", ")}](implicit ${(1 to n).map(t => s"r$t: ObjectWriter[T$t]").mkString(", ")}): ObjectWriter[(${(1 to n).map(t => s"T$t").mkString(", ")})] = {
+       |  new ObjectWriter[(${(1 to n).map(t => s"T$t").mkString(", ")})] {
+       |    override def write(v: (${(1 to n).map(t => s"T$t").mkString(", ")}))(implicit jep: Jep): Ref = {
+       |      val array = Object("[]")
+       |      ${(1 to n).map(t => "jep.eval(s\"${array.expr}.append(${Ref.from(v._" + t + ").expr})\")").mkString(";")}
+       |      array.asRef
+       |    }
+       |  }
+       |}"""
+  }
+
+  val toWrite =
+    s"""package me.shadaj.scalapy.py
+       |import jep.Jep
+       |trait ObjectTupleWriters {
        |${methods.mkString("\n")}
        |}""".stripMargin
 

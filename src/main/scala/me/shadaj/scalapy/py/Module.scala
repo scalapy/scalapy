@@ -3,18 +3,19 @@ package me.shadaj.scalapy.py
 import jep.Jep
 
 import scala.language.dynamics
+import scala.reflect.ClassTag
 
 class Module private[py](private[py] val moduleName: String)(implicit jep: Jep) extends scala.Dynamic {
-  def applyDynamic(method: String)(params: Ref*): Object = {
+  def applyDynamic(method: String)(params: Ref*): DynamicObject = {
     if (method == "apply") {
-      Object(s"$moduleName(${params.map(_.expr).mkString(",")})")
+      Object(s"$moduleName(${params.map(_.expr).mkString(",")})").asInstanceOf[DynamicObject]
     } else {
-      Object(s"$moduleName.$method(${params.map(_.expr).mkString(",")})")(jep)
+      Object(s"$moduleName.$method(${params.map(_.expr).mkString(",")})")(jep).asInstanceOf[DynamicObject]
     }
   }
 
-  def selectDynamic(value: String): Object = {
-    Object(s"$moduleName.$value")
+  def selectDynamic(value: String): DynamicObject = {
+    Object(s"$moduleName.$value").asInstanceOf[DynamicObject]
   }
 
   def updateDynamic(name: String)(value: Ref): Unit = {
@@ -23,6 +24,10 @@ class Module private[py](private[py] val moduleName: String)(implicit jep: Jep) 
 
   override def finalize(): Unit = {
     jep.eval(s"del $moduleName")
+  }
+
+  def as[T <: ObjectFascade](implicit classTag: ClassTag[T]): T = {
+    classTag.runtimeClass.getConstructor(classOf[Object], classOf[Jep]).newInstance(Object(moduleName), jep).asInstanceOf[T]
   }
 }
 

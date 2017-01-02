@@ -8,18 +8,12 @@ package object py {
 
   def global(implicit jep: Jep) = new Global()
 
-  implicit class ToNativeSeq[T](seq: Seq[T])(implicit jep: Jep) {
-    def mapNative[U](f: T => U)(implicit writer: ObjectWriter[U], reader: ObjectReader[U]): NativeSeq[U] = {
-      val to = Object("[]")
-      for (i <- 0 until seq.size) {
-        val v = seq(i)
-        val mapped = f(v)
-        jep.eval(s"${to.expr}.append(${writer.write(mapped).expr})")
-      }
+  def lambda(ref: Ref) = Ref(s"lambda: ${ref.expr}")
 
-      val ret = new NativeSeq[U](to)
+  class None private[py] extends Ref("None")
+  val None = new None
 
-      ret
-    }
-  }
+  implicit def toNativeSeqMapper[T, C <% Seq[T]](s: C)(implicit jep: Jep): ToNativeSeqMapper[T] = new ToNativeSeqMapper[T](s)
+
+  type NoneOr[T] = None | T
 }

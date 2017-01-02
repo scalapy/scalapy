@@ -3,50 +3,25 @@ package me.shadaj.scalapy.py
 import jep.Jep
 
 import scala.language.dynamics
+import scala.reflect.ClassTag
+
+class ObjectKeeper(varName: String)(implicit jep: Jep) {
+  override def finalize(): Unit = {
+    jep.eval(s"del $varName")
+  }
+}
 
 class Object private[py](val varId: Int)(implicit jep: Jep) extends Ref(s"spy_o_$varId") {
-  override def applyDynamic(method: String)(params: Ref*): Object = {
-    Object(s"$expr.$method(${params.map(_.expr).mkString(",")})")
-  }
-
-  override def selectDynamic(value: String): Object = {
-    Object(s"$expr.$value")
-  }
-
-  override def arrayAccess(key: Ref): Object = {
-    Object(s"$expr[${key.expr}]")
-  }
-
-  override def +(that: Ref): Object = {
-    Object(s"$expr + (${that.expr})")
-  }
-
-  override def -(that: Ref): Object = {
-    Object(s"$expr - (${that.expr})")
-  }
-
-  override def *(that: Ref): Object = {
-    Object(s"$expr * (${that.expr})")
-  }
-
-  override def /(that: Ref): Object = {
-    Object(s"$expr / (${that.expr})")
-  }
-
-  override def %(that: Ref): Object = {
-    Object(s"$expr % (${that.expr})")
-  }
+  private[py] var keeper: ObjectKeeper = null
 
   def value: Any = jep.getValue(s"$expr")
 
   def asRef: Ref = Ref(expr)
 
-  override def toString: String = {
-    jep.getValue(s"$expr").toString
-  }
+  override def toObject(implicit jep: Jep): Object = this
 
-  override def finalize(): Unit = {
-    jep.eval(s"del $expr")
+  override def toString: String = {
+    jep.getValue(s"str($expr)").asInstanceOf[String]
   }
 }
 
@@ -57,7 +32,9 @@ object Object {
     val variableName = nextCounter
     nextCounter += 1
 
-    new Object(variableName)
+    val ret = new DynamicObject(variableName)
+    ret.keeper = new ObjectKeeper(ret.expr)
+    ret
   }
 
   def apply(stringToEval: String)(implicit jep: Jep): Object = {
@@ -65,10 +42,17 @@ object Object {
     nextCounter += 1
 
     jep.eval(s"spy_o_$variableName = $stringToEval")
-    new Object(variableName)
+
+    val ret = new DynamicObject(variableName)
+    ret.keeper = new ObjectKeeper(ret.expr)
+    ret
   }
 
   implicit def from[T](v: T)(implicit writer: ObjectWriter[T], jep: Jep): Object = {
-    writer.write(v).toObject
+    val converted = writer.write(v).toObject
+
+    val ret = new DynamicObject(converted.varId)
+    ret.keeper = converted.keeper
+    ret
   }
 }

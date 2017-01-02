@@ -2,14 +2,16 @@ package me.shadaj.scalapy.py
 
 import jep.Jep
 
-class NativeSeq[T] private[py](private[py] val orig: Ref)(implicit reader: ObjectReader[T], jep: Jep) extends collection.immutable.Seq[T] {
-  override val length: Int = global.len(orig).as[Int]
+class NativeSeq[T] (private[py] val orig: Ref)(implicit reader: ObjectReader[T], jep: Jep) extends collection.immutable.Seq[T] {
+  protected lazy val origDynamic = orig.toObject.asInstanceOf[DynamicObject]
 
-  protected val memo: Array[Any] = new Array[Any](length)
+  override lazy val length: Int = global.len(orig).as[Int]
+
+  protected lazy val memo: Array[Any] = new Array[Any](length)
 
   override def apply(idx: Int): T = {
     if (memo(idx) == null) {
-      memo(idx) = orig.arrayAccess(idx).as[T]
+      memo(idx) = origDynamic.arrayAccess(idx).as[T]
     }
 
     memo(idx).asInstanceOf[T]
