@@ -18,5 +18,5 @@ First, [build Jep](https://github.com/mrj0/jep/wiki/Getting-Started) and place y
 When you are running, you may need to provide a path to your libraries when launching SBT by using a command such as `sbt -Djava.library.path=/your/path/to/lib/`.
 
 ## Static Facades
-+ NumPy: https://github.com/shadaj/scalapy-tensorflow
++ NumPy: https://github.com/shadaj/scalapy-numpy
 + TensorFlow: https://github.com/shadaj/scalapy-tensorflow
