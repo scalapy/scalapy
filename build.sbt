@@ -55,5 +55,7 @@ sourceGenerators in Compile <+= baseDirectory map { dir =>
   Seq(fileToWrite)
 }
 
+libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
+
 fork in Test := true
 javaOptions in Test += "-Djava.library.path=./lib/"

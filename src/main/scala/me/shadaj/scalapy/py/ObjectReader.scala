@@ -65,6 +65,10 @@ object ObjectReader extends ObjectTupleReaders {
     }
   }
 
+  implicit def unitReader = new ObjectReader[Unit] {
+    def read(r: Ref)(implicit jep: Jep): Unit = ()
+  }
+
   implicit def intReader = new ObjectReader[Int] {
     def read(r: Ref)(implicit jep: Jep): Int = toInt(r.toObject.value)
   }
