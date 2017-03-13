@@ -4,14 +4,14 @@ import jep.Jep
 
 import scala.language.dynamics
 
-class ObjectKeeper(varName: String)(implicit jep: Jep) {
-  override def finalize(): Unit = {
-    jep.eval(s"del $varName")
-  }
-}
+import scala.collection.mutable
 
 class Object private[py](val varId: Int)(implicit jep: Jep) extends Ref(s"spy_o_$varId") {
-  private[py] var keeper: ObjectKeeper = null
+  private var cleaned = false
+
+  if (Object.allocatedObjects.nonEmpty) {
+    Object.allocatedObjects.head += this
+  }
 
   def value: Any = jep.getValue(s"$expr")
 
@@ -22,17 +22,25 @@ class Object private[py](val varId: Int)(implicit jep: Jep) extends Ref(s"spy_o_
   override def toString: String = {
     jep.getValue(s"str($expr)").asInstanceOf[String]
   }
+
+  override def finalize(): Unit = {
+    if (!cleaned) {
+      jep.eval(s"del $expr")
+      cleaned = true
+    }
+  }
 }
 
 object Object {
   private var nextCounter: Int = 0
+  private[py] var allocatedObjects: List[mutable.Queue[Object]] = List.empty
 
   def empty(implicit jep: Jep): Object = {
     val variableName = nextCounter
     nextCounter += 1
 
     val ret = new DynamicObject(variableName)
-    ret.keeper = new ObjectKeeper(ret.expr)
+
     ret
   }
 
@@ -43,15 +51,10 @@ object Object {
     jep.eval(s"spy_o_$variableName = $stringToEval")
 
     val ret = new DynamicObject(variableName)
-    ret.keeper = new ObjectKeeper(ret.expr)
     ret
   }
 
   implicit def from[T](v: T)(implicit writer: ObjectWriter[T], jep: Jep): Object = {
-    val converted = writer.write(v).toObject
-
-    val ret = new DynamicObject(converted.varId)
-    ret.keeper = converted.keeper
-    ret
+    writer.write(v).toObject
   }
 }

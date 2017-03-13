@@ -6,8 +6,6 @@ import scala.reflect.macros.Context
 import scala.language.experimental.macros
 
 class ObjectFascade(originalObject: Object)(implicit jep: Jep) extends Ref(originalObject.expr) {
-  private val keeper = originalObject.keeper
-
   protected val dynamic = originalObject.asInstanceOf[DynamicObject]
 
   override def toString: String = originalObject.toString

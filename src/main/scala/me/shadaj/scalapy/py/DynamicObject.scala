@@ -52,10 +52,6 @@ class DynamicObject private[py](varId: Int)(implicit jep: Jep) extends Object(va
 
 object DynamicObject {
   implicit def from[T](v: T)(implicit writer: ObjectWriter[T], jep: Jep): DynamicObject = {
-    val converted = writer.write(v).toObject
-
-    val ret = new DynamicObject(converted.varId)
-    ret.keeper = converted.keeper
-    ret
+    writer.write(v).toObject.asInstanceOf[DynamicObject]
   }
 }
