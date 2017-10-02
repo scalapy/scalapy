@@ -58,4 +58,6 @@ sourceGenerators in Compile <+= baseDirectory map { dir =>
 libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
 
 fork in Test := true
-javaOptions in Test += "-Djava.library.path=./lib/"
+
+unmanagedBase := file("/usr/local/lib/python3.6/site-packages/jep")
+javaOptions in Test += "-Djava.library.path=/usr/local/lib/python3.6/site-packages/jep"

@@ -29,7 +29,6 @@ object ObjectFascade {
           q"${p.asTerm}".toString
         }
 
-        println(s"""dynamic.applyDynamic("$methodName")(${paramExprs.mkString(",")}).as[${returnType}]""")
         c.Expr[T](c.parse(s"""dynamic.applyDynamic("$methodName")(${paramExprs.mkString(",")}).as[${returnType}]"""))
       case scala.None =>
         c.Expr[T](q"""dynamic.selectDynamic($methodName).as[$returnType]""")

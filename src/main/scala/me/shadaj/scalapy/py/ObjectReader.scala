@@ -34,6 +34,9 @@ object ObjectReader extends ObjectTupleReaders {
   def toInt(value: Any): Int = {
     value match {
       case i: Int => i
+      case l: Long => if (l <= Int.MaxValue && l >= Int.MinValue) l.toInt else {
+        throw new IllegalArgumentException("Tried to convert a Long outside Int range to an Int")
+      }
       case _: Double =>
         throw new IllegalArgumentException("Cannot up-convert a Double to an Int")
       case _: Float =>
@@ -46,6 +49,7 @@ object ObjectReader extends ObjectTupleReaders {
   def toDouble(value: Any): Double = {
     value match {
       case i: Int => i
+      case l: Long => l
       case d: Double => d
       case f: Float => f
       case s: String => s.toDouble
@@ -57,6 +61,7 @@ object ObjectReader extends ObjectTupleReaders {
   def toFloat(value: Any): Float = {
     value match {
       case i: Int => i
+      case l: Long => l
       case _: Double =>
         throw new IllegalArgumentException("Cannot up-convert a Double to a Float")
       case fl: Float => fl
