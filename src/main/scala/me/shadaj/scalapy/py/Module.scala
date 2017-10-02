@@ -14,6 +14,14 @@ class Module private[py](private[py] val moduleName: String)(implicit jep: Jep) 
     }
   }
 
+  def applyDynamicNamed(method: String)(params: (String, Ref)*): DynamicObject = {
+    if (method == "apply") {
+      Object(s"$moduleName(${params.map(t => s"${t._1} = ${t._2.expr}").mkString(",")})").asInstanceOf[DynamicObject]
+    } else {
+      Object(s"$moduleName.$method(${params.map(t => s"${t._1} = ${t._2.expr}").mkString(",")})").asInstanceOf[DynamicObject]
+    }
+  }
+
   def selectDynamic(value: String): DynamicObject = {
     Object(s"$moduleName.$value").asInstanceOf[DynamicObject]
   }
