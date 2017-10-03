@@ -56,8 +56,8 @@ sourceGenerators in Compile <+= baseDirectory map { dir =>
 }
 
 libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
+libraryDependencies += "black.ninia" % "jep" % "3.7.0"
 
 fork in Test := true
 
-unmanagedBase := file("/usr/local/lib/python3.6/site-packages/jep")
 javaOptions in Test += "-Djava.library.path=/usr/local/lib/python3.6/site-packages/jep"
