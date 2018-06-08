@@ -72,6 +72,10 @@ class ObjectWriterTest extends FunSuite {
       .toSeq == Seq(Seq(1), Seq(2)))
   }
 
+  test("Writing a sequence of Python objects") {
+    assert(jep.getValue(Object.from(Seq[Object](Object("1"), Object("2"))).expr).asInstanceOf[util.ArrayList[Int]].size() == 2)
+  }
+
   test("Writing a map of int to int") {
     val written = jep.getValue(Object.from(Map(1 -> 2, 2 -> 3)).expr).asInstanceOf[java.util.Map[Int, Int]]
     assert(written.get(1) == 2)
@@ -80,6 +84,6 @@ class ObjectWriterTest extends FunSuite {
 
   test("Writing a tuple") {
     val tupleValue = jep.getValue(Object.from((1, 2)).expr)
-    assert(tupleValue.asInstanceOf[Array[Any]].toSeq.map(_.asInstanceOf[Int]) == Seq(1, 2))
+    assert(tupleValue.asInstanceOf[util.List[Any]].toArray.toSeq == Seq(1, 2))
   }
 }

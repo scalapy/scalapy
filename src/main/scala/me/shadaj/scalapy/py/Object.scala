@@ -66,9 +66,13 @@ object Object {
     ret
   }
 
-  implicit def from[T](v: T)(implicit writer: ObjectWriter[T], jep: Jep): Object = {
-    Object { (variable, jep) =>
-      jep.set(variable, writer.write(v)(jep))
+  def populateWith(v: Any)(implicit jep: Jep): Object = {
+    apply { (variable, j) =>
+      j.set(variable, v)
     }
+  }
+
+  implicit def from[T](v: T)(implicit writer: ObjectWriter[T], jep: Jep): Object = {
+    writer.write(v)(jep).left.map(Object.populateWith).merge
   }
 }

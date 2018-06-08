@@ -12,11 +12,7 @@ package object py {
 
   def global(implicit jep: Jep) = new Global()
 
-//  def lambda(ref: Obj) = Ref(s"lambda: ${ref.expr}")
-
   object None
-
-//  implicit def toNativeSeqMapper[T, C <% Seq[T]](s: C)(implicit jep: Jep): ToNativeSeqMapper[T] = new ToNativeSeqMapper[T](s)
 
   type NoneOr[T] = None.type | T
 

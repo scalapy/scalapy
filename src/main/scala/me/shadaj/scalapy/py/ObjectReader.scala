@@ -151,8 +151,7 @@ object ObjectReader extends ObjectTupleReaders {
         case arrList: java.util.ArrayList[Any] =>
           arrList.toArray.map(reader.read).toSeq
       }
-//      null
-    }//new NativeSeq[T](r)(reader, jep)
+    }
   }
 
   implicit def mapReader[I, O](implicit readerI: ObjectReader[I], readerO: ObjectReader[O]): ObjectReader[Map[I, O]] = new ObjectReader[Map[I, O]] {
