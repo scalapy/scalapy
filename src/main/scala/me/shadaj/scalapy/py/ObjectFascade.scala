@@ -5,13 +5,15 @@ import jep.Jep
 import scala.reflect.macros.Context
 import scala.language.experimental.macros
 
-class ObjectFascade(originalObject: Object)(implicit jep: Jep) extends Ref(originalObject.expr) {
+class ObjectFascade(originalObject: Object)(implicit jep: Jep) extends Object(originalObject.varId) {
   protected val dynamic = originalObject.asInstanceOf[DynamicObject]
 
   override def toString: String = originalObject.toString
 
   protected def native[T]: T = macro ObjectFascade.native_impl[T]
   protected def nativeNamed[T]: T = macro ObjectFascade.native_named_impl[T]
+
+  override def finalize(): Unit = {} // let the originalObject handle this
 }
 
 object ObjectFascade {

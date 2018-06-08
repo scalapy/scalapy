@@ -6,7 +6,7 @@ import scala.language.dynamics
 import scala.reflect.ClassTag
 
 class Module private[py](private[py] val moduleName: String)(implicit jep: Jep) extends scala.Dynamic {
-  def applyDynamic(method: String)(params: Ref*): DynamicObject = {
+  def applyDynamic(method: String)(params: Object*): DynamicObject = {
     if (method == "apply") {
       Object(s"$moduleName(${params.map(_.expr).mkString(",")})").asInstanceOf[DynamicObject]
     } else {
@@ -14,7 +14,7 @@ class Module private[py](private[py] val moduleName: String)(implicit jep: Jep) 
     }
   }
 
-  def applyDynamicNamed(method: String)(params: (String, Ref)*): DynamicObject = {
+  def applyDynamicNamed(method: String)(params: (String, Object)*): DynamicObject = {
     if (method == "apply") {
       Object(s"$moduleName(${params.map(t => s"${t._1} = ${t._2.expr}").mkString(",")})").asInstanceOf[DynamicObject]
     } else {
@@ -26,7 +26,7 @@ class Module private[py](private[py] val moduleName: String)(implicit jep: Jep) 
     Object(s"$moduleName.$value").asInstanceOf[DynamicObject]
   }
 
-  def updateDynamic(name: String)(value: Ref): Unit = {
+  def updateDynamic(name: String)(value: Object): Unit = {
     jep.eval(s"$moduleName.$name = ${value.expr}")
   }
 

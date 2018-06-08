@@ -12,14 +12,20 @@ package object py {
 
   def global(implicit jep: Jep) = new Global()
 
-  def lambda(ref: Ref) = Ref(s"lambda: ${ref.expr}")
+//  def lambda(ref: Obj) = Ref(s"lambda: ${ref.expr}")
 
-  class None private[py] extends Ref("None")
-  val None = new None
+  object None
 
-  implicit def toNativeSeqMapper[T, C <% Seq[T]](s: C)(implicit jep: Jep): ToNativeSeqMapper[T] = new ToNativeSeqMapper[T](s)
+//  implicit def toNativeSeqMapper[T, C <% Seq[T]](s: C)(implicit jep: Jep): ToNativeSeqMapper[T] = new ToNativeSeqMapper[T](s)
 
-  type NoneOr[T] = None | T
+  type NoneOr[T] = None.type | T
+
+  def `with`[T <: py.Object, O](ref: T)(withValue: T => O)(implicit jep: Jep): O = {
+    ref.asInstanceOf[DynamicObject].__enter__()
+    val ret = withValue(ref)
+    ref.asInstanceOf[DynamicObject].__exit__(None, None, None)
+    ret
+  }
 
   def local(f: => Unit): Unit = {
     py.Object.allocatedObjects = mutable.Queue.empty[py.Object] :: py.Object.allocatedObjects
