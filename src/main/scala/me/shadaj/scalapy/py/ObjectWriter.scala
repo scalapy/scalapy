@@ -30,7 +30,7 @@ object ObjectWriter extends ObjectTupleWriters {
     }
   }
 
-  implicit def pyFascadeWriter[T <: ObjectFascade]: ObjectWriter[T] = new ObjectWriter[T] {
+  implicit def pyFascadeWriter[T <: ObjectFacade]: ObjectWriter[T] = new ObjectWriter[T] {
     override def write(v: T)(implicit jep: Jep): Any = {
       jep.getValue(v.expr)
     }

@@ -3,7 +3,7 @@ package me.shadaj.scalapy.py
 import jep.Jep
 import org.scalatest.FunSuite
 
-class StringModuleFacade(o: Object)(implicit jep: Jep) extends ObjectFascade(o) {
+class StringModuleFacade(o: Object)(implicit jep: Jep) extends ObjectFacade(o) {
   def digits: String = native
 }
 

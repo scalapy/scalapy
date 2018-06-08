@@ -3,7 +3,7 @@ package me.shadaj.scalapy.py
 import jep.Jep
 import org.scalatest.FunSuite
 
-class StringObjectFacade(obj: Object)(implicit jep: Jep) extends ObjectFascade(obj) {
+class StringObjectFacade(obj: Object)(implicit jep: Jep) extends ObjectFacade(obj) {
   def replace(old: String, newValue: String): String = native
 }
 

@@ -30,7 +30,7 @@ class Object private[py](val varId: Int)(implicit jep: Jep) {
 
   def to[T: ObjectReader]: T = implicitly[ObjectReader[T]].read(jep.getValue(expr))(jep)
 
-  def as[T <: ObjectFascade: ClassTag](implicit classTag: ClassTag[T]): T = {
+  def as[T <: ObjectFacade: ClassTag](implicit classTag: ClassTag[T]): T = {
     classTag.runtimeClass.getConstructor(classOf[Object], classOf[Jep]).newInstance(this, jep).asInstanceOf[T]
   }
 }

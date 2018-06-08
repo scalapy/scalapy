@@ -34,7 +34,7 @@ class Module private[py](private[py] val moduleName: String)(implicit jep: Jep) 
     jep.eval(s"del $moduleName")
   }
 
-  def as[T <: ObjectFascade](implicit classTag: ClassTag[T]): T = {
+  def as[T <: ObjectFacade](implicit classTag: ClassTag[T]): T = {
     classTag.runtimeClass.getConstructor(classOf[Object], classOf[Jep]).newInstance(Object(moduleName), jep).asInstanceOf[T]
   }
 }
