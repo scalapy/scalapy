@@ -3,10 +3,8 @@ package me.shadaj.scalapy.py
 import java.util
 
 import jep.Jep
-import me.shadaj.scalapy.py
 
 import scala.reflect.ClassTag
-import scala.collection.JavaConverters._
 
 abstract class ObjectWriter[T] {
   def write(v: T)(implicit jep: Jep): Any

@@ -6,7 +6,7 @@ import scala.reflect.macros.Context
 import scala.language.experimental.macros
 
 class ObjectFascade(originalObject: Object)(implicit jep: Jep) extends Object(originalObject.varId) {
-  protected val dynamic = originalObject.asInstanceOf[DynamicObject]
+  final val toDynamic = originalObject.asInstanceOf[DynamicObject]
 
   override def toString: String = originalObject.toString
 
@@ -28,12 +28,12 @@ object ObjectFascade {
     paramss.headOption match {
       case Some(params) =>
         val paramExprs = params.map { p =>
-          q"${p.asTerm}".toString
+          p.name
         }
 
-        c.Expr[T](c.parse(s"""dynamic.applyDynamic("$methodName")(${paramExprs.mkString(",")}).as[${returnType}]"""))
+        c.Expr[T](q"toDynamic.applyDynamic($methodName)(..$paramExprs).to[$returnType]")
       case scala.None =>
-        c.Expr[T](q"""dynamic.selectDynamic($methodName).as[$returnType]""")
+        c.Expr[T](q"toDynamic.selectDynamic($methodName).to[$returnType]")
     }
   }
 
@@ -52,10 +52,10 @@ object ObjectFascade {
           s"""("${p.name}", $paramName)"""
         }
 
-        c.Expr[T](c.parse(s"""dynamic.applyDynamicNamed("$methodName")(${paramExprs.mkString(",")}).as[${returnType}]"""))
+        c.Expr[T](c.parse(s"""toDynamic.applyDynamicNamed("$methodName")(${paramExprs.mkString(",")}).to[$returnType]"""))
 
       case scala.None =>
-        c.Expr[T](q"""dynamic.selectDynamic($methodName).as[$returnType]""")
+        c.Expr[T](q"toDynamic.selectDynamic($methodName).to[$returnType]")
     }
   }
 }
