@@ -2,7 +2,7 @@ package me.shadaj.scalapy.py
 
 import jep.Jep
 
-import scala.reflect.macros.Context
+import scala.reflect.macros.whitebox
 import scala.language.experimental.macros
 
 class ObjectFacade(originalObject: Object)(implicit jep: Jep) extends Object(originalObject.varId) {
@@ -17,7 +17,7 @@ class ObjectFacade(originalObject: Object)(implicit jep: Jep) extends Object(ori
 }
 
 object ObjectFacade {
-  def native_impl[T: c.WeakTypeTag](c: Context): c.Expr[T] = {
+  def native_impl[T: c.WeakTypeTag](c: whitebox.Context): c.Expr[T] = {
     import c.universe._
 
     val method = c.internal.enclosingOwner.asMethod
@@ -27,17 +27,14 @@ object ObjectFacade {
 
     paramss.headOption match {
       case Some(params) =>
-        val paramExprs = params.map { p =>
-          p.name
-        }
-
+        val paramExprs = params.map(_.name)
         c.Expr[T](q"toDynamic.applyDynamic($methodName)(..$paramExprs).as[$returnType]")
       case scala.None =>
         c.Expr[T](q"toDynamic.selectDynamic($methodName).as[$returnType]")
     }
   }
 
-  def native_named_impl[T: c.WeakTypeTag](c: Context): c.Expr[T] = {
+  def native_named_impl[T: c.WeakTypeTag](c: whitebox.Context): c.Expr[T] = {
     import c.universe._
 
     val method = c.internal.enclosingOwner.asMethod
