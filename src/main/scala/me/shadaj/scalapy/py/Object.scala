@@ -4,7 +4,6 @@ import jep.Jep
 
 import scala.language.dynamics
 import scala.collection.mutable
-import scala.reflect.ClassTag
 
 class Object private[py](val varId: Int)(implicit jep: Jep) { self =>
   final val expr = s"spy_o_$varId"
