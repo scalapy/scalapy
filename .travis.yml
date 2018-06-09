@@ -1,0 +1,10 @@
+language: scala
+branches:
+  only:
+    - master
+    - /^v\d+(\.\d+)+$/
+script:
+  - sbt test
+after_success:
+  - 'if [ "$TRAVIS_BRANCH" = "master" ] && [ "$TRAVIS_PULL_REQUEST" = "false" ]; then bash ./publish.sh; fi'
+  - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ -n "$TRAVIS_TAG" ]; then bash ./publish.sh; fi'
