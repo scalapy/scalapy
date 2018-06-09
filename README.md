@@ -4,10 +4,10 @@
 ScalaPy allows you to use Python libraries from your Scala code through interfaces and conversions built on top of [Jep](https://github.com/mrj0/jep).
 
 ## Getting Started
-Follow the instructions in Building, and then add the dependency on ScalaPy to your own project:
+ScalaPy is published to Maven Central, so you can add it by including it in your dependencies.
 
 ```scala
-libraryDependencies += "me.shadaj" %% "scalapy" % "0.1.0-SNAPSHOT"
+libraryDependencies += "me.shadaj" %% "scalapy" % "0.2.0"
 ```
 
 To get started with working with ScalaPy, check out [the blog post introducing it](http://blog.shadaj.me/2017/01/04/tensorflow-in-scala-with-scalapy.html).
