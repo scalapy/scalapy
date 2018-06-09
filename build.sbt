@@ -62,4 +62,4 @@ libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.3" % Test
 
 fork in Test := true
 
-javaOptions in Test += "-Djava.library.path=/usr/local/lib/python3.6/site-packages/jep"
+javaOptions in Test += s"-Djava.library.path=${sys.env.getOrElse("JEP_PATH", "/usr/local/lib/python3.6/site-packages/jep")}"
