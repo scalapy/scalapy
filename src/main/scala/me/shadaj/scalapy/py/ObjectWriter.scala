@@ -7,6 +7,8 @@ import jep.Jep
 import scala.collection.mutable
 import scala.reflect.ClassTag
 
+import scala.collection.JavaConverters._
+
 abstract class ObjectWriter[T] {
   def write(v: T)(implicit jep: Jep): Either[Any, Object]
 }
@@ -93,23 +95,20 @@ object ObjectWriter extends ObjectTupleWriters {
     }
 
     override def write(v: C)(implicit jep: Jep): Either[Any, Object] = {
-      v match {
-        case _ =>
-          val coll = ev1(v)
-          val elemClass = implicitly[ClassTag[T]].runtimeClass
-          if (isNativeWritable(elemClass)) {
-            Left(coll.toArray[T])
-          } else {
-            val writtenElems = v.view.map { e =>
-              tWriter.write(e)
-            }
+      val coll = ev1(v)
+      val elemClass = implicitly[ClassTag[T]].runtimeClass
+      if (isNativeWritable(elemClass)) {
+        Left(seqAsJavaList(coll))
+      } else {
+        val writtenElems = v.view.map { e =>
+          tWriter.write(e)
+        }
 
-            if (writtenElems.forall(_.isLeft)) Left(writtenElems.map(_.left.get).toArray)
-            else {
-              val writtenObjects = writtenElems.map(_.left.map(Object.populateWith).merge.expr)
-              Right(Object(writtenObjects.mkString("[", ",", "]")))
-            }
-          }
+        if (writtenElems.forall(_.isLeft)) Left(seqAsJavaList(writtenElems.map(_.left.get)))
+        else {
+          val writtenObjects = writtenElems.map(_.left.map(Object.populateWith).merge.expr)
+          Right(Object(writtenObjects.mkString("[", ",", "]")))
+        }
       }
     }
   }
@@ -118,26 +117,22 @@ object ObjectWriter extends ObjectTupleWriters {
     override def write(map: Map[I, O])(implicit jep: Jep): Either[Any, Object] = {
       val toAddLater = mutable.Queue.empty[(Object, Object)]
 
-      val javaMap = new util.HashMap[Any, Any]()
       map.foreach { case (i, o) =>
         (iWriter.write(i), oWriter.write(o)) match {
-          case (Left(k), Left(v)) => javaMap.put(k, v)
+          case (Left(k), Left(v)) =>
+            toAddLater.enqueue((Object.populateWith(k), Object.populateWith(v)))
           case (Left(k), Right(vo)) => toAddLater.enqueue((Object.populateWith(k), vo))
           case (Right(ko), Left(v)) => toAddLater.enqueue((ko, Object.populateWith(v)))
           case (Right(ko), Right(vo)) => toAddLater.enqueue((ko, vo))
         }
       }
 
-      if (toAddLater.isEmpty) {
-        Left(javaMap)
-      } else {
-        val obj = Object.populateWith(javaMap)
-        toAddLater.foreach { case (ko, vo) =>
-          jep.eval(s"${obj.expr}[${ko.expr}] = ${vo.expr}")
-        }
-
-        Right(obj)
+      val obj = Object("{}")
+      toAddLater.foreach { case (ko, vo) =>
+        jep.eval(s"${obj.expr}[${ko.expr}] = ${vo.expr}")
       }
+
+      Right(obj)
     }
   }
 }

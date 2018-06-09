@@ -5,7 +5,7 @@ import jep.Jep
 import scala.reflect.macros.whitebox
 import scala.language.experimental.macros
 
-class ObjectFacade(originalObject: Object)(implicit jep: Jep) extends Object(originalObject.varId) {
+class ObjectFacade(originalObject: Object)(implicit jep: Jep) extends Object(originalObject.variableId) {
   final val toObject = originalObject
   final val toDynamic = originalObject.asInstanceOf[DynamicObject]
 

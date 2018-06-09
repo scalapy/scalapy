@@ -1,12 +1,13 @@
 package me.shadaj.scalapy.py
 
-import jep.Jep
+import jep.{Jep, NDArray}
 
 import scala.reflect.ClassTag
-
 import scala.collection.JavaConverters._
 
-abstract class ValueAndRequestObject(val value: Any) {
+abstract class ValueAndRequestObject(getValue: => Any) {
+  final def value: Any = getValue
+
   protected def getObject: Object
 
   private var objectCache: Object = null
@@ -22,17 +23,17 @@ trait ObjectReader[T] {
 
 object ObjectReader extends ObjectTupleReaders {
   implicit val wrapperReader = new ObjectReader[Object] {
-    def read(r: ValueAndRequestObject)(implicit jep: Jep): Object = r.requestObject
+    def read(r: ValueAndRequestObject)(implicit jep: Jep): Object = new DynamicObject(r.requestObject.variableId)
   }
 
   implicit val wrapperDynReader = new ObjectReader[DynamicObject] {
     def read(r: ValueAndRequestObject)(implicit jep: Jep): DynamicObject =
-      r.requestObject.asInstanceOf[DynamicObject]
+      new DynamicObject(r.requestObject.variableId)
   }
 
   implicit def facadeReader[F <: ObjectFacade](implicit classTag: ClassTag[F]): ObjectReader[F] = new ObjectReader[F] {
     override def read(r: ValueAndRequestObject)(implicit jep: Jep): F = {
-      classTag.runtimeClass.getConstructor(classOf[Object], classOf[Jep]).newInstance(r.requestObject, jep).asInstanceOf[F]
+      classTag.runtimeClass.getConstructor(classOf[Object], classOf[Jep]).newInstance(new DynamicObject(r.requestObject.variableId), jep).asInstanceOf[F]
     }
   }
 
@@ -66,7 +67,7 @@ object ObjectReader extends ObjectTupleReaders {
       case _: Float =>
         throw new IllegalArgumentException("Cannot up-convert a Float to an Int")
       case _ =>
-        throw new IllegalArgumentException(s"Unknown type: ${value.getClass}")
+        throw new IllegalArgumentException(s"Unknown type: ${value.getClass}: $value")
     }
   }
 
@@ -136,17 +137,15 @@ object ObjectReader extends ObjectTupleReaders {
 
   implicit val booleanReader = new ObjectReader[Boolean] {
     def read(r: ValueAndRequestObject)(implicit jep: Jep): Boolean = {
-      val value = r.value
-
-      value match {
+      r.value match {
         case b: Boolean =>
           b
         case s: String =>
           s == "True"
         case i: Int if i == 0 || i == 1 =>
           i == 1
-        case _ =>
-          throw new IllegalArgumentException(s"Unknown boolean type for value $value")
+        case o =>
+          throw new IllegalArgumentException(s"Unknown boolean type for value $o")
       }
     }
   }
@@ -162,6 +161,8 @@ object ObjectReader extends ObjectTupleReaders {
           arr.zipWithIndex
         case arrList: java.util.List[_] =>
           arrList.toArray.zipWithIndex
+        case ndArr: NDArray[Array[_]] =>
+          ndArr.getData.zipWithIndex
       }).map { case (v, i) =>
         reader.read(new ValueAndRequestObject(v) {
           override def getObject: Object = r.requestObject.asInstanceOf[DynamicObject].arrayAccess(i)

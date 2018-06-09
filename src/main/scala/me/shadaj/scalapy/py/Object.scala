@@ -5,8 +5,8 @@ import jep.Jep
 import scala.language.dynamics
 import scala.collection.mutable
 
-class Object private[py](val varId: Int)(implicit jep: Jep) { self =>
-  final val expr = s"spy_o_$varId"
+class Object(val variableId: Int)(implicit jep: Jep) { self =>
+  final val expr = s"spy_o_$variableId"
 
   private var cleaned = false
 
