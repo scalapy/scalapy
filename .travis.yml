@@ -3,6 +3,8 @@ branches:
   only:
     - master
     - /^v\d+(\.\d+)+$/
+install:
+  - pip3 install jep
 script:
   - sbt test
 after_success:
