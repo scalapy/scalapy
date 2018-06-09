@@ -3,21 +3,18 @@ package me.shadaj.scalapy.py
 import jep.Jep
 
 import scala.language.dynamics
-
 import scala.collection.mutable
 
-class Object private[py](val varId: Int)(implicit jep: Jep) extends Ref(s"spy_o_$varId") {
+class Object(val variableId: Int)(implicit jep: Jep) { self =>
+  final val expr = s"spy_o_$variableId"
+
   private var cleaned = false
 
   if (Object.allocatedObjects.nonEmpty) {
     Object.allocatedObjects.head += this
   }
 
-  def value: Any = jep.getValue(s"$expr")
-
-  def asRef: Ref = Ref(expr)
-
-  override def toObject(implicit jep: Jep): Object = this
+  def value: Any = jep.getValue(expr)
 
   override def toString: String = {
     jep.getValue(s"str($expr)").asInstanceOf[String]
@@ -29,6 +26,10 @@ class Object private[py](val varId: Int)(implicit jep: Jep) extends Ref(s"spy_o_
       cleaned = true
     }
   }
+
+  def as[T: ObjectReader]: T = implicitly[ObjectReader[T]].read(new ValueAndRequestObject(jep.getValue(expr)) {
+    override def getObject: Object = self
+  })(jep)
 }
 
 object Object {
@@ -39,9 +40,7 @@ object Object {
     val variableName = nextCounter
     nextCounter += 1
 
-    val ret = new DynamicObject(variableName)
-
-    ret
+    new DynamicObject(variableName)
   }
 
   def apply(stringToEval: String)(implicit jep: Jep): Object = {
@@ -50,11 +49,27 @@ object Object {
 
     jep.eval(s"spy_o_$variableName = $stringToEval")
 
-    val ret = new DynamicObject(variableName)
+    new DynamicObject(variableName)
+  }
+
+  /**
+   * Constructs a Python value by populating a generated variable, usually via Jep calls.
+   * @param populateVariable a function that populates a variable given its name and the Jep instance
+   */
+  def apply(populateVariable: (String, Jep) => Unit)(implicit jep: Jep): Object = {
+    val ret = Object.empty
+    populateVariable(ret.expr, jep)
+    
     ret
   }
 
+  def populateWith(v: Any)(implicit jep: Jep): Object = {
+    apply { (variable, j) =>
+      j.set(variable, v)
+    }
+  }
+
   implicit def from[T](v: T)(implicit writer: ObjectWriter[T], jep: Jep): Object = {
-    writer.write(v).toObject
+    writer.write(v)(jep).left.map(Object.populateWith).merge
   }
 }

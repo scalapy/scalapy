@@ -1,0 +1,14 @@
+language: scala
+branches:
+  only:
+    - master
+    - /^v\d+(\.\d+)+$/
+install:
+  - pyenv global 3.6
+  - pip install jep
+script:
+  - export JEP_PATH="/opt/python/3.6.3/lib/python3.6/site-packages/jep"
+  - sbt test
+after_success:
+  - 'if [ "$TRAVIS_BRANCH" = "master" ] && [ "$TRAVIS_PULL_REQUEST" = "false" ]; then bash ./publish.sh; fi'
+  - 'if [ "$TRAVIS_PULL_REQUEST" = "false" ] && [ -n "$TRAVIS_TAG" ]; then bash ./publish.sh; fi'
