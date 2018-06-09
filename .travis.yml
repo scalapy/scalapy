@@ -4,6 +4,7 @@ branches:
     - master
     - /^v\d+(\.\d+)+$/
 install:
+  - pyenv global 3.6
   - pip3 install jep
 script:
   - sbt test
