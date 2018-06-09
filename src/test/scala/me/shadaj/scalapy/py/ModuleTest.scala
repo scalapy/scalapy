@@ -12,7 +12,7 @@ class ModuleTest extends FunSuite {
   implicit val jep = new Jep()
 
   test("Can read value from module") {
-    assert(module("string").digits.to[String] == "0123456789")
+    assert(module("string").digits.as[String] == "0123456789")
   }
 
   test("Can convert to facade and call methods") {

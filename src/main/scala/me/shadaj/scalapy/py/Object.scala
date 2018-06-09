@@ -6,7 +6,7 @@ import scala.language.dynamics
 import scala.collection.mutable
 import scala.reflect.ClassTag
 
-class Object private[py](val varId: Int)(implicit jep: Jep) {
+class Object private[py](val varId: Int)(implicit jep: Jep) { self =>
   final val expr = s"spy_o_$varId"
 
   private var cleaned = false
@@ -28,11 +28,9 @@ class Object private[py](val varId: Int)(implicit jep: Jep) {
     }
   }
 
-  def to[T: ObjectReader]: T = implicitly[ObjectReader[T]].read(jep.getValue(expr))(jep)
-
-  def as[T <: ObjectFacade: ClassTag](implicit classTag: ClassTag[T]): T = {
-    classTag.runtimeClass.getConstructor(classOf[Object], classOf[Jep]).newInstance(this, jep).asInstanceOf[T]
-  }
+  def as[T: ObjectReader]: T = implicitly[ObjectReader[T]].read(new ValueAndRequestObject(jep.getValue(expr)) {
+    override def getObject: Object = self
+  })(jep)
 }
 
 object Object {

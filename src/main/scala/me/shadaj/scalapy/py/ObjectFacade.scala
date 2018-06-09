@@ -31,9 +31,9 @@ object ObjectFacade {
           p.name
         }
 
-        c.Expr[T](q"toDynamic.applyDynamic($methodName)(..$paramExprs).to[$returnType]")
+        c.Expr[T](q"toDynamic.applyDynamic($methodName)(..$paramExprs).as[$returnType]")
       case scala.None =>
-        c.Expr[T](q"toDynamic.selectDynamic($methodName).to[$returnType]")
+        c.Expr[T](q"toDynamic.selectDynamic($methodName).as[$returnType]")
     }
   }
 
@@ -52,10 +52,10 @@ object ObjectFacade {
           s"""("${p.name}", $paramName)"""
         }
 
-        c.Expr[T](c.parse(s"""toDynamic.applyDynamicNamed("$methodName")(${paramExprs.mkString(",")}).to[$returnType]"""))
+        c.Expr[T](c.parse(s"""toDynamic.applyDynamicNamed("$methodName")(${paramExprs.mkString(",")}).as[$returnType]"""))
 
       case scala.None =>
-        c.Expr[T](q"toDynamic.selectDynamic($methodName).to[$returnType]")
+        c.Expr[T](q"toDynamic.selectDynamic($methodName).as[$returnType]")
     }
   }
 }

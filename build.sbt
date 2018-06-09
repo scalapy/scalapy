@@ -9,11 +9,15 @@ scalaVersion := "2.12.6"
 sourceGenerators in Compile += Def.task {
   val fileToWrite = (sourceManaged in Compile).value / "ObjectTupleReaders.scala"
   val methods = (2 to 22).map { n =>
+    val tupleElements = (1 to n).map(t =>
+      s"""r$t.read(new ValueAndRequestObject(orArr(${t - 1})) {
+         |  def getObject = or.requestObject.asInstanceOf[DynamicObject].arrayAccess(${t - 1})
+         |})""".stripMargin).mkString(", ")
     s"""implicit def tuple${n}Reader[${(1 to n).map(t => s"T$t").mkString(", ")}](implicit ${(1 to n).map(t => s"r$t: ObjectReader[T$t]").mkString(", ")}): ObjectReader[(${(1 to n).map(t => s"T$t").mkString(", ")})] = {
        |  new ObjectReader[(${(1 to n).map(t => s"T$t").mkString(", ")})] {
-       |    override def read(or: Any)(implicit jep: Jep) = {
-       |      val orArr = or.asInstanceOf[java.util.List[Any]].toArray
-       |      (${(1 to n).map(t => s"r$t.read(orArr(${t - 1}))").mkString(", ")})
+       |    override def read(or: ValueAndRequestObject)(implicit jep: Jep) = {
+       |      val orArr = or.value.asInstanceOf[java.util.List[Any]].toArray
+       |      ($tupleElements)
        |    }
        |  }
        |}"""

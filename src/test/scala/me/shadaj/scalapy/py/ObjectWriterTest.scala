@@ -72,8 +72,9 @@ class ObjectWriterTest extends FunSuite {
       .toSeq == Seq(Seq(1), Seq(2)))
   }
 
-  test("Writing a sequence of Python objects") {
-    assert(jep.getValue(Object.from(Seq[Object](Object("1"), Object("2"))).expr).asInstanceOf[util.ArrayList[Int]].size() == 2)
+  test("Writing a sequence of Python objects preserves original objects") {
+    val objectsExpr = Object.from(Seq[Object](Object("object()"), Object("object()"))).expr
+    assert(jep.getValue(s"str(type($objectsExpr[0]))").asInstanceOf[String] == "<class 'object'>")
   }
 
   test("Writing a map of int to int") {
