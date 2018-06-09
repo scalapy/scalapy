@@ -49,9 +49,3 @@ class DynamicObject private[py](varId: Int)(implicit jep: Jep) extends Object(va
     Object(s"$expr % (${that.expr})").asInstanceOf[DynamicObject]
   }
 }
-
-object DynamicObject {
-  implicit def from[T](v: T)(implicit writer: ObjectWriter[T], jep: Jep): DynamicObject = {
-    writer.write(v).asInstanceOf[DynamicObject]
-  }
-}
