@@ -5,6 +5,8 @@ import java.util
 import jep.Jep
 import org.scalatest.FunSuite
 
+import scala.collection.JavaConverters._
+
 class ObjectWriterTest extends FunSuite {
   implicit val jep = new Jep()
 
@@ -48,28 +50,28 @@ class ObjectWriterTest extends FunSuite {
   }
 
   test("Writing an empty sequence") {
-    assert(Object.from(Seq.empty[Int]).value.asInstanceOf[Array[Int]].length == 0)
+    assert(Object.from(Seq.empty[Int]).value.asInstanceOf[util.List[Int]].size() == 0)
   }
 
   test("Writing a sequence of ints") {
-    assert(Object.from(Seq[Int](1, 2, 3)).value.asInstanceOf[Array[Int]].toSeq == Seq(1, 2, 3))
+    assert(Object.from(Seq[Int](1, 2, 3)).value.asInstanceOf[util.List[Int]].asScala == Seq(1, 2, 3))
   }
 
   test("Writing a sequence of doubles") {
-    assert(Object.from(Seq[Double](1.1, 2.2, 3.3)).value.asInstanceOf[Array[Double]].toSeq == Seq(1.1, 2.2, 3.3))
+    assert(Object.from(Seq[Double](1.1, 2.2, 3.3)).value.asInstanceOf[util.List[Double]].asScala == Seq(1.1, 2.2, 3.3))
   }
 
   test("Writing a sequence of strings") {
-    assert(Object.from(Seq[String]("hello", "world")).value.asInstanceOf[Array[String]].toSeq == Seq("hello", "world"))
+    assert(Object.from(Seq[String]("hello", "world")).value.asInstanceOf[util.List[String]].asScala == Seq("hello", "world"))
   }
 
   test("Writing a sequence of arrays") {
-    assert(Object.from(Seq[Array[Int]](Array(1), Array(2))).value.asInstanceOf[Array[Array[Int]]].map(_.toSeq).toSeq == Seq(Seq(1), Seq(2)))
+    assert(Object.from(Seq[Array[Int]](Array(1), Array(2))).value.asInstanceOf[util.List[Array[Int]]].asScala.map(_.toSeq) == Seq(Seq(1), Seq(2)))
   }
 
   test("Writing a sequence of sequences") {
-    assert(Object.from(Seq[Seq[Int]](Seq(1), Seq(2))).value.asInstanceOf[Array[java.lang.Object]].map(_.asInstanceOf[Array[Int]].toSeq)
-      .toSeq == Seq(Seq(1), Seq(2)))
+    assert(Object.from(Seq[Seq[Int]](Seq(1), Seq(2))).value.asInstanceOf[util.List[java.lang.Object]].asScala
+      .map(_.asInstanceOf[util.List[Int]].asScala) == Seq(Seq(1), Seq(2)))
   }
 
   test("Writing a sequence of Python objects preserves original objects") {
@@ -78,9 +80,9 @@ class ObjectWriterTest extends FunSuite {
   }
 
   test("Writing a map of int to int") {
-    val written = Object.from(Map(1 -> 2, 2 -> 3)).value.asInstanceOf[java.util.Map[Int, Int]]
-    assert(written.get(1) == 2)
-    assert(written.get(2) == 3)
+    val written = Object.from(Map(1 -> 2, 2 -> 3)).value.asInstanceOf[java.util.Map[Long, Long]]
+    assert(written.get(1L) == 2)
+    assert(written.get(2L) == 3)
   }
 
   test("Writing a tuple") {
