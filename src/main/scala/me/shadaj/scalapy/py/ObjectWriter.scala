@@ -1,13 +1,9 @@
 package me.shadaj.scalapy.py
 
-import java.util
-
 import jep.Jep
 
 import scala.collection.mutable
 import scala.reflect.ClassTag
-
-import scala.collection.JavaConverters._
 
 abstract class ObjectWriter[T] {
   def write(v: T)(implicit jep: Jep): Either[Any, Object]
@@ -95,16 +91,19 @@ object ObjectWriter extends ObjectTupleWriters {
     }
 
     override def write(v: C)(implicit jep: Jep): Either[Any, Object] = {
-      val coll = ev1(v)
       val elemClass = implicitly[ClassTag[T]].runtimeClass
       if (isNativeWritable(elemClass)) {
-        Left(seqAsJavaList(coll))
+        if (v.isInstanceOf[Array[_]]) {
+          Left(v)
+        } else {
+          Left(v.toArray[T])
+        }
       } else {
         val writtenElems = v.view.map { e =>
           tWriter.write(e)
         }
 
-        if (writtenElems.forall(_.isLeft)) Left(seqAsJavaList(writtenElems.map(_.left.get)))
+        if (writtenElems.forall(_.isLeft)) Left(writtenElems.map(_.left.get).toArray)
         else {
           val writtenObjects = writtenElems.map(_.left.map(Object.populateWith).merge.expr)
           Right(Object(writtenObjects.mkString("[", ",", "]")))
