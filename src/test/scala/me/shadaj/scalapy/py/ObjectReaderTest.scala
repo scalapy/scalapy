@@ -59,6 +59,13 @@ class ObjectReaderTest extends FunSuite {
     assert(Object.from(Seq[Seq[Int]](Seq(1), Seq(2))).as[Seq[Seq[Int]]] == Seq(Seq(1), Seq(2)))
   }
 
+  test("Reading a sequence of objects preserves original object") {
+    val datetimeExpr = module("datetime").moduleName
+    val datesSeq = Object(s"[$datetimeExpr.date.today(), $datetimeExpr.date.today().replace(year = 1000)]").as[Seq[Object]]
+    assert(datesSeq.head.asInstanceOf[DynamicObject].year.as[Int] > 2000)
+    assert(datesSeq.last.asInstanceOf[DynamicObject].year.as[Int] == 1000)
+  }
+
   test("Reading a map of int to int") {
     val read = Object.from(Map(1 -> 2, 2 -> 3)).as[Map[Int, Int]]
     assert(read(1) == 2)
