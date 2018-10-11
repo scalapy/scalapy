@@ -2,7 +2,7 @@ organization := "me.shadaj"
 
 name := "scalapy"
 
-scalaVersion := "2.12.6"
+scalaVersion := "2.12.7"
 
 sourceGenerators in Compile += Def.task {
   val fileToWrite = (sourceManaged in Compile).value / "ObjectTupleReaders.scala"
@@ -56,10 +56,9 @@ sourceGenerators in Compile += Def.task  {
 }
 
 libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
-libraryDependencies += "black.ninia" % "jep" % "3.7.0"
+libraryDependencies += "black.ninia" % "jep" % "3.8.2"
 
 libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.3" % Test
 
 fork in Test := true
-
-javaOptions in Test += s"-Djava.library.path=${sys.env.getOrElse("JEP_PATH", "/usr/local/lib/python3.6/site-packages/jep")}"
+javaOptions in Test += s"-Djava.library.path=${sys.env.getOrElse("JEP_PATH", "/usr/local/lib/python3.7/site-packages/jep")}"

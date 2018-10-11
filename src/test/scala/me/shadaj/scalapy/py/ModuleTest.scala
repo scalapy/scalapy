@@ -1,14 +1,13 @@
 package me.shadaj.scalapy.py
 
 import jep.Jep
-import org.scalatest.FunSuite
+import org.scalatest.{FunSuite, BeforeAndAfterAll}
 
 class StringModuleFacade(o: Object)(implicit jep: Jep) extends ObjectFacade(o) {
   def digits: String = native
 }
 
-
-class ModuleTest extends FunSuite {
+class ModuleTest extends FunSuite with BeforeAndAfterAll {
   implicit val jep = new Jep()
 
   test("Can read value from module") {
@@ -18,4 +17,6 @@ class ModuleTest extends FunSuite {
   test("Can convert to facade and call methods") {
     assert(module("string").as[StringModuleFacade].digits == "0123456789")
   }
+
+  override def afterAll = jep.close()
 }
