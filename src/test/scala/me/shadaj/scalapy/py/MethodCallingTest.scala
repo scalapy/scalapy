@@ -1,13 +1,13 @@
 package me.shadaj.scalapy.py
 
 import jep.Jep
-import org.scalatest.FunSuite
+import org.scalatest.{FunSuite, BeforeAndAfterAll}
 
 class StringObjectFacade(obj: Object)(implicit jep: Jep) extends ObjectFacade(obj) {
   def replace(old: String, newValue: String): String = native
 }
 
-class MethodCallingTest extends FunSuite {
+class MethodCallingTest extends FunSuite with BeforeAndAfterAll {
   implicit val jep = new Jep()
 
   test("Can access global variables") {
@@ -34,4 +34,6 @@ class MethodCallingTest extends FunSuite {
       assert(file.asInstanceOf[DynamicObject].encoding.as[String] == "UTF-8")
     }
   }
+
+  override def afterAll = jep.close()
 }

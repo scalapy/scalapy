@@ -3,11 +3,11 @@ package me.shadaj.scalapy.py
 import java.util
 
 import jep.Jep
-import org.scalatest.FunSuite
+import org.scalatest.{FunSuite, BeforeAndAfterAll}
 
 import scala.collection.JavaConverters._
 
-class ObjectWriterTest extends FunSuite {
+class ObjectWriterTest extends FunSuite with BeforeAndAfterAll {
   implicit val jep = new Jep()
 
   test("Writing a none value") {
@@ -93,4 +93,6 @@ class ObjectWriterTest extends FunSuite {
     val tupleValue = Object.from((1, 2)).value
     assert(tupleValue.asInstanceOf[util.List[Any]].toArray.toSeq == Seq(1, 2))
   }
+
+  override def afterAll = jep.close()
 }

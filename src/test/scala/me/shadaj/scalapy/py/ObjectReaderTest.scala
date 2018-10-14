@@ -1,9 +1,9 @@
 package me.shadaj.scalapy.py
 
 import jep.Jep
-import org.scalatest.FunSuite
+import org.scalatest.{FunSuite, BeforeAndAfterAll}
 
-class ObjectReaderTest extends FunSuite {
+class ObjectReaderTest extends FunSuite with BeforeAndAfterAll {
   implicit val jep = new Jep()
 
   test("Reading a boolean") {
@@ -75,4 +75,6 @@ class ObjectReaderTest extends FunSuite {
   test("Reading a tuple") {
     assert(Object.from((1, 2)).as[(Int, Int)] == (1, 2))
   }
+
+  override def afterAll = jep.close()
 }
