@@ -1,7 +1,7 @@
 organization := "me.shadaj"
 
 name := "scalapy"
-
+version:="0.3-SNAPSHOT"
 scalaVersion := "2.12.7"
 
 sourceGenerators in Compile += Def.task {

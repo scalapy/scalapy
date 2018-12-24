@@ -16,7 +16,9 @@ class DynamicObject private[py](varId: Int)(implicit jep: Jep) extends Object(va
   def selectDynamic(value: String): DynamicObject = {
     Object(s"$expr.$value").asInstanceOf[DynamicObject]
   }
-
+  def updateDynamic(name: String)(value: Any) {
+    Object(s"$expr.$name = $value")
+  }
   def arrayAccess(key: Object): DynamicObject = {
     Object(s"$expr[${key.expr}]").asInstanceOf[DynamicObject]
   }
