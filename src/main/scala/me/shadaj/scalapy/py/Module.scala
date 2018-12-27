@@ -22,14 +22,8 @@ class Module private[py](private[py] val moduleName: String)(implicit jep: Jep) 
     }
   }
 
-  def selectDynamic(value: String): DynamicObject = {
-    Object(s"$moduleName.$value").asInstanceOf[DynamicObject]
-  }
-
-  def updateDynamic(name: String)(value: Object): Unit = {
-    jep.eval(s"$moduleName.$name = ${value.expr}")
-  }
-
+  def selectDynamic(value: String): DynamicObject = Object(s"$moduleName.$value").asInstanceOf[DynamicObject]
+  def updateDynamic(name: String)(value: Object): Unit = jep.eval(s"$moduleName.$name = ${value.expr}")
   override def finalize(): Unit = {
     jep.eval(s"del $moduleName")
   }
@@ -41,18 +35,18 @@ class Module private[py](private[py] val moduleName: String)(implicit jep: Jep) 
 
 object Module {
   private var nextCounter: Int = 0
-  def apply(module: String)(implicit jep: Jep): Module = {
-    val moduleName = s"spy_m_$nextCounter"
-    nextCounter += 1
+  private val modnamePrefix = "spy_m_"
 
+  def apply(module: String)(implicit jep: Jep): Module = {
+    val moduleName = s"$modnamePrefix$nextCounter"
+    nextCounter += 1
     jep.eval(s"import $module as $moduleName")
     new Module(moduleName)
   }
 
   def apply(module: String, subname: String)(implicit jep: Jep): Module = {
-    val moduleName = s"spy_m_$nextCounter"
+    val moduleName = s"$modnamePrefix$nextCounter"
     nextCounter += 1
-
     jep.eval(s"from $module import $subname as $moduleName")
     new Module(moduleName)
   }

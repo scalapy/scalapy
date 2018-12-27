@@ -5,17 +5,7 @@ import jep.{Jep, NDArray}
 import scala.reflect.ClassTag
 import scala.collection.JavaConverters._
 
-abstract class ValueAndRequestObject(getValue: => Any) {
-  final def value: Any = getValue
 
-  protected def getObject: Object
-
-  private var objectCache: Object = null
-  final def requestObject: Object = {
-    if (objectCache == null) objectCache = getObject
-    objectCache
-  }
-}
 
 trait ObjectReader[T] {
   def read(r: ValueAndRequestObject)(implicit jep: Jep): T
@@ -161,8 +151,9 @@ object ObjectReader extends ObjectTupleReaders {
           arr.zipWithIndex
         case arrList: java.util.List[_] =>
           arrList.toArray.zipWithIndex
-        case ndArr: NDArray[Array[_]] =>
-          ndArr.getData.zipWithIndex
+//        case ndArr: NDArray[Array[_]] =>
+//        case ndArr: NDArray[Array[_]] =>
+//          ndArr.getData.zipWithIndex
       }).map { case (v, i) =>
         reader.read(new ValueAndRequestObject(v) {
           override def getObject: Object = r.requestObject.asInstanceOf[DynamicObject].arrayAccess(i)

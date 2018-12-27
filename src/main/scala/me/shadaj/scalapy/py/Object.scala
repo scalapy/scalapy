@@ -6,16 +6,8 @@ import scala.language.dynamics
 import scala.collection.mutable
 
 class Object(val variableId: Int)(implicit jep: Jep) { self =>
-  final val expr = s"spy_o_$variableId"
-
-  private var cleaned = false
-
-/*
-  if (Object.allocatedObjects.nonEmpty) {
-    Object.allocatedObjects.head += this
-  }
-*/
-
+  import Object._
+  final val expr = s"$objnmPrefix$variableId"
   def value: Any = jep.getValue(expr)
 
   override def toString: String = {
@@ -23,11 +15,13 @@ class Object(val variableId: Int)(implicit jep: Jep) { self =>
   }
 
   override def finalize(): Unit = {
+    jep.eval(s"del $expr")
+/*
     if (!cleaned) {
-//      println(s"finalized var ${expr}")
-      jep.eval(s"del $expr")
+      //      println(s"finalized var ${expr}")
       cleaned = true
     }
+*/
   }
 
   def as[T: ObjectReader]: T = implicitly[ObjectReader[T]].read(new ValueAndRequestObject(jep.getValue(expr)) {
@@ -36,25 +30,28 @@ class Object(val variableId: Int)(implicit jep: Jep) { self =>
 }
 
 object Object {
+  val objnmPrefix = "spy_o_"
   private var nextCounter: Int = 0
 //  private[py] var allocatedObjects: List[mutable.Queue[Object]] = List.empty
-
-  def empty(implicit jep: Jep): Object = {
+ // memory leak here!
+  def empty(implicit jep: Jep): DynamicObject = {
     val variableName = nextCounter
     nextCounter += 1
 
     new DynamicObject(variableName)
   }
 
-  def apply(stringToEval: String)(implicit jep: Jep): Object = {
+  def apply(stringToEval: String)(implicit jep: Jep): DynamicObject = {
     val variableName = nextCounter
     nextCounter += 1
 
-    jep.eval(s"spy_o_$variableName = $stringToEval")
-
+    //todo fix mem leak break things
+    jep.eval(s"$objnmPrefix$variableName = $stringToEval")
+//    jep.eval(stringToEval)
     new DynamicObject(variableName)
   }
 
+/*
   /**
    * Constructs a Python value by populating a generated variable, usually via Jep calls.
    * @param populateVariable a function that populates a variable given its name and the Jep instance
@@ -65,11 +62,20 @@ object Object {
     
     ret
   }
+*/
 
-  def populateWith(v: Any)(implicit jep: Jep): Object = {
+  def populateWith(v: Any)(implicit jep: Jep): DynamicObject = {
+
+    val ret = Object.empty
+//    populateVariable(ret.expr, jep)
+    jep.set(ret.expr,v)
+    ret
+
+/*
     apply { (variable, j) =>
       j.set(variable, v)
     }
+*/
   }
 
   implicit def from[T](v: T)(implicit writer: ObjectWriter[T], jep: Jep): Object = {

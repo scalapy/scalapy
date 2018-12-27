@@ -3,57 +3,41 @@ package me.shadaj.scalapy.py
 import jep.Jep
 
 import scala.language.dynamics
+object DynamicObject {}
+class DynamicObject(varId: Int)(implicit jep: Jep)
+    extends Object(varId)
+    with scala.Dynamic {
+  val uniaryOp = { s: String =>
+    Object(s"+$s")
+  }
+  def binaryOp(opNm: String, obj2: Object) = Object(s"$expr + (${obj2.expr})")
+  def applyDynamic(method: String)(params: Object*): DynamicObject =
+    Object(s"$expr.$method(${params.map(_.expr).mkString(",")})")
 
-class DynamicObject private[py](varId: Int)(implicit jep: Jep) extends Object(varId) with scala.Dynamic {
-  def applyDynamic(method: String)(params: Object*): DynamicObject = {
-    Object(s"$expr.$method(${params.map(_.expr).mkString(",")})").asInstanceOf[DynamicObject]
+  def applyDynamicNamed(method: String)(
+      params: (String, Object)*): DynamicObject = {
+    Object(
+      s"$expr.$method(${params.map(t => s"${t._1} = ${t._2.expr}").mkString(",")})")
+
   }
 
-  def applyDynamicNamed(method: String)(params: (String, Object)*): DynamicObject = {
-    Object(s"$expr.$method(${params.map(t => s"${t._1} = ${t._2.expr}").mkString(",")})").asInstanceOf[DynamicObject]
-  }
+  def selectDynamic(value: String): DynamicObject = Object(s"$expr.$value")
 
-  def selectDynamic(value: String): DynamicObject = {
-    Object(s"$expr.$value").asInstanceOf[DynamicObject]
-  }
-  def updateDynamic(method: String)(value: Any) {
+  def updateDynamic(method: String)(value: Any) =
     Object(s"$expr.$method = $value")
-  }
 
-  def mutateDynamicVar(value: Any) {
-    println(s"mutateDynamicVar : $expr = $value")
-    Object(s"$expr = $value")
-  }
+  def arrayAccess(key: Object): DynamicObject =
+    Object(s"$expr[${key.expr}]")
 
-  def arrayAccess(key: Object): DynamicObject = {
-    Object(s"$expr[${key.expr}]").asInstanceOf[DynamicObject]
-  }
-
-  def unary_+(): DynamicObject = {
-    Object(s"+$expr").asInstanceOf[DynamicObject]
-  }
+  def unary_+(): DynamicObject = Object(s"+$expr")
 
   def unary_-(): DynamicObject = {
-    Object(s"-$expr").asInstanceOf[DynamicObject]
+    Object(s"-$expr")
   }
 
-  def +(that: Object): DynamicObject = {
-    Object(s"$expr + (${that.expr})").asInstanceOf[DynamicObject]
-  }
-
-  def -(that: Object): DynamicObject = {
-    Object(s"$expr - (${that.expr})").asInstanceOf[DynamicObject]
-  }
-
-  def *(that: Object): DynamicObject = {
-    Object(s"$expr * (${that.expr})").asInstanceOf[DynamicObject]
-  }
-
-  def /(that: Object): DynamicObject = {
-    Object(s"$expr / (${that.expr})").asInstanceOf[DynamicObject]
-  }
-
-  def %(that: Object): DynamicObject = {
-    Object(s"$expr % (${that.expr})").asInstanceOf[DynamicObject]
-  }
+  def +(that: Object): DynamicObject = binaryOp("+", that)
+  def -(that: Object): DynamicObject = binaryOp("-", that)
+  def *(that: Object): DynamicObject = binaryOp("*", that)
+  def /(that: Object): DynamicObject = binaryOp("/", that)
+  def %(that: Object): DynamicObject = binaryOp("%", that)
 }

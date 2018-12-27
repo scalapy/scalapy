@@ -5,7 +5,7 @@ import jep.Jep
 import scala.language.dynamics
 
 class Global private[py](implicit jep: Jep) extends scala.Dynamic {
-  def applyDynamic(method: String)(params: Object*): Object = {
+  def applyDynamic(method: String)(params: Object*): DynamicObject = {
     Object(s"$method(${params.map(_.expr).mkString(",")})")
   }
 
@@ -13,7 +13,7 @@ class Global private[py](implicit jep: Jep) extends scala.Dynamic {
     Object(s"$method(${params.map(t => s"${t._1} = ${t._2.expr}").mkString(",")})").asInstanceOf[DynamicObject]
   }
 
-  def selectDynamic(value: String): Object = {
+  def selectDynamic(value: String): DynamicObject = {
     Object(value)
   }
 }
