@@ -10,9 +10,11 @@ class Object(val variableId: Int)(implicit jep: Jep) { self =>
 
   private var cleaned = false
 
+/*
   if (Object.allocatedObjects.nonEmpty) {
     Object.allocatedObjects.head += this
   }
+*/
 
   def value: Any = jep.getValue(expr)
 
@@ -22,6 +24,7 @@ class Object(val variableId: Int)(implicit jep: Jep) { self =>
 
   override def finalize(): Unit = {
     if (!cleaned) {
+//      println(s"finalized var ${expr}")
       jep.eval(s"del $expr")
       cleaned = true
     }
@@ -34,7 +37,7 @@ class Object(val variableId: Int)(implicit jep: Jep) { self =>
 
 object Object {
   private var nextCounter: Int = 0
-  private[py] var allocatedObjects: List[mutable.Queue[Object]] = List.empty
+//  private[py] var allocatedObjects: List[mutable.Queue[Object]] = List.empty
 
   def empty(implicit jep: Jep): Object = {
     val variableName = nextCounter

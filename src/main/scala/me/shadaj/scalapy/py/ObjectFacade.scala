@@ -12,7 +12,7 @@ class ObjectFacade(originalObject: Object)(implicit jep: Jep) extends Object(ori
   protected def native[T]: T = macro ObjectFacadeImpl.native_impl[T]
   protected def nativeNamed[T]: T = macro ObjectFacadeImpl.native_named_impl[T]
 
-  override def finalize(): Unit = {} // let the originalObject handle this
+//  override def finalize(): Unit = {} // let the originalObject handle this
 }
 
 object ObjectFacadeImpl {

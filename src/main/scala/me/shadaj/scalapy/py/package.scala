@@ -23,6 +23,7 @@ package object py {
     ret
   }
 
+/*
   def local(f: => Unit): Unit = {
     py.Object.allocatedObjects = mutable.Queue.empty[py.Object] :: py.Object.allocatedObjects
     f
@@ -37,4 +38,5 @@ package object py {
 
     py.Object.allocatedObjects = py.Object.allocatedObjects.tail
   }
+*/
 }
