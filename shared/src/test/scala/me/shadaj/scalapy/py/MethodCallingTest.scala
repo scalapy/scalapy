@@ -3,13 +3,11 @@ package me.shadaj.scalapy.py
 import jep.Jep
 import org.scalatest.{FunSuite, BeforeAndAfterAll}
 
-class StringObjectFacade(obj: Object)(implicit jep: Jep) extends ObjectFacade(obj) {
+class StringObjectFacade(obj: Object) extends ObjectFacade(obj) {
   def replace(old: String, newValue: String): String = native
 }
 
 class MethodCallingTest extends FunSuite with BeforeAndAfterAll {
-  implicit val jep = new Jep()
-
   test("Can access global variables") {
     val obj = Object("123")
     assert(global.selectDynamic(obj.expr).as[Int] == 123)
@@ -30,10 +28,8 @@ class MethodCallingTest extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Can use with statement with file object") {
-    `with`(global.open("README.md", "r")) { file =>
+    `with`(global.open("../README.md", "r")) { file =>
       assert(file.asInstanceOf[DynamicObject].encoding.as[String] == "UTF-8")
     }
   }
-
-  override def afterAll = jep.close()
 }

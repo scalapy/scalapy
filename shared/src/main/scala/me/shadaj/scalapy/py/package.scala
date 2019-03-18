@@ -7,16 +7,25 @@ import scala.collection.mutable
 import scala.concurrent.Future
 
 package object py {
-  def module(name: String)(implicit jep: Jep) = Module(name)
-  def module(name: String, subname: String)(implicit jep: Jep) = Module(name, subname)
+  private var _interpreter: Jep = null
+  def interpreter = {
+    if (_interpreter == null) {
+      _interpreter = new Jep()
+    }
+    
+    _interpreter
+  }
+  
+  def module(name: String) = Module(name)
+  def module(name: String, subname: String) = Module(name, subname)
 
-  def global(implicit jep: Jep) = new Global()
+  val global = new Global()
 
   object None
 
   type NoneOr[T] = None.type | T
 
-  def `with`[T <: py.Object, O](ref: T)(withValue: T => O)(implicit jep: Jep): O = {
+  def `with`[T <: py.Object, O](ref: T)(withValue: T => O): O = {
     ref.asInstanceOf[DynamicObject].__enter__()
     val ret = withValue(ref)
     ref.asInstanceOf[DynamicObject].__exit__(None, None, None)

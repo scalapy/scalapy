@@ -18,22 +18,22 @@ abstract class ValueAndRequestObject(getValue: => Any) {
 }
 
 trait ObjectReader[T] {
-  def read(r: ValueAndRequestObject)(implicit jep: Jep): T
+  def read(r: ValueAndRequestObject): T
 }
 
 object ObjectReader extends ObjectTupleReaders {
   implicit val wrapperReader = new ObjectReader[Object] {
-    def read(r: ValueAndRequestObject)(implicit jep: Jep): Object = new DynamicObject(r.requestObject.variableId)
+    def read(r: ValueAndRequestObject): Object = new DynamicObject(r.requestObject.variableId)
   }
 
   implicit val wrapperDynReader = new ObjectReader[DynamicObject] {
-    def read(r: ValueAndRequestObject)(implicit jep: Jep): DynamicObject =
+    def read(r: ValueAndRequestObject): DynamicObject =
       new DynamicObject(r.requestObject.variableId)
   }
 
   implicit def facadeReader[F <: ObjectFacade](implicit classTag: ClassTag[F]): ObjectReader[F] = new ObjectReader[F] {
-    override def read(r: ValueAndRequestObject)(implicit jep: Jep): F = {
-      classTag.runtimeClass.getConstructor(classOf[Object], classOf[Jep]).newInstance(new DynamicObject(r.requestObject.variableId), jep).asInstanceOf[F]
+    override def read(r: ValueAndRequestObject): F = {
+      classTag.runtimeClass.getConstructor(classOf[Object]).newInstance(new DynamicObject(r.requestObject.variableId)).asInstanceOf[F]
     }
   }
 
@@ -112,31 +112,31 @@ object ObjectReader extends ObjectTupleReaders {
   }
 
   implicit val unitReader = new ObjectReader[Unit] {
-    def read(r: ValueAndRequestObject)(implicit jep: Jep): Unit = ()
+    def read(r: ValueAndRequestObject): Unit = ()
   }
 
   implicit val byteReader = new ObjectReader[Byte] {
-    def read(r: ValueAndRequestObject)(implicit jep: Jep): Byte = toByte(r.value)
+    def read(r: ValueAndRequestObject): Byte = toByte(r.value)
   }
 
   implicit val intReader = new ObjectReader[Int] {
-    def read(r: ValueAndRequestObject)(implicit jep: Jep): Int = toInt(r.value)
+    def read(r: ValueAndRequestObject): Int = toInt(r.value)
   }
 
   implicit val longReader = new ObjectReader[Long] {
-    def read(r: ValueAndRequestObject)(implicit jep: Jep): Long = toLong(r.value)
+    def read(r: ValueAndRequestObject): Long = toLong(r.value)
   }
 
   implicit val doubleReader = new ObjectReader[Double] {
-    def read(r: ValueAndRequestObject)(implicit jep: Jep): Double = toDouble(r.value)
+    def read(r: ValueAndRequestObject): Double = toDouble(r.value)
   }
 
   implicit val floatReader = new ObjectReader[Float] {
-    def read(r: ValueAndRequestObject)(implicit jep: Jep): Float = toFloat(r.value)
+    def read(r: ValueAndRequestObject): Float = toFloat(r.value)
   }
 
   implicit val booleanReader = new ObjectReader[Boolean] {
-    def read(r: ValueAndRequestObject)(implicit jep: Jep): Boolean = {
+    def read(r: ValueAndRequestObject): Boolean = {
       r.value match {
         case b: Boolean =>
           b
@@ -151,11 +151,11 @@ object ObjectReader extends ObjectTupleReaders {
   }
 
   implicit val stringReader = new ObjectReader[String] {
-    def read(r: ValueAndRequestObject)(implicit jep: Jep): String = r.value.asInstanceOf[String]
+    def read(r: ValueAndRequestObject): String = r.value.asInstanceOf[String]
   }
 
   implicit def seqReader[T](implicit reader: ObjectReader[T]): ObjectReader[Seq[T]] = new ObjectReader[Seq[T]] {
-    def read(r: ValueAndRequestObject)(implicit jep: Jep) = {
+    def read(r: ValueAndRequestObject) = {
       (r.value match {
         case arr: Array[_] =>
           arr.zipWithIndex
@@ -172,7 +172,7 @@ object ObjectReader extends ObjectTupleReaders {
   }
 
   implicit def mapReader[I, O](implicit readerI: ObjectReader[I], readerO: ObjectReader[O]): ObjectReader[Map[I, O]] = new ObjectReader[Map[I, O]] {
-    override def read(r: ValueAndRequestObject)(implicit jep: Jep): Map[I, O] = {
+    override def read(r: ValueAndRequestObject): Map[I, O] = {
       r.value.asInstanceOf[java.util.Map[_, _]].asScala.map { case (k, v) =>
         readerI.read(new ValueAndRequestObject(k) {
           override def getObject: Object =

@@ -8,8 +8,6 @@ import org.scalatest.{FunSuite, BeforeAndAfterAll}
 import scala.collection.JavaConverters._
 
 class ObjectWriterTest extends FunSuite with BeforeAndAfterAll {
-  implicit val jep = new Jep()
-
   test("Writing a none value") {
     assert(Object.from(None).value == null)
     assert(Object.from(None).toString == "None") // make sure it is actually a Python `None`
@@ -80,7 +78,7 @@ class ObjectWriterTest extends FunSuite with BeforeAndAfterAll {
 
   test("Writing a sequence of Python objects preserves original objects") {
     val objectsExpr = Object.from(Seq[Object](Object("object()"), Object("object()"))).expr
-    assert(jep.getValue(s"str(type($objectsExpr[0]))").asInstanceOf[String] == "<class 'object'>")
+    assert(interpreter.getValue(s"str(type($objectsExpr[0]))").asInstanceOf[String] == "<class 'object'>")
   }
 
   test("Writing a map of int to int") {
@@ -93,6 +91,4 @@ class ObjectWriterTest extends FunSuite with BeforeAndAfterAll {
     val tupleValue = Object.from((1, 2)).value
     assert(tupleValue.asInstanceOf[util.List[Any]].toArray.toSeq == Seq(1, 2))
   }
-
-  override def afterAll = jep.close()
 }

@@ -1,5 +1,3 @@
 package me.shadaj.scalapy.py
 
-import jep.Jep
-
-class PyFunction(o: Object)(implicit jep: Jep) extends ObjectFacade(o)
+class PyFunction(o: Object) extends ObjectFacade(o)

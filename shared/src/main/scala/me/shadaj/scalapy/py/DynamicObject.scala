@@ -4,7 +4,7 @@ import jep.Jep
 
 import scala.language.dynamics
 
-class DynamicObject private[py](varId: Int)(implicit jep: Jep) extends Object(varId) with scala.Dynamic {
+class DynamicObject private[py](varId: Int) extends Object(varId) with scala.Dynamic {
   def applyDynamic(method: String)(params: Object*): DynamicObject = {
     Object(s"$expr.$method(${params.map(_.expr).mkString(",")})").asInstanceOf[DynamicObject]
   }

@@ -17,7 +17,7 @@ lazy val scalaPy =
              |})""".stripMargin).mkString(", ")
         s"""implicit def tuple${n}Reader[${(1 to n).map(t => s"T$t").mkString(", ")}](implicit ${(1 to n).map(t => s"r$t: ObjectReader[T$t]").mkString(", ")}): ObjectReader[(${(1 to n).map(t => s"T$t").mkString(", ")})] = {
            |  new ObjectReader[(${(1 to n).map(t => s"T$t").mkString(", ")})] {
-           |    override def read(or: ValueAndRequestObject)(implicit jep: Jep) = {
+           |    override def read(or: ValueAndRequestObject) = {
            |      val orArr = or.value.asInstanceOf[java.util.List[Any]].toArray
            |      ($tupleElements)
            |    }
@@ -40,7 +40,7 @@ lazy val scalaPy =
       val methods = (2 to 22).map { n =>
         s"""implicit def tuple${n}Writer[${(1 to n).map(t => s"T$t").mkString(", ")}](implicit ${(1 to n).map(t => s"r$t: ObjectWriter[T$t]").mkString(", ")}): ObjectWriter[(${(1 to n).map(t => s"T$t").mkString(", ")})] = {
            |  new ObjectWriter[(${(1 to n).map(t => s"T$t").mkString(", ")})] {
-           |    override def write(v: (${(1 to n).map(t => s"T$t").mkString(", ")}))(implicit jep: Jep): Either[Any, Object] = {
+           |    override def write(v: (${(1 to n).map(t => s"T$t").mkString(", ")})): Either[Any, Object] = {
            |      Right(Object("(" + ${(1 to n).map(t => s"r$t.write(v._" + t + ").left.map(Object.populateWith).merge.expr").mkString("+ \",\" +")} + ")"))
            |    }
            |  }

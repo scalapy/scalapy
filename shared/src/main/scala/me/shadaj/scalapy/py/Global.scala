@@ -4,7 +4,7 @@ import jep.Jep
 
 import scala.language.dynamics
 
-class Global private[py](implicit jep: Jep) extends scala.Dynamic {
+class Global private[py]() extends scala.Dynamic {
   def applyDynamic(method: String)(params: Object*): Object = {
     Object(s"$method(${params.map(_.expr).mkString(",")})")
   }

@@ -4,8 +4,6 @@ import jep.Jep
 import org.scalatest.{FunSuite, BeforeAndAfterAll}
 
 class ObjectReaderTest extends FunSuite with BeforeAndAfterAll {
-  implicit val jep = new Jep()
-
   test("Reading a boolean") {
     assert(Object.from(false).as[Boolean] == false)
     assert(Object.from(true).as[Boolean] == true)
@@ -75,6 +73,4 @@ class ObjectReaderTest extends FunSuite with BeforeAndAfterAll {
   test("Reading a tuple") {
     assert(Object.from((1, 2)).as[(Int, Int)] == (1, 2))
   }
-
-  override def afterAll = jep.close()
 }
