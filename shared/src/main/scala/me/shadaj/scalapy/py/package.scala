@@ -29,11 +29,9 @@ package object py {
 
     val toClean = py.Object.allocatedObjects.head
 
-    Future {
-      toClean.foreach { c =>
-        c.finalize()
-      }
-    }(scala.concurrent.ExecutionContext.Implicits.global)
+    toClean.foreach { c =>
+      c.finalize()
+    }
 
     py.Object.allocatedObjects = py.Object.allocatedObjects.tail
   }

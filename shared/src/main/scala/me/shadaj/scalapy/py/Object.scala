@@ -12,7 +12,9 @@ class Object(val variableId: Int)(implicit jep: Jep) { self =>
 
   if (Object.allocatedObjects.nonEmpty) {
     Object.allocatedObjects.head += this
-  }
+  }/* else if (isNative) {
+    println(s"Warning: the object $this was allocated into a global space, which means it will not be garbage collected in Scala Native")
+  }*/
 
   def value: Any = jep.getValue(expr)
 
