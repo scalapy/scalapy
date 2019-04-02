@@ -18,7 +18,7 @@ lazy val scalaPy =
         s"""implicit def tuple${n}Reader[${(1 to n).map(t => s"T$t").mkString(", ")}](implicit ${(1 to n).map(t => s"r$t: ObjectReader[T$t]").mkString(", ")}): ObjectReader[(${(1 to n).map(t => s"T$t").mkString(", ")})] = {
            |  new ObjectReader[(${(1 to n).map(t => s"T$t").mkString(", ")})] {
            |    override def read(or: ValueAndRequestObject) = {
-           |      val orArr = or.value.asInstanceOf[java.util.List[Any]].toArray
+           |      val orArr = or.value.getSeq
            |      ($tupleElements)
            |    }
            |  }
@@ -39,7 +39,7 @@ lazy val scalaPy =
       val methods = (2 to 22).map { n =>
         s"""implicit def tuple${n}Writer[${(1 to n).map(t => s"T$t").mkString(", ")}](implicit ${(1 to n).map(t => s"r$t: ObjectWriter[T$t]").mkString(", ")}): ObjectWriter[(${(1 to n).map(t => s"T$t").mkString(", ")})] = {
            |  new ObjectWriter[(${(1 to n).map(t => s"T$t").mkString(", ")})] {
-           |    override def write(v: (${(1 to n).map(t => s"T$t").mkString(", ")})): Either[Any, Object] = {
+           |    override def write(v: (${(1 to n).map(t => s"T$t").mkString(", ")})): Either[PyValue, Object] = {
            |      Right(Object("(" + ${(1 to n).map(t => s"r$t.write(v._" + t + ").left.map(Object.populateWith).merge.expr").mkString("+ \",\" +")} + ")"))
            |    }
            |  }
@@ -56,12 +56,16 @@ lazy val scalaPy =
       Seq(fileToWrite)
     }
   ).settings(
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.0.3" % Test
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.0-SNAP10" % Test
   ).jvmSettings(
     libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value,
     libraryDependencies += "black.ninia" % "jep" % "3.8.2",
+    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.0" % Test,
     fork in Test := true,
     javaOptions in Test += s"-Djava.library.path=${sys.env.getOrElse("JEP_PATH", "/usr/local/lib/python3.7/site-packages/jep")}"
   ).nativeSettings(
-    scalaVersion := "2.11.12"
+    scalaVersion := "2.11.12",
+    libraryDependencies += "com.github.lolgab" %%% "scalacheck" % "1.14.1" % Test,
+    nativeLinkStubs := true,
+    nativeLinkingOptions += "-L/usr/local/opt/python/Frameworks/Python.framework/Versions/3.7/lib/python3.7/config-3.7m-darwin"
   )

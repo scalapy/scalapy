@@ -1,12 +1,10 @@
 package me.shadaj.scalapy.py
 
-import jep.NDArray
-
 import scala.reflect.ClassTag
 import scala.collection.JavaConverters._
 
-abstract class ValueAndRequestObject(getValue: => Any) {
-  final def value: Any = getValue
+abstract class ValueAndRequestObject(getValue: => PyValue) {
+  final def value: PyValue = getValue
 
   protected def getObject: Object
 
@@ -14,6 +12,24 @@ abstract class ValueAndRequestObject(getValue: => Any) {
   final def requestObject: Object = {
     if (objectCache == null) objectCache = getObject
     objectCache
+  }
+}
+
+object ValueAndRequestObject {
+  def ofAny(anyValue: Any)(get: => Object) = {
+    def pyValue = new PyValue {
+      def getString = anyValue.asInstanceOf[String]
+      def getLong = anyValue.asInstanceOf[Long]
+      def getDouble = anyValue.asInstanceOf[Double]
+      def getBoolean = anyValue.asInstanceOf[Boolean]
+      def getSeq = ???
+
+      def getAny = anyValue
+    }
+    
+    new ValueAndRequestObject(pyValue) {
+      def getObject: Object = get
+    }
   }
 }
 
@@ -116,56 +132,40 @@ object ObjectReader extends ObjectTupleReaders {
   }
 
   implicit val byteReader = new ObjectReader[Byte] {
-    def read(r: ValueAndRequestObject): Byte = toByte(r.value)
+    def read(r: ValueAndRequestObject): Byte = toByte(r.value.getLong)
   }
 
   implicit val intReader = new ObjectReader[Int] {
-    def read(r: ValueAndRequestObject): Int = toInt(r.value)
+    def read(r: ValueAndRequestObject): Int = toInt(r.value.getLong)
   }
 
   implicit val longReader = new ObjectReader[Long] {
-    def read(r: ValueAndRequestObject): Long = toLong(r.value)
+    def read(r: ValueAndRequestObject): Long = toLong(r.value.getLong)
   }
 
   implicit val doubleReader = new ObjectReader[Double] {
-    def read(r: ValueAndRequestObject): Double = toDouble(r.value)
+    def read(r: ValueAndRequestObject): Double = toDouble(r.value.getDouble)
   }
 
   implicit val floatReader = new ObjectReader[Float] {
-    def read(r: ValueAndRequestObject): Float = toFloat(r.value)
+    def read(r: ValueAndRequestObject): Float = toFloat(r.value.getDouble)
   }
 
   implicit val booleanReader = new ObjectReader[Boolean] {
     def read(r: ValueAndRequestObject): Boolean = {
-      r.value match {
-        case b: Boolean =>
-          b
-        case s: String =>
-          s == "True"
-        case i: Int if i == 0 || i == 1 =>
-          i == 1
-        case o =>
-          throw new IllegalArgumentException(s"Unknown boolean type for value $o")
-      }
+      r.value.getBoolean
     }
   }
 
   implicit val stringReader = new ObjectReader[String] {
-    def read(r: ValueAndRequestObject): String = r.value.asInstanceOf[String]
+    def read(r: ValueAndRequestObject): String = r.value.getString
   }
 
   implicit def seqReader[T](implicit reader: ObjectReader[T]): ObjectReader[Seq[T]] = new ObjectReader[Seq[T]] {
     def read(r: ValueAndRequestObject) = {
-      (r.value match {
-        case arr: Array[_] =>
-          arr.zipWithIndex
-        case arrList: java.util.List[_] =>
-          arrList.toArray.zipWithIndex
-        case ndArr: NDArray[Array[_]] =>
-          ndArr.getData.zipWithIndex
-      }).map { case (v, i) =>
+      r.value.getSeq.zipWithIndex.map { case (v, i) =>
         reader.read(new ValueAndRequestObject(v) {
-          override def getObject: Object = r.requestObject.asInstanceOf[DynamicObject].arrayAccess(i)
+          def getObject = r.requestObject.asInstanceOf[DynamicObject].arrayAccess(i)
         })
       }.toSeq
     }
@@ -173,14 +173,17 @@ object ObjectReader extends ObjectTupleReaders {
 
   implicit def mapReader[I, O](implicit readerI: ObjectReader[I], readerO: ObjectReader[O]): ObjectReader[Map[I, O]] = new ObjectReader[Map[I, O]] {
     override def read(r: ValueAndRequestObject): Map[I, O] = {
-      r.value.asInstanceOf[java.util.Map[_, _]].asScala.map { case (k, v) =>
-        readerI.read(new ValueAndRequestObject(k) {
-          override def getObject: Object =
+      if (Platform.isNative) ??? else {
+        r.value.getAny.asInstanceOf[java.util.Map[_, _]].asScala.map { case (k, v) =>
+          readerI.read(ValueAndRequestObject.ofAny(k) {
             throw new IllegalAccessException("Cannot read a Python object for the key of a map")
-        }) -> readerO.read(new ValueAndRequestObject(v) {
-          override def getObject: Object = r.requestObject.asInstanceOf[DynamicObject].arrayAccess(Object.populateWith(k))
-        })
-      }.toMap
+          }) -> readerO.read(ValueAndRequestObject.ofAny(v) {
+            r.requestObject.asInstanceOf[DynamicObject].arrayAccess(
+              Object.populateWith(interpreter.asInstanceOf[JepInterpreter].valueFromAny(k))
+            )
+          })
+        }.toMap
+      }
     }
   }
 }

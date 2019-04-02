@@ -14,10 +14,10 @@ class Object(val variableId: Int) { self =>
     println(s"Warning: the object $this was allocated into a global space, which means it will not be garbage collected in Scala Native")
   }*/
 
-  def value: Any = interpreter.loadAsAny(expr)
+  def value: PyValue = interpreter.load(expr)
 
   override def toString: String = {
-    interpreter.loadAsString(s"str($expr)").asInstanceOf[String]
+    interpreter.load(s"str($expr)").getString
   }
 
   override def finalize(): Unit = {
@@ -27,7 +27,7 @@ class Object(val variableId: Int) { self =>
     }
   }
 
-  def as[T: ObjectReader]: T = implicitly[ObjectReader[T]].read(new ValueAndRequestObject(interpreter.loadAsAny(expr)) {
+  def as[T: ObjectReader]: T = implicitly[ObjectReader[T]].read(new ValueAndRequestObject(interpreter.load(expr)) {
     override def getObject: Object = self
   })
 }
@@ -63,7 +63,7 @@ object Object {
     ret
   }
 
-  def populateWith(v: Any): Object = {
+  def populateWith(v: PyValue): Object = {
     apply { variable =>
       interpreter.set(variable, v)
     }

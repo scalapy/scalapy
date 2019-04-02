@@ -27,7 +27,10 @@ class MethodCallingTest extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Can use with statement with file object") {
-    `with`(global.open("../README.md", "r")) { file =>
+    val opened = if (Platform.isNative) {
+      global.open("./README.md", "r")
+     } else global.open("../README.md", "r")
+    `with`(opened) { file =>
       assert(file.asInstanceOf[DynamicObject].encoding.as[String] == "UTF-8")
     }
   }
