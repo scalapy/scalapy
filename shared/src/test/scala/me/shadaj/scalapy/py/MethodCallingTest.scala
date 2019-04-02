@@ -22,8 +22,10 @@ class MethodCallingTest extends FunSuite with BeforeAndAfterAll {
     assert((num1.asInstanceOf[DynamicObject] + num2).as[Int] == 3)
   }
 
-  test("Can call object facade methods") {
-    assert(Object.from("abcdef").as[StringObjectFacade].replace("bc", "12") == "a12def")
+  if (!Platform.isNative) {
+    test("Can call object facade methods") {
+      assert(Object.from("abcdef").as[StringObjectFacade].replace("bc", "12") == "a12def")
+    }
   }
 
   test("Can use with statement with file object") {

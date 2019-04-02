@@ -11,7 +11,9 @@ class ModuleTest extends FunSuite with BeforeAndAfterAll {
     assert(module("string").digits.as[String] == "0123456789")
   }
 
-  test("Can convert to facade and call methods") {
-    assert(module("string").as[StringModuleFacade].digits == "0123456789")
+  if (!Platform.isNative) {
+    test("Can convert to facade and call methods") {
+      assert(module("string").as[StringModuleFacade].digits == "0123456789")
+    }
   }
 }
