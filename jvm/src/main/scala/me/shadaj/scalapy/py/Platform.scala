@@ -1,6 +1,7 @@
 package me.shadaj.scalapy.py
 
 object Platform {
-  def newInterpreter: Interpreter = new JepInterpreter
+  type InterpreterImplementation = JepInterpreter
+  def newInterpreter: InterpreterImplementation = new JepInterpreter
   final val isNative = false
 }

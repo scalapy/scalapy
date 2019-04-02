@@ -5,7 +5,7 @@ import scala.collection.mutable
 import scala.concurrent.Future
 
 package object py {
-  private var _interpreter: Interpreter = null
+  private var _interpreter: Platform.InterpreterImplementation = null
   def interpreter = {
     if (_interpreter == null) {
       _interpreter = Platform.newInterpreter

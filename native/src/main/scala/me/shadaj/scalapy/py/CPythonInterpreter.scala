@@ -22,6 +22,9 @@ object CPythonAPI {
   def PyLong_AsLong(pyLong: Ptr[Byte]): CLong = extern
   def PyLong_AsLongLong(pyLong: Ptr[Byte]): CLongLong = extern
 
+  def PyFloat_FromDouble(double: CDouble): Ptr[Byte] = extern
+  def PyFloat_AsDouble(float: Ptr[Byte]): Double = extern
+
   def PyDict_New(): Ptr[Byte] = extern
   def PyDict_SetItem(dict: Ptr[Byte], key: Ptr[Byte], value: Ptr[Byte]): Int = extern
   def PyDict_SetItemString(dict: Ptr[Byte], key: CString, value: Ptr[Byte]): Int = extern
@@ -42,6 +45,9 @@ class CPythonInterpreter extends Interpreter {
 
   val globals: Ptr[Byte] = CPythonAPI.PyDict_New()
   set("__builtins__", new CPyValue(CPythonAPI.PyEval_GetBuiltins()))
+
+  val falsePtr: Ptr[Byte] = CPythonAPI.PyBool_FromLong(0)
+  val truePtr: Ptr[Byte] = CPythonAPI.PyBool_FromLong(1)
   
   override def eval(code: String): Unit = {
     Zone { implicit zone =>
@@ -62,7 +68,7 @@ class CPythonInterpreter extends Interpreter {
     if (b) 1 else 0
   ))
   def valueFromLong(long: Long): PyValue = new CPyValue(CPythonAPI.PyLong_FromLongLong(long))
-  def valueFromDouble(v: Double): PyValue = ???
+  def valueFromDouble(v: Double): PyValue = new CPyValue(CPythonAPI.PyFloat_FromDouble(v))
   def valueFromString(v: String): PyValue = {
     var ret: PyValue = null
     Zone { implicit zone =>
@@ -110,14 +116,25 @@ class CPyValue(val underlying: Ptr[Byte]) extends PyValue {
     fromCString(cStr, java.nio.charset.Charset.forName("UTF-8"))
   }
   
-  def getBoolean: Boolean = false
+  def getBoolean: Boolean = {
+    if (underlying == interpreter.asInstanceOf[CPythonInterpreter].falsePtr) false
+    else if (underlying == interpreter.asInstanceOf[CPythonInterpreter].truePtr) true
+    else {
+      throw new IllegalAccessException("Cannot convert a non-boolean value to a boolean")
+    }
+  }
   def getLong: Long = {
     val ret = CPythonAPI.PyLong_AsLongLong(underlying)
     interpreter.asInstanceOf[CPythonInterpreter].throwErrorIfOccured()
     ret
   }
   
-  def getDouble: Double = ???
+  def getDouble: Double = {
+    val ret = CPythonAPI.PyFloat_AsDouble(underlying)
+    interpreter.asInstanceOf[CPythonInterpreter].throwErrorIfOccured()
+    ret
+  }
+
   def getSeq: Seq[PyValue] = ???
 
   def getAny: Any = ???
