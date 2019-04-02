@@ -3,6 +3,8 @@ branches:
   only:
     - master
     - /^v\d+(\.\d+)+$/
+before_install:
+  - curl https://raw.githubusercontent.com/scala-native/scala-native/v0.3.7/scripts/travis_setup.sh | bash -x
 install:
   - pyenv global 3.6
   - pip install jep
