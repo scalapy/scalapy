@@ -18,7 +18,7 @@ lazy val scalaPy =
         s"""implicit def tuple${n}Reader[${(1 to n).map(t => s"T$t").mkString(", ")}](implicit ${(1 to n).map(t => s"r$t: ObjectReader[T$t]").mkString(", ")}): ObjectReader[(${(1 to n).map(t => s"T$t").mkString(", ")})] = {
            |  new ObjectReader[(${(1 to n).map(t => s"T$t").mkString(", ")})] {
            |    override def read(or: ValueAndRequestObject) = {
-           |      val orArr = or.value.getSeq
+           |      val orArr = or.value.getTuple
            |      ($tupleElements)
            |    }
            |  }

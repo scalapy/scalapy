@@ -19,6 +19,7 @@ trait PyValue {
   def getLong: Long
   def getDouble: Double
   def getBoolean: Boolean
+  def getTuple: Seq[PyValue]
   def getSeq: Seq[PyValue]
 
   def getAny: Any

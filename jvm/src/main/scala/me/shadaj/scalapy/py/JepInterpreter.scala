@@ -66,6 +66,8 @@ class JepJavaPyValue(value: Any) extends PyValue {
     }
   }
 
+  def getTuple = getSeq
+
   def getSeq: Seq[PyValue] = {
     getAny match {
       case arr: Array[_] =>

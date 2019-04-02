@@ -22,6 +22,7 @@ object ValueAndRequestObject {
       def getLong = anyValue.asInstanceOf[Long]
       def getDouble = anyValue.asInstanceOf[Double]
       def getBoolean = anyValue.asInstanceOf[Boolean]
+      def getTuple = ???
       def getSeq = ???
 
       def getAny = anyValue

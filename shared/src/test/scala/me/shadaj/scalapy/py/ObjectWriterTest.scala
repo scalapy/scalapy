@@ -86,6 +86,6 @@ class ObjectWriterTest extends FunSuite with BeforeAndAfterAll {
 
   test("Writing a tuple") {
     val tupleValue = Object.from((1, 2)).value
-    assert(tupleValue.getSeq.map(_.getLong) == Seq(1, 2))
+    assert(tupleValue.getTuple.map(_.getLong) == Seq(1, 2))
   }
 }

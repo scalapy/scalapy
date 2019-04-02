@@ -31,6 +31,9 @@ object CPythonAPI {
   def PyList_Size(list: Ptr[Byte]): CSize = extern
   def PyList_GetItem(list: Ptr[Byte], index: CSize): Ptr[Byte] = extern
 
+  def PyTuple_Size(list: Ptr[Byte]): CSize = extern
+  def PyTuple_GetItem(list: Ptr[Byte], index: CSize): Ptr[Byte] = extern
+
   def PyObject_Str(obj: Ptr[Byte]): Ptr[Byte] = extern
 
   def PyErr_Occurred(): Ptr[Byte] = extern
@@ -135,6 +138,22 @@ class CPyValue(val underlying: Ptr[Byte]) extends PyValue {
     val ret = CPythonAPI.PyFloat_AsDouble(underlying)
     interpreter.throwErrorIfOccured()
     ret
+  }
+
+  def getTuple: Seq[PyValue] = new Seq[PyValue] {
+    def length: Int = {
+      val ret = CPythonAPI.PyTuple_Size(underlying).toInt
+      interpreter.throwErrorIfOccured()
+      ret
+    }
+    
+    def apply(idx: Int): PyValue = new CPyValue({
+      val ret = CPythonAPI.PyTuple_GetItem(underlying, idx)
+      interpreter.throwErrorIfOccured()
+      ret
+    })
+
+    def iterator: Iterator[PyValue] = (0 until length).toIterator.map(apply)
   }
 
   def getSeq: Seq[PyValue] = new Seq[PyValue] {
