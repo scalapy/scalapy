@@ -6,7 +6,6 @@ trait JepInterpreter {
   def valueFromAny(v: Any): PyValue
 }
 
-@link("python3.7m")
 @extern
 object CPythonAPI {
   def Py_Initialize(): Unit = extern
@@ -28,6 +27,9 @@ object CPythonAPI {
   def PyDict_New(): Ptr[Byte] = extern
   def PyDict_SetItem(dict: Ptr[Byte], key: Ptr[Byte], value: Ptr[Byte]): Int = extern
   def PyDict_SetItemString(dict: Ptr[Byte], key: CString, value: Ptr[Byte]): Int = extern
+
+  def PyList_Size(list: Ptr[Byte]): CSize = extern
+  def PyList_GetItem(list: Ptr[Byte], index: CSize): Ptr[Byte] = extern
 
   def PyObject_Str(obj: Ptr[Byte]): Ptr[Byte] = extern
 
@@ -112,30 +114,44 @@ class CPythonInterpreter extends Interpreter {
 class CPyValue(val underlying: Ptr[Byte]) extends PyValue {
   def getString: String = {
     val cStr = CPythonAPI.PyUnicode_AsUTF8(underlying)
-    interpreter.asInstanceOf[CPythonInterpreter].throwErrorIfOccured()
+    interpreter.throwErrorIfOccured()
     fromCString(cStr, java.nio.charset.Charset.forName("UTF-8"))
   }
   
   def getBoolean: Boolean = {
-    if (underlying == interpreter.asInstanceOf[CPythonInterpreter].falsePtr) false
-    else if (underlying == interpreter.asInstanceOf[CPythonInterpreter].truePtr) true
+    if (underlying == interpreter.falsePtr) false
+    else if (underlying == interpreter.truePtr) true
     else {
       throw new IllegalAccessException("Cannot convert a non-boolean value to a boolean")
     }
   }
   def getLong: Long = {
     val ret = CPythonAPI.PyLong_AsLongLong(underlying)
-    interpreter.asInstanceOf[CPythonInterpreter].throwErrorIfOccured()
+    interpreter.throwErrorIfOccured()
     ret
   }
   
   def getDouble: Double = {
     val ret = CPythonAPI.PyFloat_AsDouble(underlying)
-    interpreter.asInstanceOf[CPythonInterpreter].throwErrorIfOccured()
+    interpreter.throwErrorIfOccured()
     ret
   }
 
-  def getSeq: Seq[PyValue] = ???
+  def getSeq: Seq[PyValue] = new Seq[PyValue] {
+    def length: Int = {
+      val ret = CPythonAPI.PyList_Size(underlying).toInt
+      interpreter.throwErrorIfOccured()
+      ret
+    }
+    
+    def apply(idx: Int): PyValue = new CPyValue({
+      val ret = CPythonAPI.PyList_GetItem(underlying, idx)
+      interpreter.throwErrorIfOccured()
+      ret
+    })
+
+    def iterator: Iterator[PyValue] = (0 until length).toIterator.map(apply)
+  }
 
   def getAny: Any = ???
 }

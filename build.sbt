@@ -67,5 +67,8 @@ lazy val scalaPy =
     scalaVersion := "2.11.12",
     libraryDependencies += "com.github.lolgab" %%% "scalacheck" % "1.14.1" % Test,
     nativeLinkStubs := true,
-    nativeLinkingOptions += "-L/usr/local/opt/python/Frameworks/Python.framework/Versions/3.7/lib/python3.7/config-3.7m-darwin"
+    nativeLinkingOptions ++= {
+      import scala.sys.process._
+      "python3-config --ldflags".!!.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
+    }
   )
