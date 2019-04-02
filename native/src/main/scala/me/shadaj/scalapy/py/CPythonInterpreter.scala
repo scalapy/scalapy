@@ -27,6 +27,9 @@ object CPythonAPI {
   def PyDict_New(): Ptr[Byte] = extern
   def PyDict_SetItem(dict: Ptr[Byte], key: Ptr[Byte], value: Ptr[Byte]): Int = extern
   def PyDict_SetItemString(dict: Ptr[Byte], key: CString, value: Ptr[Byte]): Int = extern
+  def PyDict_Contains(dict: Ptr[Byte], key: Ptr[Byte]): Int = extern
+  def PyDict_GetItem(dict: Ptr[Byte], key: Ptr[Byte]): Ptr[Byte] = extern
+  def PyDict_Keys(dict: Ptr[Byte]): Ptr[Byte] = extern
 
   def PyList_Size(list: Ptr[Byte]): CSize = extern
   def PyList_GetItem(list: Ptr[Byte], index: CSize): Ptr[Byte] = extern
@@ -172,5 +175,32 @@ class CPyValue(val underlying: Ptr[Byte]) extends PyValue {
     def iterator: Iterator[PyValue] = (0 until length).toIterator.map(apply)
   }
 
-  def getMap: Map[PyValue, PyValue] = ???
+  import scala.collection.mutable
+  def getMap: mutable.Map[PyValue, PyValue] = new mutable.Map[PyValue, PyValue] {
+    def get(key: PyValue): Option[PyValue] = {
+      val contains = CPythonAPI.PyDict_Contains(
+        underlying,
+        key.asInstanceOf[CPyValue].underlying
+      ) == 1
+      
+      interpreter.throwErrorIfOccured()
+
+      if (contains) {
+        val value = CPythonAPI.PyDict_GetItem(underlying, key.asInstanceOf[CPyValue].underlying)
+        interpreter.throwErrorIfOccured()
+        Some(new CPyValue(value))
+      } else Option.empty[PyValue]
+    }
+    
+    def iterator: Iterator[(PyValue, PyValue)] = {
+      val keysList = new CPyValue(CPythonAPI.PyDict_Keys(underlying))
+      interpreter.throwErrorIfOccured()
+      keysList.getSeq.toIterator.map { k =>
+        (k, get(k).get)
+      }
+    }
+
+    def +=(kv: (PyValue, PyValue)): this.type = ???
+    def -=(k: PyValue): this.type = ???
+  }
 }

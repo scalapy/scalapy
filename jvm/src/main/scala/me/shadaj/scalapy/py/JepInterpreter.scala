@@ -84,9 +84,10 @@ class JepJavaPyValue(val value: Any) extends PyValue {
     }
   }
 
+  import scala.collection.mutable
   import scala.collection.JavaConverters._
-  def getMap: Map[PyValue, PyValue] = {
-    value.asInstanceOf[java.util.Map[Any, Any]].asScala.toMap.map { kv => 
+  def getMap: mutable.Map[PyValue, PyValue] = {
+    value.asInstanceOf[java.util.Map[Any, Any]].asScala.map { kv => 
       (interpreter.valueFromJepAny(kv._1), interpreter.valueFromJepAny(kv._2))
     }
   }

@@ -21,5 +21,7 @@ trait PyValue {
   def getBoolean: Boolean
   def getTuple: Seq[PyValue]
   def getSeq: Seq[PyValue]
-  def getMap: Map[PyValue, PyValue]
+
+  import scala.collection.mutable
+  def getMap: mutable.Map[PyValue, PyValue]
 }

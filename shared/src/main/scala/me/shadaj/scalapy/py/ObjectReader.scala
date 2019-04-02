@@ -155,19 +155,19 @@ object ObjectReader extends ObjectTupleReaders {
 
   implicit def mapReader[I, O](implicit readerI: ObjectReader[I], readerO: ObjectReader[O]): ObjectReader[Map[I, O]] = new ObjectReader[Map[I, O]] {
     override def read(r: ValueAndRequestObject): Map[I, O] = {
-      if (Platform.isNative) ??? else {
-        r.value.getMap.map { case (k, v) =>
-          readerI.read(new ValueAndRequestObject(k) {
-            def getObject = throw new IllegalAccessException("Cannot read a Python object for the key of a map")
-          }) -> readerO.read(new ValueAndRequestObject(v) {
-            def getObject = {
+      r.value.getMap.map { case (k, v) =>
+        readerI.read(new ValueAndRequestObject(k) {
+          def getObject = throw new IllegalAccessException("Cannot read a Python object for the key of a map")
+        }) -> readerO.read(new ValueAndRequestObject(v) {
+          def getObject = {
+            if (Platform.isNative) ??? else {
               r.requestObject.asInstanceOf[DynamicObject].arrayAccess(
                 Object.populateWith(interpreter.asInstanceOf[JepInterpreter].valueFromAny(k))
               )
             }
-          })
-        }.toMap
-      }
+          }
+        })
+      }.toMap
     }
   }
 }
