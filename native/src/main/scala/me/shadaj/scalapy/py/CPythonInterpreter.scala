@@ -172,5 +172,5 @@ class CPyValue(val underlying: Ptr[Byte]) extends PyValue {
     def iterator: Iterator[PyValue] = (0 until length).toIterator.map(apply)
   }
 
-  def getAny: Any = ???
+  def getMap: Map[PyValue, PyValue] = ???
 }

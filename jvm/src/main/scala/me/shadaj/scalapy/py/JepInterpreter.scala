@@ -12,7 +12,7 @@ class JepInterpreter extends Interpreter {
   }
 
   override def set(variable: String, value: PyValue): Unit = {
-    underlying.set(variable, value.getAny)
+    underlying.set(variable, value.asInstanceOf[JepJavaPyValue].value)
   }
 
   def valueFromAny(v: Any) = valueFromJepAny(v)
@@ -24,10 +24,9 @@ class JepInterpreter extends Interpreter {
 
   def noneValue: PyValue = valueFromJepAny(null)
 
-  def valueFromJepAny(value: Any): PyValue = {
-    if (value.isInstanceOf[PyValue]) value.asInstanceOf[PyValue] else {
-      new JepJavaPyValue(value)
-    }
+  def valueFromJepAny(value: Any): PyValue = value match {
+    case v: PyValue => v
+    case o => new JepJavaPyValue(o)
   }
 
   override def load(code: String): PyValue = {
@@ -35,7 +34,14 @@ class JepInterpreter extends Interpreter {
   }
 }
 
-class JepJavaPyValue(value: Any) extends PyValue {
+class JepJavaPyValue(val value: Any) extends PyValue {
+  override def equals(o: Any) = {
+    o != null && o.isInstanceOf[JepJavaPyValue] &&
+      value == o.asInstanceOf[JepJavaPyValue].value
+  }
+  
+  override def hashCode() = value.hashCode()
+  
   def getString: String = value.asInstanceOf[String]
   
   def getDouble: Double = value match {
@@ -52,9 +58,8 @@ class JepJavaPyValue(value: Any) extends PyValue {
     case v: Long => v
   }
   
-  
   def getBoolean: Boolean = {
-    this.getAny match {
+    value match {
       case b: Boolean =>
         b
       case s: String =>
@@ -69,7 +74,7 @@ class JepJavaPyValue(value: Any) extends PyValue {
   def getTuple = getSeq
 
   def getSeq: Seq[PyValue] = {
-    getAny match {
+    value match {
       case arr: Array[_] =>
         arr.view.map(interpreter.valueFromJepAny)
       case arrList: java.util.List[_] =>
@@ -79,5 +84,10 @@ class JepJavaPyValue(value: Any) extends PyValue {
     }
   }
 
-  def getAny: Any = value
+  import scala.collection.JavaConverters._
+  def getMap: Map[PyValue, PyValue] = {
+    value.asInstanceOf[java.util.Map[Any, Any]].asScala.toMap.map { kv => 
+      (interpreter.valueFromJepAny(kv._1), interpreter.valueFromJepAny(kv._2))
+    }
+  }
 }

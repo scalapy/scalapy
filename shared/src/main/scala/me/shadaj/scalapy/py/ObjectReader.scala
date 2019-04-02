@@ -15,25 +15,6 @@ abstract class ValueAndRequestObject(getValue: => PyValue) {
   }
 }
 
-object ValueAndRequestObject {
-  def ofAny(anyValue: Any)(get: => Object) = {
-    def pyValue = new PyValue {
-      def getString = anyValue.asInstanceOf[String]
-      def getLong = anyValue.asInstanceOf[Long]
-      def getDouble = anyValue.asInstanceOf[Double]
-      def getBoolean = anyValue.asInstanceOf[Boolean]
-      def getTuple = ???
-      def getSeq = ???
-
-      def getAny = anyValue
-    }
-    
-    new ValueAndRequestObject(pyValue) {
-      def getObject: Object = get
-    }
-  }
-}
-
 trait ObjectReader[T] {
   def read(r: ValueAndRequestObject): T
 }
@@ -175,13 +156,15 @@ object ObjectReader extends ObjectTupleReaders {
   implicit def mapReader[I, O](implicit readerI: ObjectReader[I], readerO: ObjectReader[O]): ObjectReader[Map[I, O]] = new ObjectReader[Map[I, O]] {
     override def read(r: ValueAndRequestObject): Map[I, O] = {
       if (Platform.isNative) ??? else {
-        r.value.getAny.asInstanceOf[java.util.Map[_, _]].asScala.map { case (k, v) =>
-          readerI.read(ValueAndRequestObject.ofAny(k) {
-            throw new IllegalAccessException("Cannot read a Python object for the key of a map")
-          }) -> readerO.read(ValueAndRequestObject.ofAny(v) {
-            r.requestObject.asInstanceOf[DynamicObject].arrayAccess(
-              Object.populateWith(interpreter.asInstanceOf[JepInterpreter].valueFromAny(k))
-            )
+        r.value.getMap.map { case (k, v) =>
+          readerI.read(new ValueAndRequestObject(k) {
+            def getObject = throw new IllegalAccessException("Cannot read a Python object for the key of a map")
+          }) -> readerO.read(new ValueAndRequestObject(v) {
+            def getObject = {
+              r.requestObject.asInstanceOf[DynamicObject].arrayAccess(
+                Object.populateWith(interpreter.asInstanceOf[JepInterpreter].valueFromAny(k))
+              )
+            }
           })
         }.toMap
       }

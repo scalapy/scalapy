@@ -79,9 +79,9 @@ class ObjectWriterTest extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Writing a map of int to int") {
-    val written = Object.from(Map(1 -> 2, 2 -> 3)).value.getAny.asInstanceOf[java.util.Map[Long, Long]]
-    assert(written.get(1L) == 2)
-    assert(written.get(2L) == 3)
+    val written = Object.from(Map(1 -> 2, 2 -> 3)).value.getMap
+    assert(written(interpreter.valueFromLong(1)).getLong == 2)
+    assert(written(interpreter.valueFromLong(2)).getLong == 3)
   }
 
   test("Writing a tuple") {

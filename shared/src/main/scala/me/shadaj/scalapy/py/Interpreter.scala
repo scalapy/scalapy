@@ -21,6 +21,5 @@ trait PyValue {
   def getBoolean: Boolean
   def getTuple: Seq[PyValue]
   def getSeq: Seq[PyValue]
-
-  def getAny: Any
+  def getMap: Map[PyValue, PyValue]
 }
