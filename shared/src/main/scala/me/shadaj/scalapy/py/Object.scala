@@ -1,7 +1,5 @@
 package me.shadaj.scalapy.py
 
-import jep.Jep
-
 import scala.language.dynamics
 import scala.collection.mutable
 
@@ -16,10 +14,10 @@ class Object(val variableId: Int) { self =>
     println(s"Warning: the object $this was allocated into a global space, which means it will not be garbage collected in Scala Native")
   }*/
 
-  def value: Any = interpreter.getValue(expr)
+  def value: Any = interpreter.loadAsAny(expr)
 
   override def toString: String = {
-    interpreter.getValue(s"str($expr)").asInstanceOf[String]
+    interpreter.loadAsString(s"str($expr)").asInstanceOf[String]
   }
 
   override def finalize(): Unit = {
@@ -29,7 +27,7 @@ class Object(val variableId: Int) { self =>
     }
   }
 
-  def as[T: ObjectReader]: T = implicitly[ObjectReader[T]].read(new ValueAndRequestObject(interpreter.getValue(expr)) {
+  def as[T: ObjectReader]: T = implicitly[ObjectReader[T]].read(new ValueAndRequestObject(interpreter.loadAsAny(expr)) {
     override def getObject: Object = self
   })
 }

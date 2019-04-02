@@ -2,7 +2,6 @@ package me.shadaj.scalapy.py
 
 import java.util
 
-import jep.Jep
 import org.scalatest.{FunSuite, BeforeAndAfterAll}
 
 import scala.collection.JavaConverters._
@@ -78,7 +77,7 @@ class ObjectWriterTest extends FunSuite with BeforeAndAfterAll {
 
   test("Writing a sequence of Python objects preserves original objects") {
     val objectsExpr = Object.from(Seq[Object](Object("object()"), Object("object()"))).expr
-    assert(interpreter.getValue(s"str(type($objectsExpr[0]))").asInstanceOf[String] == "<class 'object'>")
+    assert(interpreter.loadAsString(s"str(type($objectsExpr[0]))") == "<class 'object'>")
   }
 
   test("Writing a map of int to int") {

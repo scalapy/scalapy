@@ -27,7 +27,6 @@ lazy val scalaPy =
     
       val toWrite =
         s"""package me.shadaj.scalapy.py
-           |import jep.Jep
            |trait ObjectTupleReaders {
            |${methods.mkString("\n")}
            |}""".stripMargin
@@ -49,7 +48,6 @@ lazy val scalaPy =
     
       val toWrite =
         s"""package me.shadaj.scalapy.py
-           |import jep.Jep
            |trait ObjectTupleWriters {
            |${methods.mkString("\n")}
            |}""".stripMargin
@@ -64,4 +62,6 @@ lazy val scalaPy =
     libraryDependencies += "black.ninia" % "jep" % "3.8.2",
     fork in Test := true,
     javaOptions in Test += s"-Djava.library.path=${sys.env.getOrElse("JEP_PATH", "/usr/local/lib/python3.7/site-packages/jep")}"
+  ).nativeSettings(
+    scalaVersion := "2.11.12"
   )

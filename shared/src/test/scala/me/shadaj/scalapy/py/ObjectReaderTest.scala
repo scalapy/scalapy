@@ -1,6 +1,5 @@
 package me.shadaj.scalapy.py
 
-import jep.Jep
 import org.scalatest.{FunSuite, BeforeAndAfterAll}
 
 class ObjectReaderTest extends FunSuite with BeforeAndAfterAll {

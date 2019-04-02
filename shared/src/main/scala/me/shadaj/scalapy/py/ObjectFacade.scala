@@ -1,7 +1,5 @@
 package me.shadaj.scalapy.py
 
-import jep.Jep
-
 import scala.reflect.macros.whitebox
 import scala.language.experimental.macros
 

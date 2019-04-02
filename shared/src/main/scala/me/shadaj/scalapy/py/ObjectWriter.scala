@@ -1,7 +1,5 @@
 package me.shadaj.scalapy.py
 
-import jep.Jep
-
 import scala.collection.mutable
 import scala.reflect.ClassTag
 

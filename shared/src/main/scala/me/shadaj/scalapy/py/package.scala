@@ -1,16 +1,14 @@
 package me.shadaj.scalapy
 
-import jep.Jep
-
 import scala.collection.mutable
 
 import scala.concurrent.Future
 
 package object py {
-  private var _interpreter: Jep = null
+  private var _interpreter: Interpreter = null
   def interpreter = {
     if (_interpreter == null) {
-      _interpreter = new Jep()
+      _interpreter = Platform.newInterpreter
     }
     
     _interpreter

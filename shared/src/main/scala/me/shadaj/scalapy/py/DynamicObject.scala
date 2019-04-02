@@ -1,7 +1,5 @@
 package me.shadaj.scalapy.py
 
-import jep.Jep
-
 import scala.language.dynamics
 
 class DynamicObject private[py](varId: Int) extends Object(varId) with scala.Dynamic {

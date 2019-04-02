@@ -1,6 +1,5 @@
 package me.shadaj.scalapy.py
 
-import jep.Jep
 import org.scalatest.{FunSuite, BeforeAndAfterAll}
 
 class StringObjectFacade(obj: Object) extends ObjectFacade(obj) {

@@ -1,6 +1,6 @@
 package me.shadaj.scalapy.py
 
-import jep.{Jep, NDArray}
+import jep.NDArray
 
 import scala.reflect.ClassTag
 import scala.collection.JavaConverters._
