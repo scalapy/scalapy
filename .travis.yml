@@ -10,10 +10,11 @@ branches:
 before_install:
   - curl https://raw.githubusercontent.com/scala-native/scala-native/v0.3.7/scripts/travis_setup.sh | bash -x
 install:
-  - pyenv global 3.6
+  - pyenv global 3.6.3
   - pip install jep
 script:
   - export JEP_PATH="/opt/python/3.6.3/lib/python3.6/site-packages/jep"
+  - export LD_LIBRARY_PATH=$(python3-config --prefix)/lib
   - sbt test
 after_success:
   - 'if [ "$TRAVIS_BRANCH" = "master" ] && [ "$TRAVIS_PULL_REQUEST" = "false" ]; then bash ./publish.sh; fi'
