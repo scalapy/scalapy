@@ -2,7 +2,7 @@ package me.shadaj.scalapy.py
 
 import scala.language.dynamics
 
-class DynamicObject private[py](varId: Int) extends Object(varId) with scala.Dynamic {
+class DynamicObject(value: PyValue) extends Object(value) with scala.Dynamic {
   def applyDynamic(method: String)(params: Object*): DynamicObject = {
     Object(s"$expr.$method(${params.map(_.expr).mkString(",")})").asInstanceOf[DynamicObject]
   }

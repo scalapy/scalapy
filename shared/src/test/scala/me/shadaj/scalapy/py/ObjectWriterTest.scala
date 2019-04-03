@@ -77,7 +77,7 @@ class ObjectWriterTest extends FunSuite with BeforeAndAfterAll {
 
   test("Writing a sequence of Python objects preserves original objects") {
     val objectsExpr = Object.from(Seq[Object](Object("object()"), Object("object()"))).expr
-    assert(interpreter.load(s"str(type($objectsExpr[0]))").getString == "<class 'object'>")
+    assert(interpreter.load(s"type($objectsExpr[0])").getStringified == "<class 'object'>")
   }
 
   test("Writing a map of int to int") {

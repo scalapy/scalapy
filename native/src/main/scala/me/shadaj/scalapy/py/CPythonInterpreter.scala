@@ -71,6 +71,19 @@ class CPythonInterpreter extends Interpreter {
       throwErrorIfOccured()
     }
   }
+
+  private var counter = 0
+  def getVariableReference(value: PyValue): VariableReference = {
+    val variableName = "spy_o_" + counter
+    counter += 1
+    
+    Zone { implicit zone =>
+      CPythonAPI.PyDict_SetItemString(globals, toCString(variableName), value.asInstanceOf[CPyValue].underlying)
+      throwErrorIfOccured()
+    }
+
+    new VariableReference(variableName)
+  }
   
   def valueFromBoolean(b: Boolean): PyValue = new CPyValue(CPythonAPI.PyBool_FromLong(
     if (b) 1 else 0
@@ -118,6 +131,10 @@ class CPythonInterpreter extends Interpreter {
 }
 
 class CPyValue(val underlying: Ptr[Byte]) extends PyValue {
+  def getStringified: String = {
+    new CPyValue(CPythonAPI.PyObject_Str(underlying)).getString
+  }
+
   def getString: String = {
     val cStr = CPythonAPI.PyUnicode_AsUTF8(underlying)
     interpreter.throwErrorIfOccured()

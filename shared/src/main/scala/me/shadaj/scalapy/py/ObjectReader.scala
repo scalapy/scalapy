@@ -21,17 +21,17 @@ trait ObjectReader[T] {
 
 object ObjectReader extends ObjectTupleReaders {
   implicit val wrapperReader = new ObjectReader[Object] {
-    def read(r: ValueAndRequestObject): Object = new DynamicObject(r.requestObject.variableId)
+    def read(r: ValueAndRequestObject): Object = new DynamicObject(r.requestObject.value)
   }
 
   implicit val wrapperDynReader = new ObjectReader[DynamicObject] {
     def read(r: ValueAndRequestObject): DynamicObject =
-      new DynamicObject(r.requestObject.variableId)
+      new DynamicObject(r.requestObject.value)
   }
 
   implicit def facadeReader[F <: ObjectFacade](implicit classTag: ClassTag[F]): ObjectReader[F] = new ObjectReader[F] {
     override def read(r: ValueAndRequestObject): F = {
-      classTag.runtimeClass.getConstructor(classOf[Object]).newInstance(new DynamicObject(r.requestObject.variableId)).asInstanceOf[F]
+      classTag.runtimeClass.getConstructor(classOf[Object]).newInstance(new DynamicObject(r.requestObject.value)).asInstanceOf[F]
     }
   }
 
