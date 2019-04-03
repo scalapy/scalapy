@@ -36,6 +36,13 @@ class JepInterpreter extends Interpreter {
   def valueFromDouble(v: Double): PyValue = valueFromJepAny(v)
   def valueFromString(v: String): PyValue = valueFromJepAny(v)
 
+  def valueFromSeq(seq: Seq[PyValue]): PyValue = {
+    valueFromJepAny(seq.view.map {
+      case v: JepJavaPyValue => v.value
+      case v: JepPythonPyValue => v.pyObject
+    }.toArray)
+  }
+
   def noneValue: PyValue = valueFromJepAny(null)
 
   val stringifiedNone = underlying.getValue("str(None)", classOf[String])
@@ -124,6 +131,8 @@ class JepJavaPyValue(val value: Any) extends JepPyValue {
   }
 
   def getStringified = if (value == null) interpreter.stringifiedNone else value.toString()
+
+  def cleanup() = {}
 }
 
 class JepPythonPyValue(val pyObject: PyObject) extends JepPyValue {
@@ -134,4 +143,6 @@ class JepPythonPyValue(val pyObject: PyObject) extends JepPyValue {
   }
 
   def getStringified = if (pyObject == null) interpreter.stringifiedNone else pyObject.toString()
+
+  def cleanup() = {}
 }

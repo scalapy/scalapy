@@ -15,18 +15,12 @@ class Object(val value: PyValue) { self =>
 
   private var cleaned = false
 
-  if (Object.allocatedObjects.nonEmpty) {
-    Object.allocatedObjects.head += this
-  } else if (Platform.isNative) {
-    println(s"Warning: the object $this was allocated into a global space, which means it will not be garbage collected in Scala Native")
-  }
-
   override def toString: String = value.getStringified
 
   override def finalize(): Unit = {
     if (!cleaned) {
       if (_expr != null) {
-        _expr.finalize()
+        _expr.cleanup()
       }
 
       cleaned = true
@@ -40,7 +34,6 @@ class Object(val value: PyValue) { self =>
 
 object Object {
   private var nextCounter: Int = 0
-  private[py] var allocatedObjects: List[mutable.Queue[Object]] = List.empty
 
   def apply(stringToEval: String): Object = {
     populateWith(interpreter.load(stringToEval))

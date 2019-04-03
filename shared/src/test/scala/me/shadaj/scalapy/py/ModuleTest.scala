@@ -8,7 +8,9 @@ class StringModuleFacade(o: Object) extends ObjectFacade(o) {
 
 class ModuleTest extends FunSuite with BeforeAndAfterAll {
   test("Can read value from module") {
-    assert(module("string").digits.as[String] == "0123456789")
+    local {
+      assert(module("string").digits.as[String] == "0123456789")
+    }
   }
 
   if (!Platform.isNative) {

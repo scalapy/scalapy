@@ -31,8 +31,10 @@ object CPythonAPI {
   def PyDict_GetItem(dict: Ptr[Byte], key: Ptr[Byte]): Ptr[Byte] = extern
   def PyDict_Keys(dict: Ptr[Byte]): Ptr[Byte] = extern
 
+  def PyList_New(size: Int): Ptr[Byte] = extern
   def PyList_Size(list: Ptr[Byte]): CSize = extern
   def PyList_GetItem(list: Ptr[Byte], index: CSize): Ptr[Byte] = extern
+  def PyList_SetItem(list: Ptr[Byte], index: CSize, item: Ptr[Byte]): Int = extern
 
   def PyTuple_Size(list: Ptr[Byte]): CSize = extern
   def PyTuple_GetItem(list: Ptr[Byte], index: CSize): Ptr[Byte] = extern
@@ -46,6 +48,9 @@ object CPythonAPI {
   def PyEval_GetBuiltins(): Ptr[Byte] = extern
 
   def Py_BuildValue(str: CString): Ptr[Byte] = extern
+
+  def Py_IncRef(ptr: Ptr[Byte]): Unit = extern
+  def Py_DecRef(ptr: Ptr[Byte]): Unit = extern
 }
 
 class CPythonInterpreter extends Interpreter {
@@ -68,6 +73,7 @@ class CPythonInterpreter extends Interpreter {
   override def set(variable: String, value: PyValue): Unit = {
     Zone { implicit zone =>
       CPythonAPI.PyDict_SetItemString(globals, toCString(variable), value.asInstanceOf[CPyValue].underlying)
+      CPythonAPI.Py_IncRef(value.asInstanceOf[CPyValue].underlying)
       throwErrorIfOccured()
     }
   }
@@ -79,6 +85,7 @@ class CPythonInterpreter extends Interpreter {
     
     Zone { implicit zone =>
       CPythonAPI.PyDict_SetItemString(globals, toCString(variableName), value.asInstanceOf[CPyValue].underlying)
+      CPythonAPI.Py_IncRef(value.asInstanceOf[CPyValue].underlying)
       throwErrorIfOccured()
     }
 
@@ -101,7 +108,18 @@ class CPythonInterpreter extends Interpreter {
     ret
   }
 
-  def noneValue: PyValue = new CPyValue(CPythonAPI.Py_BuildValue(c""))
+  def valueFromSeq(seq: Seq[PyValue]): PyValue = {
+    // TODO: this is copying, should be replaced by a custom type
+    val retPtr = CPythonAPI.PyList_New(seq.size)
+    seq.zipWithIndex.foreach { case (v, i) =>
+      CPythonAPI.PyList_SetItem(retPtr, i, v.asInstanceOf[CPyValue].underlying)
+      CPythonAPI.Py_IncRef(v.asInstanceOf[CPyValue].underlying)
+    }
+
+    new CPyValue(retPtr)
+  }
+
+  val noneValue: PyValue = new CPyValue(CPythonAPI.Py_BuildValue(c""))
 
   def throwErrorIfOccured() = {
     if (CPythonAPI.PyErr_Occurred().cast[Int] != 0) {
@@ -111,7 +129,7 @@ class CPythonInterpreter extends Interpreter {
 
       CPythonAPI.PyErr_Fetch(pType, pValue, pTraceback)
 
-      val errorMessage = (new CPyValue(CPythonAPI.PyObject_Str(!pType))).getString
+      val errorMessage = local((new CPyValue(CPythonAPI.PyObject_Str(!pType))).getString)
 
       throw new Exception(errorMessage)
     }
@@ -123,6 +141,9 @@ class CPythonInterpreter extends Interpreter {
       val Py_eval_input = 258
       val result = CPythonAPI.PyRun_String(toCString(code), Py_eval_input, globals, globals)
       throwErrorIfOccured()
+
+      CPythonAPI.Py_IncRef(result)
+
       ret = new CPyValue(result)
     }
 
@@ -132,7 +153,13 @@ class CPythonInterpreter extends Interpreter {
 
 class CPyValue(val underlying: Ptr[Byte]) extends PyValue {
   def getStringified: String = {
-    new CPyValue(CPythonAPI.PyObject_Str(underlying)).getString
+    val pyStr = CPythonAPI.PyObject_Str(underlying)
+    interpreter.throwErrorIfOccured()
+    val cStr = CPythonAPI.PyUnicode_AsUTF8(pyStr)
+    interpreter.throwErrorIfOccured()
+    val ret = fromCString(cStr, java.nio.charset.Charset.forName("UTF-8"))
+    CPythonAPI.Py_DecRef(pyStr)
+    ret
   }
 
   def getString: String = {
@@ -148,6 +175,7 @@ class CPyValue(val underlying: Ptr[Byte]) extends PyValue {
       throw new IllegalAccessException("Cannot convert a non-boolean value to a boolean")
     }
   }
+  
   def getLong: Long = {
     val ret = CPythonAPI.PyLong_AsLongLong(underlying)
     interpreter.throwErrorIfOccured()
@@ -186,6 +214,7 @@ class CPyValue(val underlying: Ptr[Byte]) extends PyValue {
     def apply(idx: Int): PyValue = new CPyValue({
       val ret = CPythonAPI.PyList_GetItem(underlying, idx)
       interpreter.throwErrorIfOccured()
+      CPythonAPI.Py_IncRef(ret)
       ret
     })
 
@@ -205,6 +234,7 @@ class CPyValue(val underlying: Ptr[Byte]) extends PyValue {
       if (contains) {
         val value = CPythonAPI.PyDict_GetItem(underlying, key.asInstanceOf[CPyValue].underlying)
         interpreter.throwErrorIfOccured()
+        CPythonAPI.Py_IncRef(value)
         Some(new CPyValue(value))
       } else Option.empty[PyValue]
     }
@@ -219,5 +249,9 @@ class CPyValue(val underlying: Ptr[Byte]) extends PyValue {
 
     def +=(kv: (PyValue, PyValue)): this.type = ???
     def -=(k: PyValue): this.type = ???
+  }
+
+  override def cleanup(): Unit = {
+    CPythonAPI.Py_DecRef(underlying)
   }
 }

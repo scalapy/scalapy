@@ -84,44 +84,9 @@ object ObjectWriter extends ObjectTupleWriters {
   private val supportedObjectTypes = Set[Class[_]](classOf[String])
   implicit def seqWriter[T: ClassTag, C](implicit ev1: C => Seq[T], tWriter: ObjectWriter[T]): ObjectWriter[C] = new ObjectWriter[C] {
     override def write(v: C): Either[PyValue, Object] = {
-      if (Platform.isNative) {
-        val writtenElems = v.view.map { e =>
-          tWriter.write(e)
-        }
-        
-        val writtenObjects = writtenElems.map(_.left.map(Object.populateWith).merge.expr)
-          Right(Object(writtenObjects.mkString("[", ",", "]")))
-
-        Right(Object(writtenObjects.mkString("[", ",", "]")))
-      } else {
-        val elemClass = implicitly[ClassTag[T]].runtimeClass
-        def isNativeWritable(clazz: Class[_]): Boolean = {
-          clazz.isPrimitive || supportedObjectTypes.contains(clazz) ||
-            (clazz.isArray && isNativeWritable(clazz.getComponentType))
-        }
-
-        if (isNativeWritable(elemClass)) {
-          if (v.isInstanceOf[Array[_]]) {
-            Left(interpreter.asInstanceOf[JepInterpreter].valueFromAny(v))
-          } else {
-            Left(interpreter.asInstanceOf[JepInterpreter].valueFromAny(v.toArray[T]))
-          }
-        } else {
-          val writtenElems = v.view.map { e =>
-            tWriter.write(e)
-          }
-
-          if (writtenElems.forall(_.isLeft)) Left(
-            interpreter.asInstanceOf[JepInterpreter].valueFromAny(
-              writtenElems.map(_.left.get).toArray
-            )
-          )
-          else {
-            val writtenObjects = writtenElems.map(_.left.map(Object.populateWith).merge.expr)
-            Right(Object(writtenObjects.mkString("[", ",", "]")))
-          }
-        }
-      }
+      Left(interpreter.valueFromSeq(v.view.map { e =>
+        tWriter.write(e).right.map(_.value).merge
+      }))
     }
   }
 
