@@ -54,7 +54,9 @@ class JepInterpreter extends Interpreter {
 
   override def load(code: String): PyValue = {
     try {
-      new JepPythonPyValue(underlying.getValue(code, classOf[PyObject]))
+      val pyObject = underlying.getValue(code, classOf[PyObject])
+      pyObject.incref()
+      new JepPythonPyValue(pyObject)
     } catch {
       case _ => new JepJavaPyValue(underlying.getValue(code))
     }
@@ -124,15 +126,26 @@ trait JepPyValue extends PyValue {
 }
 
 class JepJavaPyValue(val value: Any) extends JepPyValue {
-  lazy val pyObject = {
-    val temp = "tmp_v_to_obj"
-    interpreter.underlying.set(temp, value)
-    interpreter.underlying.getValue(temp, classOf[PyObject])
+  private var _pyObject: PyObject = null
+
+  def pyObject = {
+    if (_pyObject == null) {
+      val temp = "tmp_v_to_obj"
+      interpreter.underlying.set(temp, value)
+      _pyObject = interpreter.underlying.getValue(temp, classOf[PyObject])
+      _pyObject.incref()
+    }
+
+    _pyObject
   }
 
   def getStringified = if (value == null) interpreter.stringifiedNone else value.toString()
 
-  def cleanup() = {}
+  def cleanup() = {
+    if (_pyObject != null) {
+      _pyObject.decref()
+    }
+  }
 }
 
 class JepPythonPyValue(val pyObject: PyObject) extends JepPyValue {
@@ -144,5 +157,7 @@ class JepPythonPyValue(val pyObject: PyObject) extends JepPyValue {
 
   def getStringified = if (pyObject == null) interpreter.stringifiedNone else pyObject.toString()
 
-  def cleanup() = {}
+  def cleanup() = {
+    pyObject.decref()
+  }
 }
