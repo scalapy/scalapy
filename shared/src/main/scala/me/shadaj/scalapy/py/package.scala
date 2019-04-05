@@ -30,16 +30,22 @@ package object py {
     ret
   }
 
-  def local(f: => Unit): Unit = {
-    py.Object.allocatedObjects = mutable.Queue.empty[py.Object] :: py.Object.allocatedObjects
-    f
+  def local[T](f: => T): T = {
+    py.PyValue.allocatedValues = List.empty[PyValue] :: py.PyValue.allocatedValues
+    py.VariableReference.allocatedReferences = List.empty[VariableReference] :: py.VariableReference.allocatedReferences
+    val ret: T = f
 
-    val toClean = py.Object.allocatedObjects.head
-
-    toClean.foreach { c =>
-      c.finalize()
+    py.PyValue.allocatedValues.head.foreach { c =>
+      c.cleanup()
     }
 
-    py.Object.allocatedObjects = py.Object.allocatedObjects.tail
+    py.VariableReference.allocatedReferences.head.foreach { c =>
+      c.cleanup()
+    }
+
+    py.PyValue.allocatedValues = py.PyValue.allocatedValues.tail
+    py.VariableReference.allocatedReferences = py.VariableReference.allocatedReferences.tail
+
+    ret
   }
 }

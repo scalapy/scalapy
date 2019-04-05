@@ -8,18 +8,24 @@ class StringObjectFacade(obj: Object) extends ObjectFacade(obj) {
 
 class MethodCallingTest extends FunSuite with BeforeAndAfterAll {
   test("Can access global variables") {
-    val obj = Object("123")
-    assert(global.selectDynamic(obj.expr).as[Int] == 123)
+    local {
+      val obj = Object("123")
+      assert(global.selectDynamic(obj.expr.variable).as[Int] == 123)
+    }
   }
 
   test("Can call global len with Scala sequence") {
-    assert(global.len(Seq(1, 2, 3)).as[Int] == 3)
+    local {
+      assert(global.len(Seq(1, 2, 3)).as[Int] == 3)
+    }
   }
 
   test("Can call dynamic + on integers") {
-    val num1 = Object("1")
-    val num2 = Object("2")
-    assert((num1.asInstanceOf[DynamicObject] + num2).as[Int] == 3)
+    local {
+      val num1 = Object("1")
+      val num2 = Object("2")
+      assert((num1.asInstanceOf[DynamicObject] + num2).as[Int] == 3)
+    }
   }
 
   if (!Platform.isNative) {
@@ -29,11 +35,13 @@ class MethodCallingTest extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Can use with statement with file object") {
-    val opened = if (Platform.isNative) {
-      global.open("./README.md", "r")
-     } else global.open("../README.md", "r")
-    `with`(opened) { file =>
-      assert(file.asInstanceOf[DynamicObject].encoding.as[String] == "UTF-8")
+    local {
+      val opened = if (Platform.isNative) {
+        global.open("./README.md", "r")
+      } else global.open("../README.md", "r")
+      `with`(opened) { file =>
+        assert(file.asInstanceOf[DynamicObject].encoding.as[String] == "UTF-8")
+      }
     }
   }
 }

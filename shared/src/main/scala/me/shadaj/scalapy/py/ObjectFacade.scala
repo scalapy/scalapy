@@ -3,7 +3,7 @@ package me.shadaj.scalapy.py
 import scala.reflect.macros.whitebox
 import scala.language.experimental.macros
 
-class ObjectFacade(originalObject: Object) extends Object(originalObject.variableId) {
+class ObjectFacade(originalObject: Object) extends Object(originalObject.value) {
   final val toObject = originalObject
   final val toDynamic = originalObject.asInstanceOf[DynamicObject]
 
