@@ -56,7 +56,7 @@ lazy val scalaPy =
       Seq(fileToWrite)
     }
   ).settings(
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.0-SNAP10" % Test
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.0-SNAP8" % Test
   ).jvmSettings(
     libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value,
     libraryDependencies += "black.ninia" % "jep" % "3.8.2",
