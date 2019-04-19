@@ -7,10 +7,9 @@ class StringObjectFacade(obj: Object) extends ObjectFacade(obj) {
 }
 
 class MethodCallingTest extends FunSuite with BeforeAndAfterAll {
-  test("Can access global variables") {
+  test("Can access global values") {
     local {
-      val obj = Object("123")
-      assert(global.selectDynamic(obj.expr.variable).as[Int] == 123)
+      assert(global.selectDynamic("True").as[Boolean] == true)
     }
   }
 

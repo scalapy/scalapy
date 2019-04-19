@@ -33,19 +33,27 @@ package object py {
   def local[T](f: => T): T = {
     py.PyValue.allocatedValues = List.empty[PyValue] :: py.PyValue.allocatedValues
     py.VariableReference.allocatedReferences = List.empty[VariableReference] :: py.VariableReference.allocatedReferences
-    val ret: T = f
+    @inline def cleanupAfter() = {
+      py.PyValue.allocatedValues.head.foreach { c =>
+        c.cleanup()
+      }
 
-    py.PyValue.allocatedValues.head.foreach { c =>
-      c.cleanup()
+      py.VariableReference.allocatedReferences.head.foreach { c =>
+        c.cleanup()
+      }
+
+      py.PyValue.allocatedValues = py.PyValue.allocatedValues.tail
+      py.VariableReference.allocatedReferences = py.VariableReference.allocatedReferences.tail
     }
 
-    py.VariableReference.allocatedReferences.head.foreach { c =>
-      c.cleanup()
+    try {
+      val ret = f
+      cleanupAfter()
+      ret
+    } catch {
+      case t: Throwable =>
+        cleanupAfter()
+        throw t
     }
-
-    py.PyValue.allocatedValues = py.PyValue.allocatedValues.tail
-    py.VariableReference.allocatedReferences = py.VariableReference.allocatedReferences.tail
-
-    ret
   }
 }

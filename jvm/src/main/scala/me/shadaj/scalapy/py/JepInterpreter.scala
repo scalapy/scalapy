@@ -1,9 +1,7 @@
 package me.shadaj.scalapy.py
 
-import jep.Jep
+import jep._
 import jep.python.PyObject
-
-import jep.NDArray
 
 class JepInterpreter extends Interpreter {
   val underlying = new Jep
@@ -58,8 +56,107 @@ class JepInterpreter extends Interpreter {
       pyObject.incref()
       new JepPythonPyValue(pyObject)
     } catch {
-      case _ => new JepJavaPyValue(underlying.getValue(code))
+      case _: JepException | _: NullPointerException =>
+        new JepJavaPyValue(underlying.getValue(code))
     }
+  }
+
+  def binaryAdd(a: PyValue, b: PyValue): PyValue = call(a, "__add__", Seq(b))
+  def binarySub(a: PyValue, b: PyValue): PyValue = call(a, "__sub__", Seq(b))
+  def binaryMul(a: PyValue, b: PyValue): PyValue = call(a, "__mul__", Seq(b))
+  def binaryDiv(a: PyValue, b: PyValue): PyValue = call(a, "__div__", Seq(b))
+  def binaryMod(a: PyValue, b: PyValue): PyValue = call(a, "__mod__", Seq(b))
+
+  def callGlobal(method: String, args: PyValue*): PyValue = {
+    val res = "tmp_call_global_res"
+    val argsLoaded = args.zipWithIndex.map { case (arg: JepPyValue, i) =>
+      val argName = s"tmp_call_global_arg_$i"
+      arg.loadInto(argName)
+      argName
+    }
+
+    underlying.eval(s"$res = $method(${argsLoaded.mkString(",")})")
+    val ret = load(res)
+    argsLoaded.foreach(v => underlying.eval(s"del $v"))
+    underlying.eval(s"del $res")
+    ret
+  }
+
+  def call(on: PyValue, method: String, args: Seq[PyValue]): PyValue = {
+    val res = "tmp_call_res"
+    val onValue = "tmp_call_on"
+
+    on.asInstanceOf[JepPyValue].loadInto(onValue)
+    val argsLoaded = args.zipWithIndex.map { case (arg: JepPyValue, i) =>
+      val argName = s"tmp_call_arg_$i"
+      arg.loadInto(argName)
+      argName
+    }
+
+    underlying.eval(s"$res = $onValue.$method(${argsLoaded.mkString(",")})")
+    val ret = load(res)
+    underlying.eval(s"del $onValue")
+    argsLoaded.foreach(v => underlying.eval(s"del $v"))
+    underlying.eval(s"del $res")
+    ret
+  }
+
+  def select(on: PyValue, value: String): PyValue = {
+    val res = "tmp_select_res"
+    val onValue = "tmp_select_on"
+
+    on.asInstanceOf[JepPyValue].loadInto(onValue)
+
+    underlying.eval(s"$res = $onValue.$value")
+    val ret = load(res)
+    underlying.eval(s"del $onValue")
+    underlying.eval(s"del $res")
+    ret
+  }
+
+  def selectList(on: PyValue, index: Int): PyValue = {
+    val res = "tmp_select_res"
+    val onValue = "tmp_select_on"
+
+    on.asInstanceOf[JepPyValue].loadInto(onValue)
+
+    underlying.eval(s"$res = $onValue[$index]")
+    val ret = load(res)
+    underlying.eval(s"del $onValue")
+    underlying.eval(s"del $res")
+    ret
+  }
+
+  def selectDictionary(on: PyValue, key: PyValue): PyValue = {
+    val res = "tmp_select_res"
+    val onValue = "tmp_select_on"
+    val keyValue = "tmp_select_key"
+
+    on.asInstanceOf[JepPyValue].loadInto(onValue)
+    key.asInstanceOf[JepPyValue].loadInto(keyValue)
+
+    underlying.eval(s"$res = $onValue[$keyValue]")
+    val ret = load(res)
+    underlying.eval(s"del $onValue")
+    underlying.eval(s"del $keyValue")
+    underlying.eval(s"del $res")
+    ret
+  }
+
+  def binaryOp(op: String, a: PyValue, b: PyValue): PyValue = {
+    val res = "tmp_binary_res"
+    val aValue = "tmp_binary_a"
+    val bValue = "tmp_binary_b"
+
+    a.asInstanceOf[JepPyValue].loadInto(aValue)
+    b.asInstanceOf[JepPyValue].loadInto(bValue)
+
+    underlying.eval(s"$res = $aValue $op $bValue")
+    val ret = load(res)
+    underlying.eval(s"del $aValue")
+    underlying.eval(s"del $bValue")
+    underlying.eval(s"del $res")
+    ret
   }
 }
 
@@ -123,17 +220,42 @@ trait JepPyValue extends PyValue {
       (interpreter.valueFromJepAny(kv._1), interpreter.valueFromJepAny(kv._2))
     }
   }
+
+  def loadInto(variable: String): Unit
 }
 
+// Jep value stored as a PyObject reference
+class JepPythonPyValue(val pyObject: PyObject) extends JepPyValue {
+  lazy val value = {
+    val temp = "tmp_obj_to_v"
+    loadInto(temp)
+    val ret = interpreter.underlying.getValue(temp)
+    interpreter.eval("del tmp_obj_to_v")
+    ret
+  }
+
+  def getStringified = if (pyObject == null) interpreter.stringifiedNone else pyObject.toString()
+
+  def loadInto(variable: String): Unit = {
+    interpreter.underlying.set(variable, pyObject)
+  }
+
+  def cleanup() = {
+    pyObject.decref()
+  }
+}
+
+// Jep value stored as a Java value
 class JepJavaPyValue(val value: Any) extends JepPyValue {
   private var _pyObject: PyObject = null
 
   def pyObject = {
     if (_pyObject == null) {
       val temp = "tmp_v_to_obj"
-      interpreter.underlying.set(temp, value)
+      loadInto(temp)
       _pyObject = interpreter.underlying.getValue(temp, classOf[PyObject])
       _pyObject.incref()
+      interpreter.eval("del tmp_v_to_obj")
     }
 
     _pyObject
@@ -141,23 +263,13 @@ class JepJavaPyValue(val value: Any) extends JepPyValue {
 
   def getStringified = if (value == null) interpreter.stringifiedNone else value.toString()
 
+  def loadInto(variable: String): Unit = {
+    interpreter.underlying.set(variable, value)
+  }
+
   def cleanup() = {
     if (_pyObject != null) {
       _pyObject.decref()
     }
-  }
-}
-
-class JepPythonPyValue(val pyObject: PyObject) extends JepPyValue {
-  lazy val value = {
-    val temp = "tmp_obj_to_v"
-    interpreter.underlying.set(temp, pyObject)
-    interpreter.underlying.getValue(temp)
-  }
-
-  def getStringified = if (pyObject == null) interpreter.stringifiedNone else pyObject.toString()
-
-  def cleanup() = {
-    pyObject.decref()
   }
 }

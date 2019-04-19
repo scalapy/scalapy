@@ -5,7 +5,7 @@ import scala.collection.mutable
 
 class Object(val value: PyValue) { self =>
   private var _expr: VariableReference = null
-  def expr = {
+  def expr: VariableReference = {
     if (_expr == null) {
       _expr = interpreter.getVariableReference(value)
     }
@@ -13,28 +13,14 @@ class Object(val value: PyValue) { self =>
     _expr
   }
 
-  private var cleaned = false
-
   override def toString: String = value.getStringified
 
-  override def finalize(): Unit = {
-    if (!cleaned) {
-      if (_expr != null) {
-        _expr.cleanup()
-      }
-
-      cleaned = true
-    }
-  }
-
-  def as[T: ObjectReader]: T = implicitly[ObjectReader[T]].read(new ValueAndRequestObject(interpreter.load(expr.variable)) {
+  def as[T: ObjectReader]: T = implicitly[ObjectReader[T]].read(new ValueAndRequestObject(value) {
     override def getObject: Object = self
   })
 }
 
 object Object {
-  private var nextCounter: Int = 0
-
   def apply(stringToEval: String): Object = {
     populateWith(interpreter.load(stringToEval))
   }

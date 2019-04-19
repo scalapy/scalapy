@@ -3,9 +3,7 @@ package me.shadaj.scalapy.py
 import scala.reflect.ClassTag
 import scala.collection.JavaConverters._
 
-abstract class ValueAndRequestObject(getValue: => PyValue) {
-  final def value: PyValue = getValue
-
+abstract class ValueAndRequestObject(val value: PyValue) {
   protected def getObject: Object
 
   private var objectCache: Object = null
@@ -161,7 +159,7 @@ object ObjectReader extends ObjectTupleReaders {
         }) -> readerO.read(new ValueAndRequestObject(v) {
           def getObject = {
             if (Platform.isNative) ??? else {
-              r.requestObject.asInstanceOf[DynamicObject].arrayAccess(
+              r.requestObject.asInstanceOf[DynamicObject].dictionaryAccess(
                 Object.populateWith(interpreter.asInstanceOf[JepInterpreter].valueFromAny(k))
               )
             }
