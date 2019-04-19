@@ -37,10 +37,11 @@ lazy val scalaPy =
     sourceGenerators in Compile += Def.task  {
       val fileToWrite = (sourceManaged in Compile).value / "ObjectTupleWriters.scala"
       val methods = (2 to 22).map { n =>
+        val seqArgs = (1 to n).map(t => s"r$t.write(v._" + t + ").right.map(_.value).merge").mkString(", ")
         s"""implicit def tuple${n}Writer[${(1 to n).map(t => s"T$t").mkString(", ")}](implicit ${(1 to n).map(t => s"r$t: ObjectWriter[T$t]").mkString(", ")}): ObjectWriter[(${(1 to n).map(t => s"T$t").mkString(", ")})] = {
            |  new ObjectWriter[(${(1 to n).map(t => s"T$t").mkString(", ")})] {
            |    override def write(v: (${(1 to n).map(t => s"T$t").mkString(", ")})): Either[PyValue, Object] = {
-           |      Right(Object("(" + ${(1 to n).map(t => s"r$t.write(v._" + t + ").left.map(Object.populateWith).merge.expr").mkString("+ \",\" +")} + ")"))
+           |      Left(interpreter.createTuple(Seq(${seqArgs})))
            |    }
            |  }
            |}"""
