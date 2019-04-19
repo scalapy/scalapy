@@ -16,6 +16,12 @@ object CPythonAPI {
   def PyUnicode_AsUTF8(pyString: Ptr[Byte]): CString = extern
 
   def PyBool_FromLong(long: CLong): Ptr[Byte] = extern
+
+  def PyNumber_Add(o1: Ptr[Byte], o2: Ptr[Byte]): Ptr[Byte] = extern
+  def PyNumber_Subtract(o1: Ptr[Byte], o2: Ptr[Byte]): Ptr[Byte] = extern
+  def PyNumber_Multiply(o1: Ptr[Byte], o2: Ptr[Byte]): Ptr[Byte] = extern
+  def PyNumber_TrueDivide(o1: Ptr[Byte], o2: Ptr[Byte]): Ptr[Byte] = extern
+  def PyNumber_Remainder(o1: Ptr[Byte], o2: Ptr[Byte]): Ptr[Byte] = extern
   
   def PyLong_FromLongLong(long: CLongLong): Ptr[Byte] = extern
   def PyLong_AsLong(pyLong: Ptr[Byte]): CLong = extern
@@ -29,6 +35,8 @@ object CPythonAPI {
   def PyDict_SetItemString(dict: Ptr[Byte], key: CString, value: Ptr[Byte]): Int = extern
   def PyDict_Contains(dict: Ptr[Byte], key: Ptr[Byte]): Int = extern
   def PyDict_GetItem(dict: Ptr[Byte], key: Ptr[Byte]): Ptr[Byte] = extern
+  def PyDict_GetItemWithError(dict: Ptr[Byte], key: Ptr[Byte]): Ptr[Byte] = extern
+  def PyDict_DelItemString(dict: Ptr[Byte], key: CString): Int = extern
   def PyDict_Keys(dict: Ptr[Byte]): Ptr[Byte] = extern
 
   def PyList_New(size: Int): Ptr[Byte] = extern
@@ -40,6 +48,8 @@ object CPythonAPI {
   def PyTuple_GetItem(list: Ptr[Byte], index: CSize): Ptr[Byte] = extern
 
   def PyObject_Str(obj: Ptr[Byte]): Ptr[Byte] = extern
+  def PyObject_GetAttr(obj: Ptr[Byte], name: Ptr[Byte]): Ptr[Byte] = extern
+  def PyObject_CallMethodObjArgs(obj: Ptr[Byte], name: Ptr[Byte], args: CVararg*): Ptr[Byte] = extern
 
   def PyErr_Occurred(): Ptr[Byte] = extern
   def PyErr_Fetch(pType: Ptr[Ptr[Byte]], pValue: Ptr[Ptr[Byte]], pTraceback: Ptr[Ptr[Byte]]): Unit = extern
@@ -149,6 +159,153 @@ class CPythonInterpreter extends Interpreter {
 
     ret
   }
+
+  def binaryAdd(a: PyValue, b: PyValue): PyValue = {
+    new CPyValue({
+      val ret = CPythonAPI.PyNumber_Add(
+        a.asInstanceOf[CPyValue].underlying,
+        b.asInstanceOf[CPyValue].underlying
+      )
+
+      throwErrorIfOccured()
+
+      ret
+    })
+  }
+
+  def binarySub(a: PyValue, b: PyValue): PyValue = {
+    new CPyValue({
+      val ret = CPythonAPI.PyNumber_Subtract(
+        a.asInstanceOf[CPyValue].underlying,
+        b.asInstanceOf[CPyValue].underlying
+      )
+
+      throwErrorIfOccured()
+
+      ret
+    })
+  }
+
+  def binaryMul(a: PyValue, b: PyValue): PyValue = {
+    new CPyValue({
+      val ret = CPythonAPI.PyNumber_Multiply(
+        a.asInstanceOf[CPyValue].underlying,
+        b.asInstanceOf[CPyValue].underlying
+      )
+
+      throwErrorIfOccured()
+
+      ret
+    })
+  }
+
+  def binaryDiv(a: PyValue, b: PyValue): PyValue = {
+    new CPyValue({
+      val ret = CPythonAPI.PyNumber_TrueDivide(
+        a.asInstanceOf[CPyValue].underlying,
+        b.asInstanceOf[CPyValue].underlying
+      )
+
+      throwErrorIfOccured()
+
+      ret
+    })
+  }
+
+  def binaryMod(a: PyValue, b: PyValue): PyValue = {
+    new CPyValue({
+      val ret = CPythonAPI.PyNumber_Remainder(
+        a.asInstanceOf[CPyValue].underlying,
+        b.asInstanceOf[CPyValue].underlying
+      )
+
+      throwErrorIfOccured()
+
+      ret
+    })
+  }
+
+  def callGlobal(name: String, args: PyValue*): PyValue = {
+    val argsLoaded = args.zipWithIndex.map { case (arg: CPyValue, i) =>
+      val argName = s"tmp_call_arg_$i"
+      Zone { implicit zone =>
+        CPythonAPI.PyDict_SetItemString(globals, toCString(argName), arg.underlying)
+      }
+
+      argName
+    }
+
+    try {
+      load(s"$name(${argsLoaded.mkString(",")})")
+    } finally {
+      argsLoaded.foreach { argName =>
+        Zone { implicit zone =>
+          CPythonAPI.PyDict_DelItemString(globals, toCString(argName))
+        }
+      }
+    }
+  }
+
+  def call(on: PyValue, method: String, args: Seq[PyValue]): PyValue = {
+    val onVariable = "tmp_call_on"
+    Zone { implicit zone =>
+      CPythonAPI.PyDict_SetItemString(globals, toCString(onVariable), on.asInstanceOf[CPyValue].underlying)
+    }
+
+    val argsLoaded = args.zipWithIndex.map { case (arg: CPyValue, i) =>
+      val argName = s"tmp_call_arg_$i"
+      Zone { implicit zone =>
+        CPythonAPI.PyDict_SetItemString(globals, toCString(argName), arg.underlying)
+      }
+
+      argName
+    }
+
+    try {
+      load(s"$onVariable.$method(${argsLoaded.mkString(",")})")
+    } finally {
+      Zone { implicit zone =>
+        CPythonAPI.PyDict_DelItemString(globals, toCString(onVariable))
+      }
+
+      argsLoaded.foreach { argName =>
+        Zone { implicit zone =>
+          CPythonAPI.PyDict_DelItemString(globals, toCString(argName))
+        }
+      }
+    }
+  }
+
+  def select(on: PyValue, value: String): PyValue = {
+    local(new CPyValue(CPythonAPI.PyObject_GetAttr(
+      on.asInstanceOf[CPyValue].underlying,
+      valueFromString(value).asInstanceOf[CPyValue].underlying
+    )))
+  }
+
+  def selectList(on: PyValue, index: Int): PyValue = {
+    val ret = new CPyValue(CPythonAPI.PyList_GetItem(
+      on.asInstanceOf[CPyValue].underlying,
+      index
+    ))
+
+    throwErrorIfOccured()
+
+    ret
+  }
+
+  def selectDictionary(on: PyValue, key: PyValue): PyValue = {
+    val ret = new CPyValue(CPythonAPI.PyDict_GetItemWithError(
+      on.asInstanceOf[CPyValue].underlying,
+      key.asInstanceOf[CPyValue].underlying
+    ))
+
+    throwErrorIfOccured()
+
+    ret
+  }
+
+  def binaryOp(op: String, a: PyValue, b: PyValue): PyValue = ???
 }
 
 class CPyValue(val underlying: Ptr[Byte]) extends PyValue {

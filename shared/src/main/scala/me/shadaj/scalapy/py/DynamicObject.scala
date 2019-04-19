@@ -4,19 +4,23 @@ import scala.language.dynamics
 
 class DynamicObject(value: PyValue) extends Object(value) with scala.Dynamic {
   def applyDynamic(method: String)(params: Object*): DynamicObject = {
-    Object(s"$expr.$method(${params.map(_.expr).mkString(",")})").asInstanceOf[DynamicObject]
+    new DynamicObject(interpreter.call(value, method, params.map(_.value)))
   }
 
   def applyDynamicNamed(method: String)(params: (String, Object)*): DynamicObject = {
     Object(s"$expr.$method(${params.map(t => s"${t._1} = ${t._2.expr}").mkString(",")})").asInstanceOf[DynamicObject]
   }
 
-  def selectDynamic(value: String): DynamicObject = {
-    Object(s"$expr.$value").asInstanceOf[DynamicObject]
+  def selectDynamic(term: String): DynamicObject = {
+    new DynamicObject(interpreter.select(value, term))
   }
 
-  def arrayAccess(key: Object): DynamicObject = {
-    Object(s"$expr[${key.expr}]").asInstanceOf[DynamicObject]
+  def arrayAccess(index: Int): DynamicObject = {
+    new DynamicObject(interpreter.selectList(value, index))
+  }
+
+  def dictionaryAccess(key: Object): DynamicObject = {
+    new DynamicObject(interpreter.selectDictionary(value, key.value))
   }
 
   def unary_+(): DynamicObject = {
@@ -28,22 +32,22 @@ class DynamicObject(value: PyValue) extends Object(value) with scala.Dynamic {
   }
 
   def +(that: Object): DynamicObject = {
-    Object(s"$expr + (${that.expr})").asInstanceOf[DynamicObject]
+    new DynamicObject(interpreter.binaryAdd(value, that.value))
   }
 
   def -(that: Object): DynamicObject = {
-    Object(s"$expr - (${that.expr})").asInstanceOf[DynamicObject]
+    new DynamicObject(interpreter.binarySub(value, that.value))
   }
 
   def *(that: Object): DynamicObject = {
-    Object(s"$expr * (${that.expr})").asInstanceOf[DynamicObject]
+    new DynamicObject(interpreter.binaryMul(value, that.value))
   }
 
   def /(that: Object): DynamicObject = {
-    Object(s"$expr / (${that.expr})").asInstanceOf[DynamicObject]
+    new DynamicObject(interpreter.binaryDiv(value, that.value))
   }
 
   def %(that: Object): DynamicObject = {
-    Object(s"$expr % (${that.expr})").asInstanceOf[DynamicObject]
+    new DynamicObject(interpreter.binaryMod(value, that.value))
   }
 }

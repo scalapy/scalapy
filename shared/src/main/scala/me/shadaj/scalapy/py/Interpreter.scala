@@ -1,6 +1,13 @@
 package me.shadaj.scalapy.py
 
 class VariableReference(val variable: String) {
+  // For tracing down variable reference creation
+  // try {
+  //   throw new Exception()
+  // } catch {
+  //   case e => e.printStackTrace()
+  // }
+
   if (VariableReference.allocatedReferences.nonEmpty) {
     VariableReference.allocatedReferences = (this :: VariableReference.allocatedReferences.head) :: VariableReference.allocatedReferences.tail
   } else if (Platform.isNative) {
@@ -38,6 +45,19 @@ trait Interpreter {
   def valueFromSeq(elements: Seq[PyValue]): PyValue
 
   def noneValue: PyValue
+
+  def binaryAdd(a: PyValue, b: PyValue): PyValue
+  def binarySub(a: PyValue, b: PyValue): PyValue
+  def binaryMul(a: PyValue, b: PyValue): PyValue
+  def binaryDiv(a: PyValue, b: PyValue): PyValue
+  def binaryMod(a: PyValue, b: PyValue): PyValue
+
+  def callGlobal(name: String, args: PyValue*): PyValue
+  def call(on: PyValue, method: String, args: Seq[PyValue]): PyValue
+  def select(on: PyValue, value: String): PyValue
+  def selectList(on: PyValue, index: Int): PyValue
+  def selectDictionary(on: PyValue, key: PyValue): PyValue
+  def binaryOp(op: String, a: PyValue, b: PyValue): PyValue
 }
 
 trait PyValue {

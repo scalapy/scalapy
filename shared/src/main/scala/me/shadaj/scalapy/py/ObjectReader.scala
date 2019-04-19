@@ -159,7 +159,7 @@ object ObjectReader extends ObjectTupleReaders {
         }) -> readerO.read(new ValueAndRequestObject(v) {
           def getObject = {
             if (Platform.isNative) ??? else {
-              r.requestObject.asInstanceOf[DynamicObject].arrayAccess(
+              r.requestObject.asInstanceOf[DynamicObject].dictionaryAccess(
                 Object.populateWith(interpreter.asInstanceOf[JepInterpreter].valueFromAny(k))
               )
             }

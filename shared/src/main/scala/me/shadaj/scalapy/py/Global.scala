@@ -4,7 +4,7 @@ import scala.language.dynamics
 
 class Global private[py]() extends scala.Dynamic {
   def applyDynamic(method: String)(params: Object*): Object = {
-    Object(s"$method(${params.map(_.expr.variable).mkString(",")})")
+    new DynamicObject(interpreter.callGlobal(method, params.map(_.value): _*))
   }
 
   def applyDynamicNamed(method: String)(params: (String, Object)*): DynamicObject = {
