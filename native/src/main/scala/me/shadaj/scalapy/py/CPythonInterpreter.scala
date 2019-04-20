@@ -35,6 +35,7 @@ object CPythonAPI {
   def PyDict_SetItemString(dict: Ptr[Byte], key: CString, value: Ptr[Byte]): Int = extern
   def PyDict_Contains(dict: Ptr[Byte], key: Ptr[Byte]): Int = extern
   def PyDict_GetItem(dict: Ptr[Byte], key: Ptr[Byte]): Ptr[Byte] = extern
+  def PyDict_GetItemString(dict: Ptr[Byte], key: Ptr[Byte]): Ptr[Byte] = extern
   def PyDict_GetItemWithError(dict: Ptr[Byte], key: Ptr[Byte]): Ptr[Byte] = extern
   def PyDict_DelItemString(dict: Ptr[Byte], key: CString): Int = extern
   def PyDict_Keys(dict: Ptr[Byte]): Ptr[Byte] = extern
@@ -51,11 +52,14 @@ object CPythonAPI {
 
   def PyObject_Str(obj: Ptr[Byte]): Ptr[Byte] = extern
   def PyObject_GetAttr(obj: Ptr[Byte], name: Ptr[Byte]): Ptr[Byte] = extern
+  def PyObject_GetAttrString(obj: Ptr[Byte], name: CString): Ptr[Byte] = extern
   def PyObject_CallMethodObjArgs(obj: Ptr[Byte], name: Ptr[Byte], args: CVararg*): Ptr[Byte] = extern
+  def PyObject_Call(obj: Ptr[Byte], args: Ptr[Byte], kwArgs: Ptr[Byte]): Ptr[Byte] = extern
 
   def PyErr_Occurred(): Ptr[Byte] = extern
   def PyErr_Fetch(pType: Ptr[Ptr[Byte]], pValue: Ptr[Ptr[Byte]], pTraceback: Ptr[Ptr[Byte]]): Unit = extern
   def PyErr_Print(): Unit = extern
+  def PyErr_Clear(): Unit = extern
 
   def PyEval_GetBuiltins(): Ptr[Byte] = extern
 
@@ -69,7 +73,8 @@ class CPythonInterpreter extends Interpreter {
   CPythonAPI.Py_Initialize()
 
   val globals: Ptr[Byte] = CPythonAPI.PyDict_New()
-  set("__builtins__", new CPyValue(CPythonAPI.PyEval_GetBuiltins()))
+  val builtins = new CPyValue(CPythonAPI.PyEval_GetBuiltins())
+  set("__builtins__", builtins)
 
   val falsePtr: Ptr[Byte] = CPythonAPI.PyBool_FromLong(0)
   val truePtr: Ptr[Byte] = CPythonAPI.PyBool_FromLong(1)
@@ -152,7 +157,11 @@ class CPythonInterpreter extends Interpreter {
 
       CPythonAPI.PyErr_Fetch(pType, pValue, pTraceback)
 
-      val errorMessage = local((new CPyValue(CPythonAPI.PyObject_Str(!pType))).getString)
+      val errorMessage = local {
+        (new CPyValue(CPythonAPI.PyObject_Str(!pType))).getString + (if (!pValue != null) {
+          " " + (new CPyValue(CPythonAPI.PyObject_Str(!pValue))).getString
+        } else "")
+      }
 
       throw new Exception(errorMessage)
     }
@@ -238,55 +247,45 @@ class CPythonInterpreter extends Interpreter {
     })
   }
 
-  def callGlobal(name: String, args: PyValue*): PyValue = {
-    val argsLoaded = args.zipWithIndex.map { case (arg: CPyValue, i) =>
-      val argName = s"tmp_call_arg_$i"
-      Zone { implicit zone =>
-        CPythonAPI.PyDict_SetItemString(globals, toCString(argName), arg.underlying)
+  def callGlobal(method: String, args: PyValue*): PyValue = {
+    var callable: CPyValue = local {
+      var gottenAttr = CPythonAPI.PyDict_GetItemWithError(globals, valueFromString(method).asInstanceOf[CPyValue].underlying)
+      if (gottenAttr == null) {
+        CPythonAPI.PyErr_Clear()
+        gottenAttr = CPythonAPI.PyDict_GetItemWithError(builtins.underlying, valueFromString(method).asInstanceOf[CPyValue].underlying)
       }
 
-      argName
+      throwErrorIfOccured()
+      new CPyValue(gottenAttr)
     }
 
-    try {
-      load(s"$name(${argsLoaded.mkString(",")})")
-    } finally {
-      argsLoaded.foreach { argName =>
-        Zone { implicit zone =>
-          CPythonAPI.PyDict_DelItemString(globals, toCString(argName))
-        }
-      }
-    }
+    val result = CPythonAPI.PyObject_Call(
+      callable.underlying,
+      createTuple(args).asInstanceOf[CPyValue].underlying,
+      null
+    )
+
+    throwErrorIfOccured()
+
+    new CPyValue(result)
   }
 
   def call(on: PyValue, method: String, args: Seq[PyValue]): PyValue = {
-    val onVariable = "tmp_call_on"
-    Zone { implicit zone =>
-      CPythonAPI.PyDict_SetItemString(globals, toCString(onVariable), on.asInstanceOf[CPyValue].underlying)
+    var callable: CPyValue = Zone { implicit zone =>
+      val gottenAttr = CPythonAPI.PyObject_GetAttrString(on.asInstanceOf[CPyValue].underlying, toCString(method))
+      throwErrorIfOccured()
+      new CPyValue(gottenAttr)
     }
 
-    val argsLoaded = args.zipWithIndex.map { case (arg: CPyValue, i) =>
-      val argName = s"tmp_call_arg_$i"
-      Zone { implicit zone =>
-        CPythonAPI.PyDict_SetItemString(globals, toCString(argName), arg.underlying)
-      }
+    val result = CPythonAPI.PyObject_Call(
+      callable.underlying,
+      createTuple(args).asInstanceOf[CPyValue].underlying,
+      null
+    )
 
-      argName
-    }
+    throwErrorIfOccured()
 
-    try {
-      load(s"$onVariable.$method(${argsLoaded.mkString(",")})")
-    } finally {
-      Zone { implicit zone =>
-        CPythonAPI.PyDict_DelItemString(globals, toCString(onVariable))
-      }
-
-      argsLoaded.foreach { argName =>
-        Zone { implicit zone =>
-          CPythonAPI.PyDict_DelItemString(globals, toCString(argName))
-        }
-      }
-    }
+    new CPyValue(result)
   }
 
   def select(on: PyValue, value: String): PyValue = {
