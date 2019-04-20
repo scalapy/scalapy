@@ -4,24 +4,24 @@ import scala.language.dynamics
 import scala.reflect.ClassTag
 
 class Module private[py](private[py] val moduleName: String) extends scala.Dynamic {
-  def applyDynamic(method: String)(params: Object*): DynamicObject = {
+  def applyDynamic(method: String)(params: Object*): Dynamic = {
     if (method == "apply") {
-      Object(s"$moduleName(${params.map(_.expr).mkString(",")})").asInstanceOf[DynamicObject]
+      Object(s"$moduleName(${params.map(_.expr).mkString(",")})").asDynamic
     } else {
-      Object(s"$moduleName.$method(${params.map(_.expr).mkString(",")})").asInstanceOf[DynamicObject]
+      Object(s"$moduleName.$method(${params.map(_.expr).mkString(",")})").asDynamic
     }
   }
 
-  def applyDynamicNamed(method: String)(params: (String, Object)*): DynamicObject = {
+  def applyDynamicNamed(method: String)(params: (String, Object)*): Dynamic = {
     if (method == "apply") {
-      Object(s"$moduleName(${params.map(t => s"${t._1} = ${t._2.expr}").mkString(",")})").asInstanceOf[DynamicObject]
+      Object(s"$moduleName(${params.map(t => s"${t._1} = ${t._2.expr}").mkString(",")})").asDynamic
     } else {
-      Object(s"$moduleName.$method(${params.map(t => s"${t._1} = ${t._2.expr}").mkString(",")})").asInstanceOf[DynamicObject]
+      Object(s"$moduleName.$method(${params.map(t => s"${t._1} = ${t._2.expr}").mkString(",")})").asDynamic
     }
   }
 
-  def selectDynamic(value: String): DynamicObject = {
-    Object(s"$moduleName.$value").asInstanceOf[DynamicObject]
+  def selectDynamic(value: String): Dynamic = {
+    Object(s"$moduleName.$value").asDynamic
   }
 
   def updateDynamic(name: String)(value: Object): Unit = {
@@ -32,8 +32,10 @@ class Module private[py](private[py] val moduleName: String) extends scala.Dynam
     interpreter.eval(s"del $moduleName")
   }
 
-  def as[T <: ObjectFacade](implicit classTag: ClassTag[T]): T = {
-    classTag.runtimeClass.getConstructor(classOf[Object]).newInstance(Object(moduleName)).asInstanceOf[T]
+  def as[T <: ObjectFacade](implicit facadeCreator: FacadeCreator[T]): T = {
+    val inst = facadeCreator.create
+    inst.value = Object(moduleName).value
+    inst
   }
 }
 

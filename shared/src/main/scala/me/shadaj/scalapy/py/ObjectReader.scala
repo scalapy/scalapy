@@ -19,17 +19,18 @@ trait ObjectReader[T] {
 
 object ObjectReader extends ObjectTupleReaders {
   implicit val wrapperReader = new ObjectReader[Object] {
-    def read(r: ValueAndRequestObject): Object = new DynamicObject(r.requestObject.value)
+    def read(r: ValueAndRequestObject): Object = r.requestObject
   }
 
-  implicit val wrapperDynReader = new ObjectReader[DynamicObject] {
-    def read(r: ValueAndRequestObject): DynamicObject =
-      new DynamicObject(r.requestObject.value)
+  implicit val wrapperDynReader = new ObjectReader[Dynamic] {
+    def read(r: ValueAndRequestObject): Dynamic = r.requestObject.asDynamic
   }
 
-  implicit def facadeReader[F <: ObjectFacade](implicit classTag: ClassTag[F]): ObjectReader[F] = new ObjectReader[F] {
+  implicit def facadeReader[F <: ObjectFacade](implicit creator: FacadeCreator[F]): ObjectReader[F] = new ObjectReader[F] {
     override def read(r: ValueAndRequestObject): F = {
-      classTag.runtimeClass.getConstructor(classOf[Object]).newInstance(new DynamicObject(r.requestObject.value)).asInstanceOf[F]
+      val inst = creator.create
+      inst.value = r.value
+      inst
     }
   }
 
@@ -145,7 +146,7 @@ object ObjectReader extends ObjectTupleReaders {
     def read(r: ValueAndRequestObject) = {
       r.value.getSeq.zipWithIndex.map { case (v, i) =>
         reader.read(new ValueAndRequestObject(v) {
-          def getObject = r.requestObject.asInstanceOf[DynamicObject].arrayAccess(i)
+          def getObject = r.requestObject.asDynamic.arrayAccess(i)
         })
       }.toSeq
     }
@@ -159,7 +160,7 @@ object ObjectReader extends ObjectTupleReaders {
         }) -> readerO.read(new ValueAndRequestObject(v) {
           def getObject = {
             if (Platform.isNative) ??? else {
-              r.requestObject.asInstanceOf[DynamicObject].dictionaryAccess(
+              r.requestObject.asDynamic.dictionaryAccess(
                 Object.populateWith(interpreter.asInstanceOf[JepInterpreter].valueFromAny(k))
               )
             }

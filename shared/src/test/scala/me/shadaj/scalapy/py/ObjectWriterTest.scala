@@ -99,10 +99,8 @@ class ObjectWriterTest extends FunSuite with BeforeAndAfterAll {
     }
   }
 
-  if (!Platform.isNative) {
-    test("Sequences of sequences are natively writable") {
-      assert(implicitly[ObjectWriter[Seq[Seq[Int]]]].write(Seq(Seq(1), Seq(2))).isLeft)
-    }
+  test("Sequences of sequences are natively writable") {
+    assert(implicitly[ObjectWriter[Seq[Seq[Int]]]].write(Seq(Seq(1), Seq(2))).isLeft)
   }
 
   test("Writing a sequence of Python objects preserves original objects") {

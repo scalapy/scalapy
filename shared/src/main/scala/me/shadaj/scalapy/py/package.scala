@@ -24,9 +24,9 @@ package object py {
   type NoneOr[T] = None.type | T
 
   def `with`[T <: py.Object, O](ref: T)(withValue: T => O): O = {
-    ref.asInstanceOf[DynamicObject].__enter__()
+    ref.asDynamic.__enter__()
     val ret = withValue(ref)
-    ref.asInstanceOf[DynamicObject].__exit__(None, None, None)
+    ref.asDynamic.__exit__(None, None, None)
     ret
   }
 

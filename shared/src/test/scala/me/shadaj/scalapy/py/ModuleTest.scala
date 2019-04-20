@@ -2,7 +2,7 @@ package me.shadaj.scalapy.py
 
 import org.scalatest.{FunSuite, BeforeAndAfterAll}
 
-class StringModuleFacade(o: Object) extends ObjectFacade(o) {
+trait StringModuleFacade extends ObjectFacade {
   def digits: String = native
 }
 
@@ -13,9 +13,7 @@ class ModuleTest extends FunSuite with BeforeAndAfterAll {
     }
   }
 
-  if (!Platform.isNative) {
-    test("Can convert to facade and call methods") {
-      assert(module("string").as[StringModuleFacade].digits == "0123456789")
-    }
+  test("Can convert to facade and call methods") {
+    assert(module("string").as[StringModuleFacade].digits == "0123456789")
   }
 }
