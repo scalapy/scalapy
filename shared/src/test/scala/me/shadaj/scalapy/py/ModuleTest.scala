@@ -2,7 +2,7 @@ package me.shadaj.scalapy.py
 
 import org.scalatest.{FunSuite, BeforeAndAfterAll}
 
-trait StringModuleFacade extends ObjectFacade {
+@native trait StringModuleFacade extends Object {
   def digits: String = native
 }
 

@@ -32,10 +32,11 @@ class Module private[py](private[py] val moduleName: String) extends scala.Dynam
     interpreter.eval(s"del $moduleName")
   }
 
-  def as[T <: ObjectFacade](implicit facadeCreator: FacadeCreator[T]): T = {
-    val inst = facadeCreator.create
-    inst.value = Object(moduleName).value
-    inst
+  def as[T: ObjectReader]: T = {
+    val obj = Object(moduleName)
+    implicitly[ObjectReader[T]].read(new ValueAndRequestObject(obj.value) {
+      override def getObject: Object = obj
+    })
   }
 }
 

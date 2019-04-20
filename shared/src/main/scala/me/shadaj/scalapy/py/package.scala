@@ -17,8 +17,6 @@ package object py {
   def module(name: String) = Module(name)
   def module(name: String, subname: String) = Module(name, subname)
 
-  val global = new Global()
-
   object None
 
   type NoneOr[T] = None.type | T
@@ -33,7 +31,10 @@ package object py {
   def local[T](f: => T): T = {
     py.PyValue.allocatedValues = List.empty[PyValue] :: py.PyValue.allocatedValues
     py.VariableReference.allocatedReferences = List.empty[VariableReference] :: py.VariableReference.allocatedReferences
-    @inline def cleanupAfter() = {
+
+    try {
+      f
+    } finally {
       py.PyValue.allocatedValues.head.foreach { c =>
         c.cleanup()
       }
@@ -45,15 +46,12 @@ package object py {
       py.PyValue.allocatedValues = py.PyValue.allocatedValues.tail
       py.VariableReference.allocatedReferences = py.VariableReference.allocatedReferences.tail
     }
-
-    try {
-      val ret = f
-      cleanupAfter()
-      ret
-    } catch {
-      case t: Throwable =>
-        cleanupAfter()
-        throw t
-    }
   }
+
+  import scala.annotation.StaticAnnotation
+  class native extends StaticAnnotation
+
+  import scala.language.experimental.macros
+  def native[T]: T = macro ObjectFacadeImpl.native_impl[T]
+  def nativeNamed[T]: T = macro ObjectFacadeImpl.native_named_impl[T]
 }
