@@ -3,9 +3,8 @@ package me.shadaj.scalapy.py
 import scala.reflect.macros.whitebox
 import scala.language.experimental.macros
 
-class ObjectFacade(originalObject: Object) extends Object(originalObject.value) {
-  final val toObject = originalObject
-  final val toDynamic = originalObject.asInstanceOf[DynamicObject]
+trait ObjectFacade extends Object {
+  private[py] var value: PyValue = null
 
   protected def native[T]: T = macro ObjectFacadeImpl.native_impl[T]
   protected def nativeNamed[T]: T = macro ObjectFacadeImpl.native_named_impl[T]
@@ -13,7 +12,23 @@ class ObjectFacade(originalObject: Object) extends Object(originalObject.value) 
   override def finalize(): Unit = {} // let the originalObject handle this
 }
 
+object ObjectFacade {
+  implicit def getCreator[F <: ObjectFacade]: FacadeCreator[F] = macro ObjectFacadeImpl.creator[F]
+}
+
+abstract class FacadeCreator[F <: ObjectFacade] {
+  def create: F
+}
+
 object ObjectFacadeImpl {
+  def creator[T <: ObjectFacade](c: whitebox.Context)(implicit tag: c.WeakTypeTag[T]): c.Expr[FacadeCreator[T]] = {
+    import c.universe._
+    
+    c.Expr[FacadeCreator[T]](q"""new _root_.me.shadaj.scalapy.py.FacadeCreator[${tag.tpe}] {
+      def create = new ${tag.tpe} {}
+    }""")
+  }
+
   def native_impl[T: c.WeakTypeTag](c: whitebox.Context): c.Expr[T] = {
     import c.universe._
 
@@ -25,9 +40,9 @@ object ObjectFacadeImpl {
     paramss.headOption match {
       case Some(params) =>
         val paramExprs = params.map(_.name)
-        c.Expr[T](q"toDynamic.applyDynamic($methodName)(..$paramExprs).as[$returnType]")
+        c.Expr[T](q"asDynamic.applyDynamic($methodName)(..$paramExprs).as[$returnType]")
       case scala.None =>
-        c.Expr[T](q"toDynamic.selectDynamic($methodName).as[$returnType]")
+        c.Expr[T](q"asDynamic.selectDynamic($methodName).as[$returnType]")
     }
   }
 
@@ -46,10 +61,10 @@ object ObjectFacadeImpl {
           s"""("${p.name}", $paramName)"""
         }
 
-        c.Expr[T](c.parse(s"""toDynamic.applyDynamicNamed("$methodName")(${paramExprs.mkString(",")}).as[$returnType]"""))
+        c.Expr[T](c.parse(s"""asDynamic.applyDynamicNamed("$methodName")(${paramExprs.mkString(",")}).as[$returnType]"""))
 
       case scala.None =>
-        c.Expr[T](q"toDynamic.selectDynamic($methodName).as[$returnType]")
+        c.Expr[T](q"asDynamic.selectDynamic($methodName).as[$returnType]")
     }
   }
 }

@@ -2,7 +2,7 @@ package me.shadaj.scalapy.py
 
 import org.scalatest.{FunSuite, BeforeAndAfterAll}
 
-class StringObjectFacade(obj: Object) extends ObjectFacade(obj) {
+trait StringObjectFacade extends ObjectFacade {
   def replace(old: String, newValue: String): String = native
 }
 
@@ -23,14 +23,12 @@ class MethodCallingTest extends FunSuite with BeforeAndAfterAll {
     local {
       val num1 = Object("1")
       val num2 = Object("2")
-      assert((num1.asInstanceOf[DynamicObject] + num2).as[Int] == 3)
+      assert((num1.asDynamic + num2).as[Int] == 3)
     }
   }
 
-  if (!Platform.isNative) {
-    test("Can call object facade methods") {
-      assert(Object.from("abcdef").as[StringObjectFacade].replace("bc", "12") == "a12def")
-    }
+  test("Can call object facade methods") {
+    assert(Object.from("abcdef").as[StringObjectFacade].replace("bc", "12") == "a12def")
   }
 
   test("Can use with statement with file object") {
@@ -39,7 +37,7 @@ class MethodCallingTest extends FunSuite with BeforeAndAfterAll {
         global.open("./README.md", "r")
       } else global.open("../README.md", "r")
       `with`(opened) { file =>
-        assert(file.asInstanceOf[DynamicObject].encoding.as[String] == "UTF-8")
+        assert(file.asDynamic.encoding.as[String] == "UTF-8")
       }
     }
   }

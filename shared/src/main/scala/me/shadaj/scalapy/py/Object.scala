@@ -3,7 +3,9 @@ package me.shadaj.scalapy.py
 import scala.language.dynamics
 import scala.collection.mutable
 
-class Object(val value: PyValue) { self =>
+trait Object { self =>
+  private[py] def value: PyValue
+  
   private var _expr: VariableReference = null
   def expr: VariableReference = {
     if (_expr == null) {
@@ -15,6 +17,7 @@ class Object(val value: PyValue) { self =>
 
   override def toString: String = value.getStringified
 
+  def asDynamic: Dynamic = new Dynamic(value)
   def as[T: ObjectReader]: T = implicitly[ObjectReader[T]].read(new ValueAndRequestObject(value) {
     override def getObject: Object = self
   })
@@ -26,7 +29,9 @@ object Object {
   }
 
   def populateWith(v: PyValue): Object = {
-    new DynamicObject(v)
+    new Object {
+      val value = v
+    }
   }
 
   implicit def from[T](v: T)(implicit writer: ObjectWriter[T]): Object = {

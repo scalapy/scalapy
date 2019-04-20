@@ -13,7 +13,7 @@ lazy val scalaPy =
       val methods = (2 to 22).map { n =>
         val tupleElements = (1 to n).map(t =>
           s"""r$t.read(new ValueAndRequestObject(orArr(${t - 1})) {
-             |  def getObject = or.requestObject.asInstanceOf[DynamicObject].arrayAccess(${t - 1})
+             |  def getObject = or.requestObject.asDynamic.arrayAccess(${t - 1})
              |})""".stripMargin).mkString(", ")
         s"""implicit def tuple${n}Reader[${(1 to n).map(t => s"T$t").mkString(", ")}](implicit ${(1 to n).map(t => s"r$t: ObjectReader[T$t]").mkString(", ")}): ObjectReader[(${(1 to n).map(t => s"T$t").mkString(", ")})] = {
            |  new ObjectReader[(${(1 to n).map(t => s"T$t").mkString(", ")})] {

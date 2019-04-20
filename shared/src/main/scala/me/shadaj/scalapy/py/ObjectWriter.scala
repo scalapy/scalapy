@@ -33,8 +33,8 @@ object ObjectWriter extends ObjectTupleWriters {
     }
   }
 
-  implicit val pyDynamicObjWriter: ObjectWriter[DynamicObject] = new ObjectWriter[DynamicObject] {
-    override def write(v: DynamicObject): Either[PyValue, Object] = {
+  implicit val pyDynamicObjWriter: ObjectWriter[Dynamic] = new ObjectWriter[Dynamic] {
+    override def write(v: Dynamic): Either[PyValue, Object] = {
       Right(v)
     }
   }

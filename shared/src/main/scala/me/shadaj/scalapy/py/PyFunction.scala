@@ -1,3 +1,3 @@
 package me.shadaj.scalapy.py
 
-class PyFunction(o: Object) extends ObjectFacade(o)
+class PyFunction(o: Object) extends ObjectFacade

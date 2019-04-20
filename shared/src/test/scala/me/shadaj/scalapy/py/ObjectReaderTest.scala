@@ -86,8 +86,8 @@ class ObjectReaderTest extends FunSuite with BeforeAndAfterAll {
     local {
       val datetimeExpr = module("datetime").moduleName
       val datesSeq = Object(s"[$datetimeExpr.date.today(), $datetimeExpr.date.today().replace(year = 1000)]").as[Seq[Object]]
-      assert(datesSeq.head.asInstanceOf[DynamicObject].year.as[Int] > 2000)
-      assert(datesSeq.last.asInstanceOf[DynamicObject].year.as[Int] == 1000)
+      assert(datesSeq.head.asDynamic.year.as[Int] > 2000)
+      assert(datesSeq.last.asDynamic.year.as[Int] == 1000)
     }
   }
 
