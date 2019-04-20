@@ -84,7 +84,7 @@ object ObjectWriter extends ObjectTupleWriters {
   private val supportedObjectTypes = Set[Class[_]](classOf[String])
   implicit def seqWriter[T: ClassTag, C](implicit ev1: C => Seq[T], tWriter: ObjectWriter[T]): ObjectWriter[C] = new ObjectWriter[C] {
     override def write(v: C): Either[PyValue, Object] = {
-      Left(interpreter.valueFromSeq(v.view.map { e =>
+      Left(interpreter.createList(v.view.map { e =>
         tWriter.write(e).right.map(_.value).merge
       }))
     }

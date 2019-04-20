@@ -3,6 +3,8 @@ package me.shadaj.scalapy.py
 import jep._
 import jep.python.PyObject
 
+import scala.collection.JavaConverters._
+
 class JepInterpreter extends Interpreter {
   val underlying = new Jep
 
@@ -34,11 +36,18 @@ class JepInterpreter extends Interpreter {
   def valueFromDouble(v: Double): PyValue = valueFromJepAny(v)
   def valueFromString(v: String): PyValue = valueFromJepAny(v)
 
-  def valueFromSeq(seq: Seq[PyValue]): PyValue = {
+  def createList(seq: Seq[PyValue]): PyValue = {
     valueFromJepAny(seq.view.map {
       case v: JepJavaPyValue => v.value
       case v: JepPythonPyValue => v.pyObject
     }.toArray)
+  }
+
+  def createTuple(seq: Seq[PyValue]): PyValue = {
+    callGlobal("tuple", valueFromJepAny(seq.view.map {
+      case v: JepJavaPyValue => v.value
+      case v: JepPythonPyValue => v.pyObject
+    }.asJava))
   }
 
   def noneValue: PyValue = valueFromJepAny(null)

@@ -42,7 +42,8 @@ trait Interpreter {
   def valueFromLong(v: Long): PyValue
   def valueFromDouble(v: Double): PyValue
   def valueFromString(v: String): PyValue
-  def valueFromSeq(elements: Seq[PyValue]): PyValue
+  def createList(elements: Seq[PyValue]): PyValue
+  def createTuple(elements: Seq[PyValue]): PyValue
 
   def noneValue: PyValue
 

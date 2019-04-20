@@ -44,8 +44,10 @@ object CPythonAPI {
   def PyList_GetItem(list: Ptr[Byte], index: CSize): Ptr[Byte] = extern
   def PyList_SetItem(list: Ptr[Byte], index: CSize, item: Ptr[Byte]): Int = extern
 
-  def PyTuple_Size(list: Ptr[Byte]): CSize = extern
-  def PyTuple_GetItem(list: Ptr[Byte], index: CSize): Ptr[Byte] = extern
+  def PyTuple_New(size: Int): Ptr[Byte] = extern
+  def PyTuple_Size(tuple: Ptr[Byte]): CSize = extern
+  def PyTuple_GetItem(tuple: Ptr[Byte], index: CSize): Ptr[Byte] = extern
+  def PyTuple_SetItem(tuple: Ptr[Byte], index: CSize, item: Ptr[Byte]): Int = extern
 
   def PyObject_Str(obj: Ptr[Byte]): Ptr[Byte] = extern
   def PyObject_GetAttr(obj: Ptr[Byte], name: Ptr[Byte]): Ptr[Byte] = extern
@@ -118,11 +120,22 @@ class CPythonInterpreter extends Interpreter {
     ret
   }
 
-  def valueFromSeq(seq: Seq[PyValue]): PyValue = {
+  def createList(seq: Seq[PyValue]): PyValue = {
     // TODO: this is copying, should be replaced by a custom type
     val retPtr = CPythonAPI.PyList_New(seq.size)
     seq.zipWithIndex.foreach { case (v, i) =>
       CPythonAPI.PyList_SetItem(retPtr, i, v.asInstanceOf[CPyValue].underlying)
+      CPythonAPI.Py_IncRef(v.asInstanceOf[CPyValue].underlying)
+    }
+
+    new CPyValue(retPtr)
+  }
+
+  def createTuple(seq: Seq[PyValue]): PyValue = {
+    // TODO: this is copying, should be replaced by a custom type
+    val retPtr = CPythonAPI.PyTuple_New(seq.size)
+    seq.zipWithIndex.foreach { case (v, i) =>
+      CPythonAPI.PyTuple_SetItem(retPtr, i, v.asInstanceOf[CPyValue].underlying)
       CPythonAPI.Py_IncRef(v.asInstanceOf[CPyValue].underlying)
     }
 
