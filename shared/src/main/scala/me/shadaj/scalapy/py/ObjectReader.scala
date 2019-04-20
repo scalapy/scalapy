@@ -26,12 +26,8 @@ object ObjectReader extends ObjectTupleReaders {
     def read(r: ValueAndRequestObject): Dynamic = r.requestObject.asDynamic
   }
 
-  implicit def facadeReader[F <: ObjectFacade](implicit creator: FacadeCreator[F]): ObjectReader[F] = new ObjectReader[F] {
-    override def read(r: ValueAndRequestObject): F = {
-      val inst = creator.create
-      inst.value = r.value
-      inst
-    }
+  implicit def facadeReader[F <: Object](implicit creator: FacadeCreator[F]): ObjectReader[F] = new ObjectReader[F] {
+    override def read(r: ValueAndRequestObject): F = creator.create(r.value)
   }
 
   def toByte(value: Any): Byte = {

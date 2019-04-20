@@ -2,7 +2,7 @@ package me.shadaj.scalapy.py
 
 import scala.language.dynamics
 
-class Global private[py]() extends scala.Dynamic {
+object global extends scala.Dynamic {
   def applyDynamic(method: String)(params: Object*): Object = {
     new Dynamic(interpreter.callGlobal(method, params.map(_.value): _*))
   }

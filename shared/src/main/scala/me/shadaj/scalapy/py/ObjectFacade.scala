@@ -3,34 +3,31 @@ package me.shadaj.scalapy.py
 import scala.reflect.macros.whitebox
 import scala.language.experimental.macros
 
-trait ObjectFacade extends Object {
-  private[py] var value: PyValue = null
+class FacadeValueProvider(private[py] val value: PyValue) extends Object
 
-  protected def native[T]: T = macro ObjectFacadeImpl.native_impl[T]
-  protected def nativeNamed[T]: T = macro ObjectFacadeImpl.native_named_impl[T]
-
-  override def finalize(): Unit = {} // let the originalObject handle this
-}
-
-object ObjectFacade {
-  implicit def getCreator[F <: ObjectFacade]: FacadeCreator[F] = macro ObjectFacadeImpl.creator[F]
-}
-
-abstract class FacadeCreator[F <: ObjectFacade] {
-  def create: F
+abstract class FacadeCreator[F <: Object] {
+  def create(value: PyValue): F
 }
 
 object ObjectFacadeImpl {
-  def creator[T <: ObjectFacade](c: whitebox.Context)(implicit tag: c.WeakTypeTag[T]): c.Expr[FacadeCreator[T]] = {
+  def creator[T <: Object](c: whitebox.Context)(implicit tag: c.WeakTypeTag[T]): c.Expr[FacadeCreator[T]] = {
     import c.universe._
+
+    if (!tag.tpe.typeSymbol.annotations.exists(_.tpe =:= typeOf[native])) {
+      c.error(c.enclosingPosition, "Cannot derive a creator for a trait that is not annotated as @py.native")
+    }
     
     c.Expr[FacadeCreator[T]](q"""new _root_.me.shadaj.scalapy.py.FacadeCreator[${tag.tpe}] {
-      def create = new ${tag.tpe} {}
+      def create(value: _root_.me.shadaj.scalapy.py.PyValue) = new FacadeValueProvider(value) with ${tag.tpe} {}
     }""")
   }
 
   def native_impl[T: c.WeakTypeTag](c: whitebox.Context): c.Expr[T] = {
     import c.universe._
+
+    if (!c.enclosingClass.symbol.annotations.exists(_.tpe =:= typeOf[native])) {
+      c.error(c.enclosingPosition, "py.native implemented functions can only be declared inside traits annotated as @py.native")
+    }
 
     val method = c.internal.enclosingOwner.asMethod
     val methodName = method.name.toString
@@ -48,6 +45,10 @@ object ObjectFacadeImpl {
 
   def native_named_impl[T: c.WeakTypeTag](c: whitebox.Context): c.Expr[T] = {
     import c.universe._
+
+    if (!c.enclosingClass.symbol.annotations.exists(_.tpe =:= typeOf[native])) {
+      c.error(c.enclosingPosition, "py.native implemented functions can only be declared inside traits annotated as @py.native")
+    }
 
     val method = c.internal.enclosingOwner.asMethod
     val methodName = method.name.toString

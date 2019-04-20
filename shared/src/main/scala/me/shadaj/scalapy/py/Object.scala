@@ -37,4 +37,7 @@ object Object {
   implicit def from[T](v: T)(implicit writer: ObjectWriter[T]): Object = {
     writer.write(v).left.map(Object.populateWith).merge
   }
+
+  import scala.language.experimental.macros
+  implicit def getCreator[F <: Object]: FacadeCreator[F] = macro ObjectFacadeImpl.creator[F]
 }

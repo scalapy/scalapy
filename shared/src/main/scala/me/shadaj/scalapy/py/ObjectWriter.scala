@@ -8,8 +8,8 @@ abstract class ObjectWriter[T] {
 }
 
 object ObjectWriter extends ObjectTupleWriters {
-  implicit val pyObjWriter: ObjectWriter[Object] = new ObjectWriter[Object] {
-    override def write(v: Object): Either[PyValue, Object] = {
+  implicit def pyObjWriter[T <: Object]: ObjectWriter[T] = new ObjectWriter[T] {
+    override def write(v: T): Either[PyValue, T] = {
       Right(v)
     }
   }
@@ -24,12 +24,6 @@ object ObjectWriter extends ObjectTupleWriters {
         case Some(a) => aWriter.write(a)
         case _ => bWriter.write(v.value.asInstanceOf[B])
       }
-    }
-  }
-
-  implicit def pyFascadeWriter[T <: ObjectFacade]: ObjectWriter[T] = new ObjectWriter[T] {
-    override def write(v: T): Either[PyValue, Object] = {
-      Right(v)
     }
   }
 
