@@ -17,6 +17,8 @@ object CPythonAPI {
 
   def PyBool_FromLong(long: CLong): Ptr[Byte] = extern
 
+  def PyNumber_Negative(o1: Ptr[Byte]): Ptr[Byte] = extern
+  def PyNumber_Positive(o1: Ptr[Byte]): Ptr[Byte] = extern
   def PyNumber_Add(o1: Ptr[Byte], o2: Ptr[Byte]): Ptr[Byte] = extern
   def PyNumber_Subtract(o1: Ptr[Byte], o2: Ptr[Byte]): Ptr[Byte] = extern
   def PyNumber_Multiply(o1: Ptr[Byte], o2: Ptr[Byte]): Ptr[Byte] = extern
@@ -180,6 +182,30 @@ class CPythonInterpreter extends Interpreter {
     }
 
     ret
+  }
+
+  def unaryNeg(a: PyValue): PyValue = {
+    new CPyValue({
+      val ret = CPythonAPI.PyNumber_Negative(
+        a.asInstanceOf[CPyValue].underlying
+      )
+
+      throwErrorIfOccured()
+
+      ret
+    })
+  }
+
+  def unaryPos(a: PyValue): PyValue = {
+    new CPyValue({
+      val ret = CPythonAPI.PyNumber_Positive(
+        a.asInstanceOf[CPyValue].underlying
+      )
+
+      throwErrorIfOccured()
+
+      ret
+    })
   }
 
   def binaryAdd(a: PyValue, b: PyValue): PyValue = {

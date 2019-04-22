@@ -155,11 +155,9 @@ object ObjectReader extends ObjectTupleReaders {
           def getObject = throw new IllegalAccessException("Cannot read a Python object for the key of a map")
         }) -> readerO.read(new ValueAndRequestObject(v) {
           def getObject = {
-            if (Platform.isNative) ??? else {
-              r.requestObject.asDynamic.dictionaryAccess(
-                Object.populateWith(interpreter.asInstanceOf[JepInterpreter].valueFromAny(k))
-              )
-            }
+            r.requestObject.asDynamic.dictionaryAccess(
+              Object.populateWith(interpreter.asInstanceOf[JepInterpreter].valueFromAny(k))
+            )
           }
         })
       }.toMap
