@@ -28,7 +28,9 @@ class MethodCallingTest extends FunSuite with BeforeAndAfterAll {
   }
 
   test("Can call object facade methods") {
-    assert(Object.from("abcdef").as[StringObjectFacade].replace("bc", "12") == "a12def")
+    local {
+      assert(Object.from("abcdef").as[StringObjectFacade].replace("bc", "12") == "a12def")
+    }
   }
 
   test("Can use with statement with file object") {

@@ -30,102 +30,28 @@ object ObjectReader extends ObjectTupleReaders {
     override def read(r: ValueAndRequestObject): F = creator.create(r.value)
   }
 
-  def toByte(value: Any): Byte = {
-    value match {
-      case b: Byte => b
-      case i: Int => if (i <= Byte.MaxValue && i >= Byte.MaxValue) i.toByte else {
-        throw new IllegalArgumentException("Tried to convert a Int outside Byte range to an Byte")
-      }
-      case l: Long => if (l <= Byte.MaxValue && l >= Byte.MinValue) l.toByte else {
-        throw new IllegalArgumentException("Tried to convert a Long outside Byte range to an Byte")
-      }
-      case _: Double =>
-        throw new IllegalArgumentException("Cannot up-convert a Double to a Byte")
-      case _: Float =>
-        throw new IllegalArgumentException("Cannot up-convert a Float to a Byte")
-      case _ =>
-        throw new IllegalArgumentException(s"Unknown type: ${value.getClass}")
-    }
-  }
-
-  def toInt(value: Any): Int = {
-    value match {
-      case b: Byte => b
-      case i: Int => i
-      case l: Long => if (l <= Int.MaxValue && l >= Int.MinValue) l.toInt else {
-        throw new IllegalArgumentException("Tried to convert a Long outside Int range to an Int")
-      }
-      case _: Double =>
-        throw new IllegalArgumentException("Cannot up-convert a Double to an Int")
-      case _: Float =>
-        throw new IllegalArgumentException("Cannot up-convert a Float to an Int")
-      case _ =>
-        throw new IllegalArgumentException(s"Unknown type: ${value.getClass}: $value")
-    }
-  }
-
-  def toLong(value: Any): Long = {
-    value match {
-      case b: Byte => b
-      case i: Int => i
-      case l: Long => l
-      case _: Double =>
-        throw new IllegalArgumentException("Cannot up-convert a Double to a Long")
-      case _: Float =>
-        throw new IllegalArgumentException("Cannot up-convert a Float to a Long")
-      case _ =>
-        throw new IllegalArgumentException(s"Unknown type: ${value.getClass}")
-    }
-  }
-
-  def toDouble(value: Any): Double = {
-    value match {
-      case i: Int => i
-      case l: Long => l
-      case d: Double => d
-      case f: Float => f
-      case s: String => s.toDouble
-      case _ =>
-        throw new IllegalArgumentException(s"Unknown type: ${value.getClass} for value $value")
-    }
-  }
-
-  def toFloat(value: Any): Float = {
-    value match {
-      case i: Int => i
-      case l: Long => l
-      case d: Double =>
-        if (d.toFloat == d) d.toFloat else {
-          throw new IllegalArgumentException("Cannot up-convert a Double to a Float")
-        }
-      case fl: Float => fl
-      case _ =>
-        throw new IllegalArgumentException(s"Unknown type: ${value.getClass}")
-    }
-  }
-
   implicit val unitReader = new ObjectReader[Unit] {
     def read(r: ValueAndRequestObject): Unit = ()
   }
 
   implicit val byteReader = new ObjectReader[Byte] {
-    def read(r: ValueAndRequestObject): Byte = toByte(r.value.getLong)
+    def read(r: ValueAndRequestObject): Byte = r.value.getLong.toByte
   }
 
   implicit val intReader = new ObjectReader[Int] {
-    def read(r: ValueAndRequestObject): Int = toInt(r.value.getLong)
+    def read(r: ValueAndRequestObject): Int = r.value.getLong.toInt
   }
 
   implicit val longReader = new ObjectReader[Long] {
-    def read(r: ValueAndRequestObject): Long = toLong(r.value.getLong)
+    def read(r: ValueAndRequestObject): Long = r.value.getLong
   }
 
   implicit val doubleReader = new ObjectReader[Double] {
-    def read(r: ValueAndRequestObject): Double = toDouble(r.value.getDouble)
+    def read(r: ValueAndRequestObject): Double = r.value.getDouble
   }
 
   implicit val floatReader = new ObjectReader[Float] {
-    def read(r: ValueAndRequestObject): Float = toFloat(r.value.getDouble)
+    def read(r: ValueAndRequestObject): Float = r.value.getDouble.toFloat
   }
 
   implicit val booleanReader = new ObjectReader[Boolean] {
