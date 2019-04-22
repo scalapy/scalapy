@@ -6,22 +6,22 @@ import scala.reflect.ClassTag
 class Module private[py](private[py] val moduleName: String) extends scala.Dynamic {
   def applyDynamic(method: String)(params: Any*): Dynamic = {
     if (method == "apply") {
-      py"$moduleName(${params.map(_.expr).mkString(",")})"
+      eval(s"$moduleName(${params.map(_.expr).mkString(",")})")
     } else {
-      py"$moduleName.$method(${params.map(_.expr).mkString(",")})"
+      eval(s"$moduleName.$method(${params.map(_.expr).mkString(",")})")
     }
   }
 
   def applyDynamicNamed(method: String)(params: (String, Any)*): Dynamic = {
     if (method == "apply") {
-      py"$moduleName(${params.map(t => s"${t._1} = ${t._2.expr}").mkString(",")})"
+      eval(s"$moduleName(${params.map(t => s"${t._1} = ${t._2.expr}").mkString(",")})")
     } else {
-      py"$moduleName.$method(${params.map(t => s"${t._1} = ${t._2.expr}").mkString(",")})"
+      eval(s"$moduleName.$method(${params.map(t => s"${t._1} = ${t._2.expr}").mkString(",")})")
     }
   }
 
   def selectDynamic(value: String): Dynamic = {
-    py"$moduleName.$value"
+    eval(s"$moduleName.$value")
   }
 
   def updateDynamic(name: String)(value: Any): Unit = {
@@ -33,7 +33,7 @@ class Module private[py](private[py] val moduleName: String) extends scala.Dynam
   }
 
   def as[T: ObjectReader]: T = {
-    val obj = py"$moduleName"
+    val obj = eval(moduleName)
     implicitly[ObjectReader[T]].read(new ValueAndRequestObject(obj.value) {
       override def getObject: Any = obj
     })

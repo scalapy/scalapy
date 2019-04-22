@@ -24,7 +24,7 @@ class ObjectReaderTest extends FunSuite with BeforeAndAfterAll {
 
   test("Reading a long") {
     local {
-      assert(py"${Long.MaxValue.toString}".as[Long] == Long.MaxValue)
+      assert(eval(Long.MaxValue.toString).as[Long] == Long.MaxValue)
     }
   }
 
@@ -79,7 +79,7 @@ class ObjectReaderTest extends FunSuite with BeforeAndAfterAll {
   test("Reading a sequence of objects preserves original object") {
     local {
       val datetimeExpr = module("datetime").moduleName
-      val datesSeq = py"[$datetimeExpr.date.today(), $datetimeExpr.date.today().replace(year = 1000)]".as[Seq[Object]]
+      val datesSeq = eval(s"[$datetimeExpr.date.today(), $datetimeExpr.date.today().replace(year = 1000)]").as[Seq[Object]]
       assert(datesSeq.head.asDynamic.year.as[Int] > 2000)
       assert(datesSeq.last.asDynamic.year.as[Int] == 1000)
     }

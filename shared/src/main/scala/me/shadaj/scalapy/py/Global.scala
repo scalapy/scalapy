@@ -8,10 +8,10 @@ object global extends scala.Dynamic {
   }
 
   def applyDynamicNamed(method: String)(params: (String, Any)*): Dynamic = {
-    py"$method(${params.map(t => s"${t._1} = ${t._2.expr.variable}").mkString(",")})"
+    eval(s"$method(${params.map(t => s"${t._1} = ${t._2.expr.variable}").mkString(",")})")
   }
 
   def selectDynamic(value: String): Any = {
-    py"$value"
+    eval(value)
   }
 }

@@ -8,7 +8,7 @@ final class Dynamic(private[py] val value: PyValue) extends AnyVal with Any with
   }
 
   def applyDynamicNamed(method: String)(params: (String, Any)*): Dynamic = {
-    py"$this.$method(${params.map(t => s"${t._1} = ${t._2.expr}").mkString(",")})"
+    eval(s"${this.expr}.$method(${params.map(t => s"${t._1} = ${t._2.expr}").mkString(",")})")
   }
 
   def selectDynamic(term: String): Dynamic = {

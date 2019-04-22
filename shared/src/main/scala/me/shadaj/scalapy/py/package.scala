@@ -58,8 +58,8 @@ package object py {
       def stringToInsert: String = any.expr.toString
     }
 
-    implicit def fromString(str: String): PyQuotable = new PyQuotable {
-      def stringToInsert: String = str
+    implicit def fromValue[V](value: V)(implicit writer: ObjectWriter[V]): PyQuotable = new PyQuotable {
+      def stringToInsert: String = writer.write(value).left.map(Any.populateWith).merge.expr.toString
     }
   }
 
@@ -77,6 +77,10 @@ package object py {
         new PyDynamic(interpreter.load(buf.toString))
       }
     }
+  }
+
+  def eval(str: String): PyDynamic = {
+    new PyDynamic(interpreter.load(str.toString))
   }
 
   import scala.annotation.StaticAnnotation
