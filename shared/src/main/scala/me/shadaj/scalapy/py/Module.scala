@@ -4,27 +4,27 @@ import scala.language.dynamics
 import scala.reflect.ClassTag
 
 class Module private[py](private[py] val moduleName: String) extends scala.Dynamic {
-  def applyDynamic(method: String)(params: Object*): Dynamic = {
+  def applyDynamic(method: String)(params: Any*): Dynamic = {
     if (method == "apply") {
-      Object(s"$moduleName(${params.map(_.expr).mkString(",")})").asDynamic
+      eval(s"$moduleName(${params.map(_.expr).mkString(",")})")
     } else {
-      Object(s"$moduleName.$method(${params.map(_.expr).mkString(",")})").asDynamic
+      eval(s"$moduleName.$method(${params.map(_.expr).mkString(",")})")
     }
   }
 
-  def applyDynamicNamed(method: String)(params: (String, Object)*): Dynamic = {
+  def applyDynamicNamed(method: String)(params: (String, Any)*): Dynamic = {
     if (method == "apply") {
-      Object(s"$moduleName(${params.map(t => s"${t._1} = ${t._2.expr}").mkString(",")})").asDynamic
+      eval(s"$moduleName(${params.map(t => s"${t._1} = ${t._2.expr}").mkString(",")})")
     } else {
-      Object(s"$moduleName.$method(${params.map(t => s"${t._1} = ${t._2.expr}").mkString(",")})").asDynamic
+      eval(s"$moduleName.$method(${params.map(t => s"${t._1} = ${t._2.expr}").mkString(",")})")
     }
   }
 
   def selectDynamic(value: String): Dynamic = {
-    Object(s"$moduleName.$value").asDynamic
+    eval(s"$moduleName.$value")
   }
 
-  def updateDynamic(name: String)(value: Object): Unit = {
+  def updateDynamic(name: String)(value: Any): Unit = {
     interpreter.eval(s"$moduleName.$name = ${value.expr}")
   }
 
@@ -32,10 +32,10 @@ class Module private[py](private[py] val moduleName: String) extends scala.Dynam
     interpreter.eval(s"del $moduleName")
   }
 
-  def as[T: ObjectReader]: T = {
-    val obj = Object(moduleName)
-    implicitly[ObjectReader[T]].read(new ValueAndRequestObject(obj.value) {
-      override def getObject: Object = obj
+  def as[T: Reader]: T = {
+    val obj = eval(moduleName)
+    implicitly[Reader[T]].read(new ValueAndRequestRef(obj.value) {
+      override def getRef: Any = obj
     })
   }
 }

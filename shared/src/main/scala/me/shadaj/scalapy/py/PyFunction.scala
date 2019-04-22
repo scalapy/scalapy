@@ -1,3 +1,3 @@
 package me.shadaj.scalapy.py
 
-@native trait PyFunction extends Object
+@native trait PyFunction extends Any

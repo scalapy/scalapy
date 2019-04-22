@@ -21,7 +21,7 @@ package object py {
 
   type NoneOr[T] = None.type | T
 
-  def `with`[T <: py.Object, O](ref: T)(withValue: T => O): O = {
+  def `with`[T <: py.Any, O](ref: T)(withValue: T => O): O = {
     ref.asDynamic.__enter__()
     val ret = withValue(ref)
     ref.asDynamic.__exit__(None, None, None)
@@ -48,10 +48,45 @@ package object py {
     }
   }
 
+  import py.{Dynamic => PyDynamic, Any => PyAny}
+  trait PyQuotable {
+    def stringToInsert: String
+  }
+
+  object PyQuotable {
+    implicit def fromAny(any: py.Any): PyQuotable = new PyQuotable {
+      def stringToInsert: String = any.expr.toString
+    }
+
+    implicit def fromValue[V](value: V)(implicit writer: Writer[V]): PyQuotable = new PyQuotable {
+      def stringToInsert: String = writer.write(value).left.map(Any.populateWith).merge.expr.toString
+    }
+  }
+
+  implicit class PyQuote(private val sc: StringContext) extends AnyVal {
+    def py(values: PyQuotable*): PyDynamic = {
+      local {
+        val strings = sc.parts.iterator
+        val expressions = values.iterator
+        var buf = new StringBuffer(strings.next)
+        while (strings.hasNext) {
+          buf append expressions.next.stringToInsert
+          buf append strings.next
+        }
+        
+        new PyDynamic(interpreter.load(buf.toString))
+      }
+    }
+  }
+
+  def eval(str: String): PyDynamic = {
+    new PyDynamic(interpreter.load(str.toString))
+  }
+
   import scala.annotation.StaticAnnotation
   class native extends StaticAnnotation
 
   import scala.language.experimental.macros
-  def native[T]: T = macro ObjectFacadeImpl.native_impl[T]
-  def nativeNamed[T]: T = macro ObjectFacadeImpl.native_named_impl[T]
+  def native[T]: T = macro FacadeImpl.native_impl[T]
+  def nativeNamed[T]: T = macro FacadeImpl.native_named_impl[T]
 }

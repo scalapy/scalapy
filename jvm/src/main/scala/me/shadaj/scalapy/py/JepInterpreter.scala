@@ -23,7 +23,7 @@ class JepInterpreter extends Interpreter {
     try {
       underlying.set(variableName, value.asInstanceOf[JepPyValue].pyObject)
     } catch {
-      case _ => underlying.set(variableName, value.asInstanceOf[JepPyValue].value)
+      case _: JepException => underlying.set(variableName, value.asInstanceOf[JepPyValue].value)
     }
     
     new VariableReference(variableName)
@@ -54,7 +54,7 @@ class JepInterpreter extends Interpreter {
 
   val stringifiedNone = underlying.getValue("str(None)", classOf[String])
 
-  def valueFromJepAny(value: Any): PyValue = value match {
+  def valueFromJepAny(value: scala.Any): PyValue = value match {
     case v: PyValue => v
     case o => new JepJavaPyValue(o)
   }
@@ -173,10 +173,10 @@ class JepInterpreter extends Interpreter {
 }
 
 trait JepPyValue extends PyValue {
-  def value: Any
+  def value: scala.Any
   def pyObject: PyObject
   
-  override def equals(o: Any) = {
+  override def equals(o: scala.Any) = {
     o != null && o.isInstanceOf[JepJavaPyValue] &&
       value == o.asInstanceOf[JepJavaPyValue].value
   }
@@ -258,7 +258,7 @@ class JepPythonPyValue(val pyObject: PyObject) extends JepPyValue {
 }
 
 // Jep value stored as a Java value
-class JepJavaPyValue(val value: Any) extends JepPyValue {
+class JepJavaPyValue(val value: scala.Any) extends JepPyValue {
   private var _pyObject: PyObject = null
 
   def pyObject = {
