@@ -55,6 +55,8 @@ object CPythonAPI {
   def PyObject_Str(obj: Ptr[Byte]): Ptr[Byte] = extern
   def PyObject_GetAttr(obj: Ptr[Byte], name: Ptr[Byte]): Ptr[Byte] = extern
   def PyObject_GetAttrString(obj: Ptr[Byte], name: CString): Ptr[Byte] = extern
+  def PyObject_SetAttr(obj: Ptr[Byte], name: Ptr[Byte], newValue: Ptr[Byte]): Ptr[Byte] = extern
+  def PyObject_SetAttrString(obj: Ptr[Byte], name: CString, newValue: Ptr[Byte]): Ptr[Byte] = extern
   def PyObject_CallMethodObjArgs(obj: Ptr[Byte], name: Ptr[Byte], args: CVararg*): Ptr[Byte] = extern
   def PyObject_Call(obj: Ptr[Byte], args: Ptr[Byte], kwArgs: Ptr[Byte]): Ptr[Byte] = extern
 
@@ -319,6 +321,14 @@ class CPythonInterpreter extends Interpreter {
       on.asInstanceOf[CPyValue].underlying,
       valueFromString(value).asInstanceOf[CPyValue].underlying
     )))
+  }
+
+  def update(on: PyValue, value: String, newValue: PyValue): Unit = {
+    local(CPythonAPI.PyObject_SetAttr(
+      on.asInstanceOf[CPyValue].underlying,
+      valueFromString(value).asInstanceOf[CPyValue].underlying,
+      newValue.asInstanceOf[CPyValue].underlying
+    ))
   }
 
   def selectList(on: PyValue, index: Int): PyValue = {
