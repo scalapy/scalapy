@@ -40,7 +40,7 @@ lazy val scalaPy =
         val seqArgs = (1 to n).map(t => s"r$t.write(v._" + t + ").right.map(_.value).merge").mkString(", ")
         s"""implicit def tuple${n}Writer[${(1 to n).map(t => s"T$t").mkString(", ")}](implicit ${(1 to n).map(t => s"r$t: ObjectWriter[T$t]").mkString(", ")}): ObjectWriter[(${(1 to n).map(t => s"T$t").mkString(", ")})] = {
            |  new ObjectWriter[(${(1 to n).map(t => s"T$t").mkString(", ")})] {
-           |    override def write(v: (${(1 to n).map(t => s"T$t").mkString(", ")})): Either[PyValue, Object] = {
+           |    override def write(v: (${(1 to n).map(t => s"T$t").mkString(", ")})): Either[PyValue, Any] = {
            |      Left(interpreter.createTuple(Seq(${seqArgs})))
            |    }
            |  }

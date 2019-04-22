@@ -21,15 +21,15 @@ class MethodCallingTest extends FunSuite with BeforeAndAfterAll {
 
   test("Can call dynamic + on integers") {
     local {
-      val num1 = Object("1")
-      val num2 = Object("2")
+      val num1 = py"1"
+      val num2 = py"2"
       assert((num1.asDynamic + num2).as[Int] == 3)
     }
   }
 
   test("Can call object facade methods") {
     local {
-      assert(Object.from("abcdef").as[StringObjectFacade].replace("bc", "12") == "a12def")
+      assert(py"'abcdef'".as[StringObjectFacade].replace("bc", "12") == "a12def")
     }
   }
 

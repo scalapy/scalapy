@@ -3,7 +3,7 @@ package me.shadaj.scalapy.py
 import scala.scalanative.native._
 
 trait JepInterpreter {
-  def valueFromAny(v: Any): PyValue
+  def valueFromAny(v: scala.Any): PyValue
 }
 
 @extern

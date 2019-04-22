@@ -3,14 +3,14 @@ package me.shadaj.scalapy.py
 import scala.reflect.macros.whitebox
 import scala.language.experimental.macros
 
-class FacadeValueProvider(private[py] val value: PyValue) extends Object
+class FacadeValueProvider(private[py] val value: PyValue) extends Any
 
-abstract class FacadeCreator[F <: Object] {
+abstract class FacadeCreator[F <: Any] {
   def create(value: PyValue): F
 }
 
-object ObjectFacadeImpl {
-  def creator[T <: Object](c: whitebox.Context)(implicit tag: c.WeakTypeTag[T]): c.Expr[FacadeCreator[T]] = {
+object FacadeImpl {
+  def creator[T <: Any](c: whitebox.Context)(implicit tag: c.WeakTypeTag[T]): c.Expr[FacadeCreator[T]] = {
     import c.universe._
 
     if (!tag.tpe.typeSymbol.annotations.exists(_.tpe =:= typeOf[native])) {

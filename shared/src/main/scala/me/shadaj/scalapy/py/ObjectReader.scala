@@ -4,10 +4,10 @@ import scala.reflect.ClassTag
 import scala.collection.JavaConverters._
 
 abstract class ValueAndRequestObject(val value: PyValue) {
-  protected def getObject: Object
+  protected def getObject: Any
 
-  private var objectCache: Object = null
-  final def requestObject: Object = {
+  private var objectCache: Any = null
+  final def requestObject: Any = {
     if (objectCache == null) objectCache = getObject
     objectCache
   }
@@ -18,16 +18,16 @@ trait ObjectReader[T] {
 }
 
 object ObjectReader extends ObjectTupleReaders {
-  implicit val wrapperReader = new ObjectReader[Object] {
-    def read(r: ValueAndRequestObject): Object = r.requestObject
+  implicit val anyReader = new ObjectReader[Any] {
+    def read(r: ValueAndRequestObject): Any = r.requestObject
   }
 
   implicit val wrapperDynReader = new ObjectReader[Dynamic] {
     def read(r: ValueAndRequestObject): Dynamic = r.requestObject.asDynamic
   }
 
-  implicit def facadeReader[F <: Object](implicit creator: FacadeCreator[F]): ObjectReader[F] = new ObjectReader[F] {
-    override def read(r: ValueAndRequestObject): F = creator.create(r.value)
+  implicit def facadeReader[F <: Any](implicit creator: FacadeCreator[F]): ObjectReader[F] = new ObjectReader[F] {
+    override def read(r: ValueAndRequestObject): F = creator.create(r.requestObject.value)
   }
 
   implicit val unitReader = new ObjectReader[Unit] {
@@ -81,9 +81,7 @@ object ObjectReader extends ObjectTupleReaders {
           def getObject = throw new IllegalAccessException("Cannot read a Python object for the key of a map")
         }) -> readerO.read(new ValueAndRequestObject(v) {
           def getObject = {
-            r.requestObject.asDynamic.dictionaryAccess(
-              Object.populateWith(interpreter.asInstanceOf[JepInterpreter].valueFromAny(k))
-            )
+            r.requestObject.asDynamic.dictionaryAccess(Any.populateWith(k))
           }
         })
       }.toMap
