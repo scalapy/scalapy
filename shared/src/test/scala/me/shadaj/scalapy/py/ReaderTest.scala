@@ -2,7 +2,7 @@ package me.shadaj.scalapy.py
 
 import org.scalatest.{FunSuite, BeforeAndAfterAll}
 
-class ObjectReaderTest extends FunSuite with BeforeAndAfterAll {
+class ReaderTest extends FunSuite with BeforeAndAfterAll {
   test("Reading a boolean") {
     local {
       assert(py"False".as[Boolean] == false)

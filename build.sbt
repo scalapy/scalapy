@@ -9,15 +9,15 @@ scalaVersion := "2.12.7"
 lazy val scalaPy =
   crossProject(JVMPlatform, NativePlatform).in(file(".")).settings(
     sourceGenerators in Compile += Def.task {
-      val fileToWrite = (sourceManaged in Compile).value / "ObjectTupleReaders.scala"
+      val fileToWrite = (sourceManaged in Compile).value / "TupleReaders.scala"
       val methods = (2 to 22).map { n =>
         val tupleElements = (1 to n).map(t =>
-          s"""r$t.read(new ValueAndRequestObject(orArr(${t - 1})) {
-             |  def getObject = or.requestObject.asDynamic.arrayAccess(${t - 1})
+          s"""r$t.read(new ValueAndRequestRef(orArr(${t - 1})) {
+             |  def getRef = or.requestRef.asDynamic.arrayAccess(${t - 1})
              |})""".stripMargin).mkString(", ")
-        s"""implicit def tuple${n}Reader[${(1 to n).map(t => s"T$t").mkString(", ")}](implicit ${(1 to n).map(t => s"r$t: ObjectReader[T$t]").mkString(", ")}): ObjectReader[(${(1 to n).map(t => s"T$t").mkString(", ")})] = {
-           |  new ObjectReader[(${(1 to n).map(t => s"T$t").mkString(", ")})] {
-           |    override def read(or: ValueAndRequestObject) = {
+        s"""implicit def tuple${n}Reader[${(1 to n).map(t => s"T$t").mkString(", ")}](implicit ${(1 to n).map(t => s"r$t: Reader[T$t]").mkString(", ")}): Reader[(${(1 to n).map(t => s"T$t").mkString(", ")})] = {
+           |  new Reader[(${(1 to n).map(t => s"T$t").mkString(", ")})] {
+           |    override def read(or: ValueAndRequestRef) = {
            |      val orArr = or.value.getTuple
            |      ($tupleElements)
            |    }
@@ -27,7 +27,7 @@ lazy val scalaPy =
     
       val toWrite =
         s"""package me.shadaj.scalapy.py
-           |trait ObjectTupleReaders {
+           |trait TupleReaders {
            |${methods.mkString("\n")}
            |}""".stripMargin
     
@@ -35,11 +35,11 @@ lazy val scalaPy =
       Seq(fileToWrite)
     },
     sourceGenerators in Compile += Def.task  {
-      val fileToWrite = (sourceManaged in Compile).value / "ObjectTupleWriters.scala"
+      val fileToWrite = (sourceManaged in Compile).value / "TupleWriters.scala"
       val methods = (2 to 22).map { n =>
         val seqArgs = (1 to n).map(t => s"r$t.write(v._" + t + ").right.map(_.value).merge").mkString(", ")
-        s"""implicit def tuple${n}Writer[${(1 to n).map(t => s"T$t").mkString(", ")}](implicit ${(1 to n).map(t => s"r$t: ObjectWriter[T$t]").mkString(", ")}): ObjectWriter[(${(1 to n).map(t => s"T$t").mkString(", ")})] = {
-           |  new ObjectWriter[(${(1 to n).map(t => s"T$t").mkString(", ")})] {
+        s"""implicit def tuple${n}Writer[${(1 to n).map(t => s"T$t").mkString(", ")}](implicit ${(1 to n).map(t => s"r$t: Writer[T$t]").mkString(", ")}): Writer[(${(1 to n).map(t => s"T$t").mkString(", ")})] = {
+           |  new Writer[(${(1 to n).map(t => s"T$t").mkString(", ")})] {
            |    override def write(v: (${(1 to n).map(t => s"T$t").mkString(", ")})): Either[PyValue, Any] = {
            |      Left(interpreter.createTuple(Seq(${seqArgs})))
            |    }
@@ -49,7 +49,7 @@ lazy val scalaPy =
     
       val toWrite =
         s"""package me.shadaj.scalapy.py
-           |trait ObjectTupleWriters {
+           |trait TupleWriters {
            |${methods.mkString("\n")}
            |}""".stripMargin
     

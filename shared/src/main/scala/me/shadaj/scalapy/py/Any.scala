@@ -13,8 +13,8 @@ trait Any extends scala.Any { self =>
   override def toString: String = value.getStringified
 
   final def asDynamic: Dynamic = new Dynamic(value)
-  final def as[T: ObjectReader]: T = implicitly[ObjectReader[T]].read(new ValueAndRequestObject(value) {
-    override def getObject: Any = self
+  final def as[T: Reader]: T = implicitly[Reader[T]].read(new ValueAndRequestRef(value) {
+    override def getRef: Any = self
   })
 }
 
@@ -25,7 +25,7 @@ object Any {
     }
   }
 
-  implicit def from[T](v: T)(implicit writer: ObjectWriter[T]): Any = {
+  implicit def from[T](v: T)(implicit writer: Writer[T]): Any = {
     writer.write(v).left.map(Any.populateWith).merge
   }
 

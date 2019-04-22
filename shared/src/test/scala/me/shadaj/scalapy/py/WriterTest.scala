@@ -6,7 +6,7 @@ import org.scalatest.{FunSuite, BeforeAndAfterAll}
 
 import scala.collection.JavaConverters._
 
-class ObjectWriterTest extends FunSuite with BeforeAndAfterAll {
+class WriterTest extends FunSuite with BeforeAndAfterAll {
   test("Writing a none value") {
     local {
       assert(Any.from(None).toString == "None")
@@ -111,7 +111,7 @@ class ObjectWriterTest extends FunSuite with BeforeAndAfterAll {
 
   test("Sequences of sequences are natively writable") {
     local {
-      assert(implicitly[ObjectWriter[Seq[Seq[Int]]]].write(Seq(Seq(1), Seq(2))).isLeft)
+      assert(implicitly[Writer[Seq[Seq[Int]]]].write(Seq(Seq(1), Seq(2))).isLeft)
     }
   }
 

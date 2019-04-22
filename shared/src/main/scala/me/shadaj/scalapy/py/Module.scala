@@ -32,10 +32,10 @@ class Module private[py](private[py] val moduleName: String) extends scala.Dynam
     interpreter.eval(s"del $moduleName")
   }
 
-  def as[T: ObjectReader]: T = {
+  def as[T: Reader]: T = {
     val obj = eval(moduleName)
-    implicitly[ObjectReader[T]].read(new ValueAndRequestObject(obj.value) {
-      override def getObject: Any = obj
+    implicitly[Reader[T]].read(new ValueAndRequestRef(obj.value) {
+      override def getRef: Any = obj
     })
   }
 }
