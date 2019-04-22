@@ -70,6 +70,9 @@ class JepInterpreter extends Interpreter {
     }
   }
 
+  def unaryNeg(a: PyValue): PyValue = call(a, "__neg__", Seq())
+  def unaryPos(a: PyValue): PyValue = call(a, "__pos__", Seq())
+
   def binaryAdd(a: PyValue, b: PyValue): PyValue = call(a, "__add__", Seq(b))
   def binarySub(a: PyValue, b: PyValue): PyValue = call(a, "__sub__", Seq(b))
   def binaryMul(a: PyValue, b: PyValue): PyValue = call(a, "__mul__", Seq(b))

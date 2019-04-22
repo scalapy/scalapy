@@ -47,6 +47,9 @@ trait Interpreter {
 
   def noneValue: PyValue
 
+  def unaryNeg(a: PyValue): PyValue
+  def unaryPos(a: PyValue): PyValue
+
   def binaryAdd(a: PyValue, b: PyValue): PyValue
   def binarySub(a: PyValue, b: PyValue): PyValue
   def binaryMul(a: PyValue, b: PyValue): PyValue

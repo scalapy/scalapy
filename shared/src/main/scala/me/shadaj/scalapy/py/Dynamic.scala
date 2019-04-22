@@ -24,11 +24,11 @@ final class Dynamic(private[py] val value: PyValue) extends Object with scala.Dy
   }
 
   def unary_+(): Dynamic = {
-    Object(s"+$expr").asDynamic
+    new Dynamic(interpreter.unaryPos(value))
   }
 
   def unary_-(): Dynamic = {
-    Object(s"-$expr").asDynamic
+    new Dynamic(interpreter.unaryNeg(value))
   }
 
   def +(that: Object): Dynamic = {
