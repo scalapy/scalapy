@@ -1,19 +1,30 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
-organization := "me.shadaj"
+organization in ThisBuild := "me.shadaj"
 
-name := "scalapy"
+scalaVersion in ThisBuild := "2.12.7"
 
-scalaVersion := "2.12.7"
+lazy val scalaPyMacros = crossProject(JVMPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
+  .in(file("coreMacros"))
+  .settings(
+    name := "scalapy-macros",
+    libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
+  ).nativeSettings(
+    scalaVersion := "2.11.12"
+  )
 
-lazy val scalaPy =
-  crossProject(JVMPlatform, NativePlatform).in(file(".")).settings(
+lazy val scalaPy = crossProject(JVMPlatform, NativePlatform)
+  .in(file("core"))
+  .dependsOn(scalaPyMacros)
+  .settings(
+    name := "scalapy",
     sourceGenerators in Compile += Def.task {
       val fileToWrite = (sourceManaged in Compile).value / "TupleReaders.scala"
       val methods = (2 to 22).map { n =>
         val tupleElements = (1 to n).map(t =>
           s"""r$t.read(new ValueAndRequestRef(orArr(${t - 1})) {
-             |  def getRef = or.requestRef.asDynamic.arrayAccess(${t - 1})
+             |  def getRef = or.requestRef.as[Dynamic].arrayAccess(${t - 1})
              |})""".stripMargin).mkString(", ")
         s"""implicit def tuple${n}Reader[${(1 to n).map(t => s"T$t").mkString(", ")}](implicit ${(1 to n).map(t => s"r$t: Reader[T$t]").mkString(", ")}): Reader[(${(1 to n).map(t => s"T$t").mkString(", ")})] = {
            |  new Reader[(${(1 to n).map(t => s"T$t").mkString(", ")})] {
@@ -57,9 +68,9 @@ lazy val scalaPy =
       Seq(fileToWrite)
     }
   ).settings(
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.0-SNAP8" % Test
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.0-SNAP8" % Test,
+    libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
   ).jvmSettings(
-    libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value,
     libraryDependencies += "black.ninia" % "jep" % "3.8.2",
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.0" % Test,
     fork in Test := true,
