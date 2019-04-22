@@ -270,7 +270,14 @@ class JepJavaPyValue(val value: Any) extends JepPyValue {
     _pyObject
   }
 
-  def getStringified = if (value == null) interpreter.stringifiedNone else value.toString()
+  def getStringified = if (value == null) interpreter.stringifiedNone else {
+    val temp = "tmp_v_to_str"
+    loadInto(temp)
+    interpreter.eval("tmp_v_to_str = str(tmp_v_to_str)")
+    val ret: String = interpreter.underlying.getValue(temp, classOf[String])
+    interpreter.eval("del tmp_v_to_str")
+    ret
+  }
 
   def loadInto(variable: String): Unit = {
     interpreter.underlying.set(variable, value)
