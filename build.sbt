@@ -4,7 +4,23 @@ organization in ThisBuild := "me.shadaj"
 
 scalaVersion in ThisBuild := "2.12.7"
 
-lazy val scalaPyMacros = crossProject(JVMPlatform, NativePlatform)
+lazy val scalapy = project.in(file(".")).aggregate(
+  macrosJVM, macrosNative,
+  coreJVM, coreNative,
+).settings(
+  publish := {},
+  publishLocal := {}
+)
+
+addCommandAlias(
+  "publishSignedAll",
+  (scalapy: ProjectDefinition[ProjectReference])
+    .aggregate
+    .map(p => s"+ ${p.asInstanceOf[LocalProject].project}/publishSigned")
+    .mkString(";", ";", "")
+)
+
+lazy val macros = crossProject(JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .in(file("coreMacros"))
   .settings(
@@ -14,11 +30,14 @@ lazy val scalaPyMacros = crossProject(JVMPlatform, NativePlatform)
     scalaVersion := "2.11.12"
   )
 
-lazy val scalaPy = crossProject(JVMPlatform, NativePlatform)
+lazy val macrosJVM = macros.jvm
+lazy val macrosNative = macros.native
+
+lazy val core = crossProject(JVMPlatform, NativePlatform)
   .in(file("core"))
-  .dependsOn(scalaPyMacros)
+  .dependsOn(macros)
   .settings(
-    name := "scalapy",
+    name := "scalapy-core",
     sourceGenerators in Compile += Def.task {
       val fileToWrite = (sourceManaged in Compile).value / "TupleReaders.scala"
       val methods = (2 to 22).map { n =>
@@ -84,3 +103,6 @@ lazy val scalaPy = crossProject(JVMPlatform, NativePlatform)
       "python3-config --ldflags".!!.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
     }
   )
+
+lazy val coreJVM = core.jvm
+lazy val coreNative = core.native
