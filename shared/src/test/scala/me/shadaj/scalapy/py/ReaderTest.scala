@@ -78,8 +78,8 @@ class ReaderTest extends FunSuite with BeforeAndAfterAll {
 
   test("Reading a sequence of objects preserves original object") {
     local {
-      val datetimeExpr = module("datetime").moduleName
-      val datesSeq = eval(s"[$datetimeExpr.date.today(), $datetimeExpr.date.today().replace(year = 1000)]").as[Seq[Object]]
+      val datetime = module("datetime")
+      val datesSeq = py"[$datetime.date.today(), $datetime.date.today().replace(year = 1000)]".as[Seq[Object]]
       assert(datesSeq.head.asDynamic.year.as[Int] > 2000)
       assert(datesSeq.last.asDynamic.year.as[Int] == 1000)
     }

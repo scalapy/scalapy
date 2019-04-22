@@ -126,6 +126,18 @@ class JepInterpreter extends Interpreter {
     ret
   }
 
+  def update(on: PyValue, value: String, newValue: PyValue): Unit = {
+    val onValueRef = "tmp_select_on"
+    val newValueRef = "tmp_select_new"
+
+    on.asInstanceOf[JepPyValue].loadInto(onValueRef)
+    newValue.asInstanceOf[JepPyValue].loadInto(newValueRef)
+
+    underlying.eval(s"$onValueRef.$value = $newValueRef")
+    underlying.eval(s"del $onValueRef")
+    underlying.eval(s"del $newValueRef")
+  }
+
   def selectList(on: PyValue, index: Int): PyValue = {
     val res = "tmp_select_res"
     val onValue = "tmp_select_on"

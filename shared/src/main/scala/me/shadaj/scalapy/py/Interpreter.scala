@@ -59,6 +59,7 @@ trait Interpreter {
   def callGlobal(name: String, args: PyValue*): PyValue
   def call(on: PyValue, method: String, args: Seq[PyValue]): PyValue
   def select(on: PyValue, value: String): PyValue
+  def update(on: PyValue, value: String, newValue: PyValue): Unit
   def selectList(on: PyValue, index: Int): PyValue
   def selectDictionary(on: PyValue, key: PyValue): PyValue
   def binaryOp(op: String, a: PyValue, b: PyValue): PyValue

@@ -2,7 +2,9 @@ package me.shadaj.scalapy.py
 
 import scala.language.dynamics
 
-final class Dynamic(private[py] val value: PyValue) extends AnyVal with Any with scala.Dynamic {
+final class Dynamic(private[py] val value: PyValue) extends AnyVal with Any with AnyDynamics
+
+trait AnyDynamics extends scala.Any with Any with scala.Dynamic {
   def applyDynamic(method: String)(params: Any*): Dynamic = {
     new Dynamic(interpreter.call(value, method, params.map(_.value)))
   }
@@ -13,6 +15,10 @@ final class Dynamic(private[py] val value: PyValue) extends AnyVal with Any with
 
   def selectDynamic(term: String): Dynamic = {
     new Dynamic(interpreter.select(value, term))
+  }
+
+  def updateDynamic(name: String)(newValue: Any): Unit = {
+    interpreter.update(value, name, newValue.value)
   }
 
   def arrayAccess(index: Int): Dynamic = {
