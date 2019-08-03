@@ -10,7 +10,7 @@ object FacadeImpl {
   def creator[T <: Any](c: whitebox.Context)(implicit tag: c.WeakTypeTag[T]): c.Tree = {
     import c.universe._
 
-    if (!tag.tpe.typeSymbol.annotations.exists(_.tpe =:= typeOf[native])) {
+    if (!tag.tpe.typeSymbol.annotations.exists(_.tree.tpe =:= typeOf[native])) {
       c.error(c.enclosingPosition, "Cannot derive a creator for a trait that is not annotated as @py.native")
     }
     
@@ -22,7 +22,7 @@ object FacadeImpl {
   def native_impl[T: c.WeakTypeTag](c: whitebox.Context): c.Expr[T] = {
     import c.universe._
 
-    if (!c.enclosingClass.symbol.annotations.exists(_.tpe =:= typeOf[native])) {
+    if (!c.enclosingClass.symbol.annotations.exists(_.tree.tpe =:= typeOf[native])) {
       c.error(c.enclosingPosition, "py.native implemented functions can only be declared inside traits annotated as @py.native")
     }
 
@@ -43,7 +43,7 @@ object FacadeImpl {
   def native_named_impl[T: c.WeakTypeTag](c: whitebox.Context): c.Expr[T] = {
     import c.universe._
 
-    if (!c.enclosingClass.symbol.annotations.exists(_.tpe =:= typeOf[native])) {
+    if (!c.enclosingClass.symbol.annotations.exists(_.tree.tpe =:= typeOf[native])) {
       c.error(c.enclosingPosition, "py.native implemented functions can only be declared inside traits annotated as @py.native")
     }
 

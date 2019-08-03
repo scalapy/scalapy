@@ -213,11 +213,11 @@ trait JepPyValue extends PyValue {
   def getSeq: Seq[PyValue] = {
     value match {
       case arr: Array[_] =>
-        arr.view.map(interpreter.valueFromJepAny)
+        arr.map(interpreter.valueFromJepAny)
       case arrList: java.util.List[_] =>
-        arrList.toArray.view.map(interpreter.valueFromJepAny)
+        arrList.toArray.map(interpreter.valueFromJepAny)
       case ndArr: NDArray[Array[_]] =>
-        ndArr.getData.view.map(interpreter.valueFromJepAny)
+        ndArr.getData.map(interpreter.valueFromJepAny)
     }
   }
 

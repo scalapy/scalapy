@@ -2,14 +2,19 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 organization in ThisBuild := "me.shadaj"
 
-scalaVersion in ThisBuild := "2.12.7"
+scalaVersion in ThisBuild := "2.12.8"
+
+lazy val supportedScalaVersions = List("2.12.8", "2.13.0")
+
 
 lazy val scalapy = project.in(file(".")).aggregate(
   macrosJVM, macrosNative,
-  coreJVM, coreNative,
+  coreJVM, coreNative
 ).settings(
   publish := {},
-  publishLocal := {}
+  publishLocal := {},
+  // crossScalaVersions must be set to Nil on the aggregating project
+  crossScalaVersions := Nil
 )
 
 addCommandAlias(
@@ -26,6 +31,8 @@ lazy val macros = crossProject(JVMPlatform, NativePlatform)
   .settings(
     name := "scalapy-macros",
     libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
+  ).jvmSettings(
+    crossScalaVersions := supportedScalaVersions
   ).nativeSettings(
     scalaVersion := "2.11.12"
   )
@@ -87,9 +94,10 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
       Seq(fileToWrite)
     }
   ).settings(
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.0-SNAP8" % Test,
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.0-SNAP13" % Test,
     libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
   ).jvmSettings(
+    crossScalaVersions := supportedScalaVersions,
     libraryDependencies += "black.ninia" % "jep" % "3.8.2",
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.0" % Test,
     fork in Test := true,

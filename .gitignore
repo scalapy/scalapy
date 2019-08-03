@@ -2,3 +2,4 @@
 lib/
 project/project
 target/
+.bloop/
