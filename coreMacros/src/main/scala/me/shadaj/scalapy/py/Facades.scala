@@ -34,9 +34,9 @@ object FacadeImpl {
     paramss.headOption match {
       case Some(params) =>
         val paramExprs = params.map(_.name)
-        c.Expr[T](q"as[Dynamic].applyDynamic($methodName)(..$paramExprs).as[$returnType]")
+        c.Expr[T](q"as[_root_.me.shadaj.scalapy.py.Dynamic].applyDynamic($methodName)(..$paramExprs).as[$returnType]")
       case scala.None =>
-        c.Expr[T](q"as[Dynamic].selectDynamic($methodName).as[$returnType]")
+        c.Expr[T](q"as[_root_.me.shadaj.scalapy.py.Dynamic].selectDynamic($methodName).as[$returnType]")
     }
   }
 
@@ -59,10 +59,10 @@ object FacadeImpl {
           s"""("${p.name}", $paramName)"""
         }
 
-        c.Expr[T](c.parse(s"""as[Dynamic].applyDynamicNamed("$methodName")(${paramExprs.mkString(",")}).as[$returnType]"""))
+        c.Expr[T](c.parse(s"""as[_root_.me.shadaj.scalapy.py.Dynamic].applyDynamicNamed("$methodName")(${paramExprs.mkString(",")}).as[$returnType]"""))
 
       case scala.None =>
-        c.Expr[T](q"as[Dynamic].selectDynamic($methodName).as[$returnType]")
+        c.Expr[T](q"as[_root_.me.shadaj.scalapy.py.Dynamic].selectDynamic($methodName).as[$returnType]")
     }
   }
 }

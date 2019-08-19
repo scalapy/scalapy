@@ -2,3 +2,5 @@
 lib/
 project/project
 target/
+website/build
+website/node_modules
