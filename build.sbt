@@ -106,3 +106,16 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
 
 lazy val coreJVM = core.jvm
 lazy val coreNative = core.native
+
+lazy val docs = project
+  .in(file("built-docs"))
+  .settings(
+    moduleName := "built-docs",
+  )
+  .enablePlugins(MdocPlugin, DocusaurusPlugin)
+  .dependsOn(coreJVM)
+  .settings(
+    fork := true,
+    connectInput := true,
+    javaOptions += s"-Djava.library.path=${sys.env.getOrElse("JEP_PATH", "/usr/local/lib/python3.7/site-packages/jep")}"
+  )
