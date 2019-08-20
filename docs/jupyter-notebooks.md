@@ -45,7 +45,7 @@ With `/usr/lib/jvm/java-8-openjdk-amd64` and the `dist-packages` folder adjusted
 Once you've run this setup code, you can import ScalaPy and start using it as usual!
 
 ```scala
-import $ivy.`me.shadaj::scalapy:0.2.0`
+import $ivy.`me.shadaj::scalapy:0.3.0`
 
 import me.shadaj.scalapy.py
 ```
