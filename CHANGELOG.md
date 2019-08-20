@@ -1,5 +1,7 @@
 # Changelog
 ## vNEXT
+
+## v0.3.0
 ### Highlights :tada:
 + ScalaPy now has a website! Check it out at [scalapy.dev](https://scalapy.dev)
 + The `py""` interpolator now makes it possible to interpret bits of Python code with references to Scala values

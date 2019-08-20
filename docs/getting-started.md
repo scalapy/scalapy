@@ -9,7 +9,7 @@ ScalaPy makes it easy to use Python libraries from Scala code. With a simple API
 ## Installation
 First, add ScalaPy to your SBT build:
 ```scala
-libraryDependencies += "me.shadaj" %% "scalapy-core" % "0.2.0"
+libraryDependencies += "me.shadaj" %% "scalapy-core" % "0.3.0"
 ```
 
 If you're running on the JVM, you'll need to install Jep, which provides the bindings between the JVM and CPython.

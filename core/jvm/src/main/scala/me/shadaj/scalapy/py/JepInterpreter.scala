@@ -6,7 +6,7 @@ import jep.python.PyObject
 import scala.collection.JavaConverters._
 
 class JepInterpreter extends Interpreter {
-  val underlying = new Jep
+  val underlying = new Jep(new JepConfig().setRedirectOutputStreams(true))
 
   override def eval(code: String): Unit = {
     underlying.eval(code)
