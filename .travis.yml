@@ -10,6 +10,7 @@ branches:
 before_install:
   - curl https://raw.githubusercontent.com/scala-native/scala-native/v0.3.7/scripts/travis_setup.sh | bash -x
 install:
+  - pyenv install -s 3.6.3
   - pyenv global 3.6.3
   - pip install jep
 script:

@@ -3,3 +3,5 @@ lib/
 project/project
 target/
 .bloop/
+website/build
+website/node_modules

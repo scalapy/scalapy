@@ -2,10 +2,9 @@ import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 
 organization in ThisBuild := "me.shadaj"
 
-scalaVersion in ThisBuild := "2.12.8"
+scalaVersion in ThisBuild := "2.12.9"
 
-lazy val supportedScalaVersions = List("2.12.8", "2.13.0")
-
+lazy val supportedScalaVersions = List("2.12.9", "2.13.0")
 
 lazy val scalapy = project.in(file(".")).aggregate(
   macrosJVM, macrosNative,
@@ -114,3 +113,16 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
 
 lazy val coreJVM = core.jvm
 lazy val coreNative = core.native
+
+lazy val docs = project
+  .in(file("built-docs"))
+  .settings(
+    moduleName := "built-docs",
+  )
+  .enablePlugins(MdocPlugin, DocusaurusPlugin)
+  .dependsOn(coreJVM)
+  .settings(
+    fork := true,
+    connectInput := true,
+    javaOptions += s"-Djava.library.path=${sys.env.getOrElse("JEP_PATH", "/usr/local/lib/python3.7/site-packages/jep")}"
+  )

@@ -1,7 +1,10 @@
 # Changelog
 ## vNEXT
+
+## v0.3.0
 ### Highlights :tada:
-+ The `py""` interpolator now makes it possible to interpret bits of Python code with references to Scala values 
++ ScalaPy now has a website! Check it out at [scalapy.dev](https://scalapy.dev)
++ The `py""` interpolator now makes it possible to interpret bits of Python code with references to Scala values
 
 ### Breaking Changes :warning:
 + `py.Any` is now the default type taken in and returned by operations

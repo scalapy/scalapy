@@ -6,7 +6,7 @@ import jep.python.PyObject
 import scala.collection.JavaConverters._
 
 class JepInterpreter extends Interpreter {
-  val underlying = new Jep
+  val underlying = new Jep(new JepConfig().setRedirectOutputStreams(true))
 
   override def eval(code: String): Unit = {
     underlying.eval(code)
@@ -76,7 +76,7 @@ class JepInterpreter extends Interpreter {
   def binaryAdd(a: PyValue, b: PyValue): PyValue = call(a, "__add__", Seq(b))
   def binarySub(a: PyValue, b: PyValue): PyValue = call(a, "__sub__", Seq(b))
   def binaryMul(a: PyValue, b: PyValue): PyValue = call(a, "__mul__", Seq(b))
-  def binaryDiv(a: PyValue, b: PyValue): PyValue = call(a, "__div__", Seq(b))
+  def binaryDiv(a: PyValue, b: PyValue): PyValue = call(a, "__truediv__", Seq(b))
   def binaryMod(a: PyValue, b: PyValue): PyValue = call(a, "__mod__", Seq(b))
 
   def callGlobal(method: String, args: PyValue*): PyValue = {
@@ -187,6 +187,7 @@ trait JepPyValue extends PyValue {
     case v: Float => v
     case v: Long => v
     case v: Double => v
+    case v: String => v.toDouble
   }
   
   def getLong: Long = value match {
