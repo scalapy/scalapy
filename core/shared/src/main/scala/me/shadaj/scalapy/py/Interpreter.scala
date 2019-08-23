@@ -67,8 +67,6 @@ trait Interpreter {
 trait PyValue {
   if (PyValue.allocatedValues.nonEmpty) {
     PyValue.allocatedValues = (this :: PyValue.allocatedValues.head) :: PyValue.allocatedValues.tail
-  } else if (Platform.isNative) {
-    println(s"Warning: the value ${this.getStringified} was allocated into a global space, which means it will not be garbage collected in Scala Native")
   }
 
   def getString: String

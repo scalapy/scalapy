@@ -77,11 +77,13 @@ class CPythonInterpreter extends Interpreter {
   CPythonAPI.Py_Initialize()
 
   val globals: Ptr[Byte] = CPythonAPI.PyDict_New()
-  val builtins = new CPyValue(CPythonAPI.PyEval_GetBuiltins())
+  val builtins = new CPyValue(CPythonAPI.PyEval_GetBuiltins(), true)
   set("__builtins__", builtins)
 
   val falsePtr: Ptr[Byte] = CPythonAPI.PyBool_FromLong(0)
   val truePtr: Ptr[Byte] = CPythonAPI.PyBool_FromLong(1)
+
+  val noneValue: PyValue = new CPyValue(CPythonAPI.Py_BuildValue(c""), true)
   
   override def eval(code: String): Unit = {
     Zone { implicit zone =>
@@ -150,8 +152,6 @@ class CPythonInterpreter extends Interpreter {
 
     new CPyValue(retPtr)
   }
-
-  val noneValue: PyValue = new CPyValue(CPythonAPI.Py_BuildValue(c""))
 
   def throwErrorIfOccured() = {
     if (CPythonAPI.PyErr_Occurred().cast[Int] != 0) {
@@ -354,7 +354,11 @@ class CPythonInterpreter extends Interpreter {
   }
 }
 
-class CPyValue(val underlying: Ptr[Byte]) extends PyValue {
+class CPyValue(val underlying: Ptr[Byte], safeGlobal: Boolean = false) extends PyValue {
+  if (PyValue.allocatedValues.isEmpty && !safeGlobal) {
+    println(s"Warning: the value ${this.getStringified} was allocated into a global space, which means it will not be garbage collected in Scala Native")
+  }
+
   def getStringified: String = {
     val pyStr = CPythonAPI.PyObject_Str(underlying)
     interpreter.throwErrorIfOccured()
