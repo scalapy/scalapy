@@ -1,5 +1,7 @@
 # Changelog
 ## vNEXT
+### Bug Fixes :bug:
++ Fix a segfault in Scala Native when the interpreter is initialized outside of a `py.local { ... }` block
 
 ## v0.3.0
 ### Highlights :tada:
