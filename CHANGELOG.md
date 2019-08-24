@@ -2,6 +2,7 @@
 ## vNEXT
 ### Bug Fixes :bug:
 + Fix a segfault in Scala Native when the interpreter is initialized outside of a `py.local { ... }` block
++ Correctly handle reading a list-like object (such as a NumPy array) into a `Seq` in Scala Native
 
 ## v0.3.0
 ### Highlights :tada:
