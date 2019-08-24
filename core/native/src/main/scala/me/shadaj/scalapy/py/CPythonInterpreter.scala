@@ -53,12 +53,14 @@ object CPythonAPI {
   def PyTuple_SetItem(tuple: Ptr[Byte], index: CSize, item: Ptr[Byte]): Int = extern
 
   def PyObject_Str(obj: Ptr[Byte]): Ptr[Byte] = extern
+  def PyObject_GetItem(obj: Ptr[Byte], idx: Ptr[Byte]): Ptr[Byte] = extern
   def PyObject_GetAttr(obj: Ptr[Byte], name: Ptr[Byte]): Ptr[Byte] = extern
   def PyObject_GetAttrString(obj: Ptr[Byte], name: CString): Ptr[Byte] = extern
   def PyObject_SetAttr(obj: Ptr[Byte], name: Ptr[Byte], newValue: Ptr[Byte]): Ptr[Byte] = extern
   def PyObject_SetAttrString(obj: Ptr[Byte], name: CString, newValue: Ptr[Byte]): Ptr[Byte] = extern
   def PyObject_CallMethodObjArgs(obj: Ptr[Byte], name: Ptr[Byte], args: CVararg*): Ptr[Byte] = extern
   def PyObject_Call(obj: Ptr[Byte], args: Ptr[Byte], kwArgs: Ptr[Byte]): Ptr[Byte] = extern
+  def PyObject_Length(obj: Ptr[Byte]): CSize = extern
 
   def PyErr_Occurred(): Ptr[Byte] = extern
   def PyErr_Fetch(pType: Ptr[Ptr[Byte]], pValue: Ptr[Ptr[Byte]], pTraceback: Ptr[Ptr[Byte]]): Unit = extern
@@ -413,17 +415,26 @@ class CPyValue(val underlying: Ptr[Byte], safeGlobal: Boolean = false) extends P
 
   def getSeq: Seq[PyValue] = new Seq[PyValue] {
     def length: Int = {
-      val ret = CPythonAPI.PyList_Size(underlying).toInt
+      val ret = CPythonAPI.PyObject_Length(underlying).toInt
       interpreter.throwErrorIfOccured()
       ret
     }
     
-    def apply(idx: Int): PyValue = new CPyValue({
-      val ret = CPythonAPI.PyList_GetItem(underlying, idx)
+    def apply(idx: Int): PyValue = {
+      val indexValue = CPythonAPI.PyLong_FromLongLong(idx)
+
+      CPythonAPI.Py_IncRef(indexValue)
+      val ret = CPythonAPI.PyObject_GetItem(
+        underlying,
+        indexValue
+      )
+      CPythonAPI.Py_DecRef(indexValue)
+
       interpreter.throwErrorIfOccured()
+
       CPythonAPI.Py_IncRef(ret)
-      ret
-    })
+      new CPyValue(ret)
+    }
 
     def iterator: Iterator[PyValue] = (0 until length).toIterator.map(apply)
   }
