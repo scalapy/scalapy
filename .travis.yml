@@ -16,6 +16,7 @@ install:
 script:
   - export JEP_PATH="/opt/python/3.6.3/lib/python3.6/site-packages/jep"
   - export LD_LIBRARY_PATH=$(python3-config --prefix)/lib
+  - pip install numpy
   - sbt test
 after_success:
   - 'if [ "$TRAVIS_BRANCH" = "master" ] && [ "$TRAVIS_PULL_REQUEST" = "false" ]; then bash ./publish.sh; fi'
