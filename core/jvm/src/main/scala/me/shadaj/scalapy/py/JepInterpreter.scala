@@ -81,7 +81,7 @@ class JepInterpreter extends Interpreter {
 
   def callGlobal(method: String, args: PyValue*): PyValue = {
     val res = "tmp_call_global_res"
-    val argsLoaded = args.zipWithIndex.map { case (arg: JepPyValue, i) =>
+    val argsLoaded = args.zipWithIndex.collect { case (arg: JepPyValue, i) =>
       val argName = s"tmp_call_global_arg_$i"
       arg.loadInto(argName)
       argName
@@ -99,7 +99,7 @@ class JepInterpreter extends Interpreter {
     val onValue = "tmp_call_on"
 
     on.asInstanceOf[JepPyValue].loadInto(onValue)
-    val argsLoaded = args.zipWithIndex.map { case (arg: JepPyValue, i) =>
+    val argsLoaded = args.zipWithIndex.collect { case (arg: JepPyValue, i) =>
       val argName = s"tmp_call_arg_$i"
       arg.loadInto(argName)
       argName
@@ -209,21 +209,21 @@ trait JepPyValue extends PyValue {
     }
   }
 
-  def getTuple = getSeq
+  def getTuple: Seq[PyValue] = getSeq
 
   def getSeq: Seq[PyValue] = {
     value match {
       case arr: Array[_] =>
         arr.map(interpreter.valueFromJepAny)
       case arrList: java.util.List[_] =>
-        arrList.toArray.map(interpreter.valueFromJepAny)
-      case ndArr: NDArray[Array[_]] =>
+        arrList.asScala.view.map(interpreter.valueFromJepAny).toSeq
+      case ndArr: NDArray[Array[_]] @unchecked =>
         ndArr.getData.map(interpreter.valueFromJepAny)
     }
   }
 
-  import scala.collection.mutable
   import scala.collection.JavaConverters._
+  import scala.collection.mutable
   def getMap: mutable.Map[PyValue, PyValue] = {
     value.asInstanceOf[java.util.Map[Any, Any]].asScala.map { kv => 
       (interpreter.valueFromJepAny(kv._1), interpreter.valueFromJepAny(kv._2))

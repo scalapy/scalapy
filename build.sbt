@@ -4,7 +4,7 @@ organization in ThisBuild := "me.shadaj"
 
 scalaVersion in ThisBuild := "2.12.9"
 
-lazy val supportedScalaVersions = List("2.12.9", "2.13.0")
+lazy val supportedScalaVersions = List("2.11.12", "2.12.9", "2.13.0")
 
 lazy val scalapy = project.in(file(".")).aggregate(
   macrosJVM, macrosNative,
@@ -118,6 +118,7 @@ lazy val docs = project
   .in(file("built-docs"))
   .settings(
     moduleName := "built-docs",
+    crossScalaVersions := Nil
   )
   .enablePlugins(MdocPlugin, DocusaurusPlugin)
   .dependsOn(coreJVM)
