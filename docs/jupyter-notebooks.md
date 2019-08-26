@@ -24,25 +24,10 @@ In your `jupyter/kernels/scala/kernel.json` file, replace the contents with
 }"
 ```
 
-Make sure to replace `/usr/lib/x86_64-linux-gnu/libpython3.6m.so` with the path to your Python native library. `python3-config --configdir` will give you the folder containing your installation's native libraries.
+Make sure to replace `/usr/lib/x86_64-linux-gnu/libpython3.6m.so` with the path to your Python native library. `python3-config --prefix` will give you the folder containing your installation's native libraries.
 
 ## Loading ScalaPy in a notebook
-In your notebook, you can automate the process of installing Jep and loading it with a bit of starter Scala code.
-
-```scala
-import scala.sys.process._
-
-Process(
-  "pip3 install jep==3.7.0", new java.io.File("."),
-  "JAVA_HOME" -> "/usr/lib/jvm/java-8-openjdk-amd64"
-).!
-
-"cp /usr/local/lib/python3.6/dist-packages/jep/libjep.so /usr/lib/jni".!
-```
-
-With `/usr/lib/jvm/java-8-openjdk-amd64` and the `dist-packages` folder adjusted according to your platform and Python installation.
-
-Once you've run this setup code, you can import ScalaPy and start using it as usual!
+ScalaPy on the JVM contains with all the logic to load native libraries built-in, so you can import ScalaPy and start using it as usual!
 
 ```scala
 import $ivy.`me.shadaj::scalapy:0.3.0`

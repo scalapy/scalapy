@@ -12,18 +12,13 @@ First, add ScalaPy to your SBT build:
 libraryDependencies += "me.shadaj" %% "scalapy-core" % "0.3.0"
 ```
 
-If you're running on the JVM, you'll need to install Jep, which provides the bindings between the JVM and CPython.
-
-```bash
-$ pip install jep
-```
-
-Then, add the Jep native libraries to your project and configure SBT to run your code in a separate JVM instance.
+You'll then need to add the Python native libraries to your project and configure SBT to run your code in a separate JVM instance.
 
 ```scala
 fork := true
-// use `pip show jep` to find your install location
-javaOptions += "-Djava.library.path=/usr/local/lib/python3.7/site-packages/jep"
+
+import scala.sys.process._
+javaOptions in Test += s"-Djava.library.path=${"python3-config --ldflags".!! + "/lib"}"
 ```
 
 ## Hello World!

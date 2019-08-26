@@ -30,6 +30,8 @@ object VariableReference {
   private[py] var allocatedReferences: List[List[VariableReference]] = List.empty
 }
 
+class PythonException(s: String) extends Exception(s) 
+
 trait Interpreter {
   def eval(string: String): Unit
   def set(string: String, value: PyValue): Unit

@@ -2,10 +2,6 @@ package me.shadaj.scalapy.py
 
 import scala.scalanative.native._
 
-trait JepInterpreter {
-  def valueFromAny(v: scala.Any): PyValue
-}
-
 @extern
 object CPythonAPI {
   def Py_Initialize(): Unit = extern
@@ -167,7 +163,7 @@ class CPythonInterpreter extends Interpreter {
         } else "")
       }
 
-      throw new Exception(errorMessage)
+      throw new PythonException(errorMessage)
     }
   }
 

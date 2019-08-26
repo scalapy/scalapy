@@ -1,4 +1,5 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
+import scala.sys.process._
 
 organization in ThisBuild := "me.shadaj"
 
@@ -90,18 +91,15 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.0-SNAP8" % Test,
     libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
   ).jvmSettings(
-    libraryDependencies += "black.ninia" % "jep" % "3.8.2",
+    libraryDependencies += "net.java.dev.jna" % "jna" % "5.4.0",
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.0" % Test,
     fork in Test := true,
-    javaOptions in Test += s"-Djava.library.path=${sys.env.getOrElse("JEP_PATH", "/usr/local/lib/python3.7/site-packages/jep")}"
+    javaOptions in Test += s"-Djava.library.path=${"python3-config --ldflags".!! + "/lib"}"
   ).nativeSettings(
     scalaVersion := "2.11.12",
     libraryDependencies += "com.github.lolgab" %%% "scalacheck" % "1.14.1" % Test,
     nativeLinkStubs := true,
-    nativeLinkingOptions ++= {
-      import scala.sys.process._
-      "python3-config --ldflags".!!.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
-    }
+    nativeLinkingOptions ++= "python3-config --ldflags".!!.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
   )
 
 lazy val coreJVM = core.jvm
@@ -116,6 +114,5 @@ lazy val docs = project
   .dependsOn(coreJVM)
   .settings(
     fork := true,
-    connectInput := true,
-    javaOptions += s"-Djava.library.path=${sys.env.getOrElse("JEP_PATH", "/usr/local/lib/python3.7/site-packages/jep")}"
+    connectInput := true
   )
