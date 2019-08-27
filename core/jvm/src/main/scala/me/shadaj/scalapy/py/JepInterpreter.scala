@@ -451,7 +451,12 @@ class CPyValue(val underlying: Pointer, safeGlobal: Boolean = false) extends PyV
     def -=(k: PyValue): this.type = ???
   }
 
+  private var cleaned = false
+
   override def cleanup(): Unit = {
-    CPythonAPI.Py_DecRef(underlying)
+    if (!cleaned) {
+      cleaned = true
+      CPythonAPI.Py_DecRef(underlying)
+    }
   }
 }
