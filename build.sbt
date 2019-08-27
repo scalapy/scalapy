@@ -114,5 +114,6 @@ lazy val docs = project
   .dependsOn(coreJVM)
   .settings(
     fork := true,
-    connectInput := true
+    connectInput := true,
+    javaOptions += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib"
   )
