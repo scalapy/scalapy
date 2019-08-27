@@ -16,8 +16,13 @@ class VariableReference(val variable: String) {
 
   override def toString(): String = variable
 
+  private var cleaned = false
+
   def cleanup(): Unit = {
-    interpreter.eval(s"del $variable")
+    if (!cleaned) {
+      cleaned = true
+      interpreter.eval(s"del $variable")
+    }
   }
 
   override def finalize(): Unit = {
