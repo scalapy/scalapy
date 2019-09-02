@@ -117,3 +117,19 @@ lazy val docs = project
     connectInput := true,
     javaOptions += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib"
   )
+
+lazy val bench = crossProject(JVMPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
+  .in(file("bench"))
+  .settings(
+    name := "scalapy-bench"
+  ).jvmSettings(
+    fork := true,
+    javaOptions += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib"
+  ).nativeSettings(
+    scalaVersion := "2.11.12",
+    nativeLinkingOptions ++= "python3-config --ldflags".!!.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
+  ).dependsOn(core)
+
+lazy val benchJVM = bench.jvm
+lazy val benchNative = bench.native
