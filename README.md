@@ -15,7 +15,7 @@ ScalaPy allows you to use any Python library from your Scala code with an intuit
 # Get Started at [scalapy.dev](https://scalapy.dev)
 
 ## Building
-First, [install Jep](https://github.com/mrj0/jep/wiki/Getting-Started) and and set your `JEP_PATH` environment variable to the path where Jep is installed (use `pip show jep` to find this). To run the unit tests for ScalaPy, run `sbt coreJVM/test`.
+To run the unit tests for ScalaPy, run `sbt coreJVM/test`. To run unit tests for Scala Native, run `sbt coreNative/test`.
 
 ## Static Facades
 + NumPy: https://github.com/shadaj/scalapy-numpy

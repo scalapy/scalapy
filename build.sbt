@@ -1,4 +1,5 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
+import scala.sys.process._
 
 organization in ThisBuild := "me.shadaj"
 
@@ -90,18 +91,15 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.0-SNAP8" % Test,
     libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
   ).jvmSettings(
-    libraryDependencies += "black.ninia" % "jep" % "3.8.2",
+    libraryDependencies += "net.java.dev.jna" % "jna" % "5.4.0",
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.0" % Test,
     fork in Test := true,
-    javaOptions in Test += s"-Djava.library.path=${sys.env.getOrElse("JEP_PATH", "/usr/local/lib/python3.7/site-packages/jep")}"
+    javaOptions in Test += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib"
   ).nativeSettings(
     scalaVersion := "2.11.12",
     libraryDependencies += "com.github.lolgab" %%% "scalacheck" % "1.14.1" % Test,
     nativeLinkStubs := true,
-    nativeLinkingOptions ++= {
-      import scala.sys.process._
-      "python3-config --ldflags".!!.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
-    }
+    nativeLinkingOptions ++= "python3-config --ldflags".!!.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
   )
 
 lazy val coreJVM = core.jvm
@@ -117,5 +115,21 @@ lazy val docs = project
   .settings(
     fork := true,
     connectInput := true,
-    javaOptions += s"-Djava.library.path=${sys.env.getOrElse("JEP_PATH", "/usr/local/lib/python3.7/site-packages/jep")}"
+    javaOptions += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib"
   )
+
+lazy val bench = crossProject(JVMPlatform, NativePlatform)
+  .crossType(CrossType.Pure)
+  .in(file("bench"))
+  .settings(
+    name := "scalapy-bench"
+  ).jvmSettings(
+    fork := true,
+    javaOptions += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib"
+  ).nativeSettings(
+    scalaVersion := "2.11.12",
+    nativeLinkingOptions ++= "python3-config --ldflags".!!.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
+  ).dependsOn(core)
+
+lazy val benchJVM = bench.jvm
+lazy val benchNative = bench.native

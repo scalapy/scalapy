@@ -1,5 +1,8 @@
 # Changelog
 ## vNEXT
+### Highlights :tada:
++ The JVM interface to Python has been completely rewritten from scratch to share all of its logic with the Scala Native backend by binding directly to CPython with JNA. This means that moving forward, ScalaPy JVM and Native will always have the same features and use near-identical logic for talking to Python libraries
+
 ### Bug Fixes :bug:
 + Fix a segfault in Scala Native when the interpreter is initialized outside of a `py.local { ... }` block
 
