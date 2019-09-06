@@ -1,6 +1,6 @@
 package me.shadaj.scalapy.py
 
-class CPythonInterpreter extends Interpreter {
+class CPythonInterpreter {
   CPythonAPI.Py_Initialize()
 
   val globals: Platform.Pointer = CPythonAPI.PyDict_New()
@@ -12,7 +12,7 @@ class CPythonInterpreter extends Interpreter {
 
   val noneValue: PyValue = new CPyValue(CPythonAPI.Py_BuildValue(Platform.emptyCString), true)
   
-  override def eval(code: String): Unit = {
+  def eval(code: String): Unit = {
     Platform.Zone { implicit zone =>
       val Py_single_input = 256
       CPythonAPI.PyRun_String(Platform.toCString(code), Py_single_input, globals, globals)
@@ -20,7 +20,7 @@ class CPythonInterpreter extends Interpreter {
     }
   }
 
-  override def set(variable: String, value: PyValue): Unit = {
+  def set(variable: String, value: PyValue): Unit = {
     Platform.Zone { implicit zone =>
       CPythonAPI.PyDict_SetItemString(globals, Platform.toCString(variable), value.asInstanceOf[CPyValue].underlying)
       CPythonAPI.Py_IncRef(value.asInstanceOf[CPyValue].underlying)
@@ -100,7 +100,7 @@ class CPythonInterpreter extends Interpreter {
     }
   }
 
-  override def load(code: String): PyValue = {
+  def load(code: String): PyValue = {
     var ret: CPyValue = null
     Platform.Zone { implicit zone =>
       val Py_eval_input = 258

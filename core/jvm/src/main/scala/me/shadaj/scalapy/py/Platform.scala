@@ -5,8 +5,6 @@ import com.sun.jna.Native
 import java.nio.charset.Charset
 
 object Platform {
-  type InterpreterImplementation = CPythonInterpreter
-  def newInterpreter: InterpreterImplementation = new CPythonInterpreter
   final val isNative = false
 
   def Zone[T](fn: Unit => T): T = fn(())

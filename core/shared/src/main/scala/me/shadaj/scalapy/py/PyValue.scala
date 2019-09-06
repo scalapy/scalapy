@@ -37,40 +37,6 @@ object VariableReference {
 
 class PythonException(s: String) extends Exception(s) 
 
-trait Interpreter {
-  def eval(string: String): Unit
-  def set(string: String, value: PyValue): Unit
-
-  def load(variable: String): PyValue
-
-  def getVariableReference(value: PyValue): VariableReference
-
-  def valueFromBoolean(v: Boolean): PyValue
-  def valueFromLong(v: Long): PyValue
-  def valueFromDouble(v: Double): PyValue
-  def valueFromString(v: String): PyValue
-  def createList(elements: Seq[PyValue]): PyValue
-  def createTuple(elements: Seq[PyValue]): PyValue
-
-  def noneValue: PyValue
-
-  def unaryNeg(a: PyValue): PyValue
-  def unaryPos(a: PyValue): PyValue
-
-  def binaryAdd(a: PyValue, b: PyValue): PyValue
-  def binarySub(a: PyValue, b: PyValue): PyValue
-  def binaryMul(a: PyValue, b: PyValue): PyValue
-  def binaryDiv(a: PyValue, b: PyValue): PyValue
-  def binaryMod(a: PyValue, b: PyValue): PyValue
-
-  def callGlobal(name: String, args: PyValue*): PyValue
-  def call(on: PyValue, method: String, args: Seq[PyValue]): PyValue
-  def select(on: PyValue, value: String): PyValue
-  def update(on: PyValue, value: String, newValue: PyValue): Unit
-  def selectList(on: PyValue, index: Int): PyValue
-  def selectDictionary(on: PyValue, key: PyValue): PyValue
-}
-
 trait PyValue {
   if (PyValue.allocatedValues.nonEmpty) {
     PyValue.allocatedValues = (this :: PyValue.allocatedValues.head) :: PyValue.allocatedValues.tail

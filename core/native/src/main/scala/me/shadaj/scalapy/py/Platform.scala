@@ -6,8 +6,6 @@ import java.nio.charset.Charset
 import scala.scalanative.native.CQuote
 
 object Platform {
-  type InterpreterImplementation = CPythonInterpreter
-  def newInterpreter: InterpreterImplementation = new CPythonInterpreter
   final val isNative = true
 
   def Zone[T](fn: sn.Zone => T): T = sn.Zone(fn)
