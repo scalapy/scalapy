@@ -12,9 +12,7 @@ trait Any extends scala.Any { self =>
 
   override def toString: String = value.getStringified
 
-  final def as[T: Reader]: T = implicitly[Reader[T]].read(new ValueAndRequestRef(value) {
-    override def getRef: Any = self
-  })
+  final def as[T: Reader]: T = implicitly[Reader[T]].read(value)
 }
 
 object Any {

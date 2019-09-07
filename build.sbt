@@ -42,14 +42,12 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
     sourceGenerators in Compile += Def.task {
       val fileToWrite = (sourceManaged in Compile).value / "TupleReaders.scala"
       val methods = (2 to 22).map { n =>
-        val tupleElements = (1 to n).map(t =>
-          s"""r$t.read(new ValueAndRequestRef(orArr(${t - 1})) {
-             |  def getRef = or.requestRef.as[Dynamic].arrayAccess(${t - 1})
-             |})""".stripMargin).mkString(", ")
+        val tupleElements = (1 to n).map(t => s"r$t.read(orArr(${t - 1}))")
+          .mkString(", ")
         s"""implicit def tuple${n}Reader[${(1 to n).map(t => s"T$t").mkString(", ")}](implicit ${(1 to n).map(t => s"r$t: Reader[T$t]").mkString(", ")}): Reader[(${(1 to n).map(t => s"T$t").mkString(", ")})] = {
            |  new Reader[(${(1 to n).map(t => s"T$t").mkString(", ")})] {
-           |    override def read(or: ValueAndRequestRef) = {
-           |      val orArr = or.value.getTuple
+           |    override def read(or: PyValue) = {
+           |      val orArr = or.getTuple
            |      ($tupleElements)
            |    }
            |  }
