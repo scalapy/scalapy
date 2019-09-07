@@ -23,6 +23,6 @@ object Any {
   }
 
   implicit def from[T](v: T)(implicit writer: Writer[T]): Any = {
-    writer.write(v).left.map(Any.populateWith).merge
+    Any.populateWith(writer.write(v))
   }
 }

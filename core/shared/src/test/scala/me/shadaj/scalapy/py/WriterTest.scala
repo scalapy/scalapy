@@ -109,12 +109,6 @@ class WriterTest extends FunSuite with BeforeAndAfterAll {
     }
   }
 
-  test("Sequences of sequences are natively writable") {
-    local {
-      assert(implicitly[Writer[Seq[Seq[Int]]]].write(Seq(Seq(1), Seq(2))).isLeft)
-    }
-  }
-
   test("Writing a sequence of Python objects preserves original objects") {
     local {
       val objects = Any.from(Seq[Any](py"object()", py"object()"))

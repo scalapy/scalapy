@@ -62,7 +62,7 @@ package object py {
     }
 
     implicit def fromValue[V](value: V)(implicit writer: Writer[V]): PyQuotable = new PyQuotable {
-      private val expr = writer.write(value).left.map(Any.populateWith).merge.expr
+      private val expr = Any.populateWith(writer.write(value)).expr
       def stringToInsert: String = expr.toString
       def cleanup() = expr.cleanup()
     }
