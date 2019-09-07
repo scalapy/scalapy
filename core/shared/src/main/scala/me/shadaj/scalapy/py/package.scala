@@ -51,31 +51,40 @@ package object py {
   import py.{Dynamic => PyDynamic, Any => PyAny}
   trait PyQuotable {
     def stringToInsert: String
+    def cleanup(): Unit
   }
 
   object PyQuotable {
     implicit def fromAny(any: py.Any): PyQuotable = new PyQuotable {
-      def stringToInsert: String = any.expr.toString
+      private val expr = any.expr
+      def stringToInsert: String = expr.toString
+      def cleanup() = expr.cleanup()
     }
 
     implicit def fromValue[V](value: V)(implicit writer: Writer[V]): PyQuotable = new PyQuotable {
-      def stringToInsert: String = writer.write(value).left.map(Any.populateWith).merge.expr.toString
+      private val expr = writer.write(value).left.map(Any.populateWith).merge.expr
+      def stringToInsert: String = expr.toString
+      def cleanup() = expr.cleanup()
     }
   }
 
   implicit class PyQuote(private val sc: StringContext) extends AnyVal {
     def py(values: PyQuotable*): PyDynamic = {
-      local {
-        val strings = sc.parts.iterator
-        val expressions = values.iterator
-        var buf = new StringBuffer(strings.next)
-        while (strings.hasNext) {
-          buf append expressions.next.stringToInsert
-          buf append strings.next
-        }
-        
-        PyAny.populateWith(interpreter.load(buf.toString)).as[Dynamic]
+      val strings = sc.parts.iterator
+      val expressions = values.iterator
+      var buf = new StringBuffer(strings.next)
+      val toCleanup = mutable.Queue[PyQuotable]()
+      while (strings.hasNext) {
+        val expr = expressions.next
+        buf append expr.stringToInsert
+        toCleanup += expr
+
+        buf append strings.next
       }
+      
+      val ret = PyAny.populateWith(interpreter.load(buf.toString)).as[Dynamic]
+      toCleanup.foreach(_.cleanup())
+      ret
     }
   }
 

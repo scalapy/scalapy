@@ -4,11 +4,14 @@ class CPythonInterpreter {
   CPythonAPI.Py_Initialize()
 
   val globals: Platform.Pointer = CPythonAPI.PyDict_New()
-  val builtins = new CPyValue(CPythonAPI.PyEval_GetBuiltins(), true)
-  set("__builtins__", builtins)
+  val builtins = CPythonAPI.PyEval_GetBuiltins()
+  Platform.Zone { implicit zone =>
+    CPythonAPI.PyDict_SetItemString(globals, Platform.toCString("__builtins__"), builtins)
+    throwErrorIfOccured()
+  }
 
-  val falsePtr: Platform.Pointer = CPythonAPI.PyBool_FromLong(Platform.intToCLong(0))
-  val truePtr: Platform.Pointer = CPythonAPI.PyBool_FromLong(Platform.intToCLong(1))
+  val falseValue = new CPyValue(CPythonAPI.PyBool_FromLong(Platform.intToCLong(0)), true)
+  val trueValue = new CPyValue(CPythonAPI.PyBool_FromLong(Platform.intToCLong(1)), true)
 
   val noneValue: PyValue = new CPyValue(CPythonAPI.Py_BuildValue(Platform.emptyCString), true)
   
@@ -23,7 +26,6 @@ class CPythonInterpreter {
   def set(variable: String, value: PyValue): Unit = {
     Platform.Zone { implicit zone =>
       CPythonAPI.PyDict_SetItemString(globals, Platform.toCString(variable), value.asInstanceOf[CPyValue].underlying)
-      CPythonAPI.Py_IncRef(value.asInstanceOf[CPyValue].underlying)
       throwErrorIfOccured()
     }
   }
@@ -35,16 +37,13 @@ class CPythonInterpreter {
     
     Platform.Zone { implicit zone =>
       CPythonAPI.PyDict_SetItemString(globals, Platform.toCString(variableName), value.asInstanceOf[CPyValue].underlying)
-      CPythonAPI.Py_IncRef(value.asInstanceOf[CPyValue].underlying)
       throwErrorIfOccured()
     }
 
     new VariableReference(variableName)
   }
   
-  def valueFromBoolean(b: Boolean): PyValue = new CPyValue(CPythonAPI.PyBool_FromLong(
-    Platform.intToCLong(if (b) 1 else 0)
-  ))
+  def valueFromBoolean(b: Boolean): PyValue = if (b) trueValue else falseValue
   def valueFromLong(long: Long): PyValue = new CPyValue(CPythonAPI.PyLong_FromLongLong(long))
   def valueFromDouble(v: Double): PyValue = new CPyValue(CPythonAPI.PyFloat_FromDouble(v))
   def valueFromString(v: String): PyValue = {
@@ -62,8 +61,8 @@ class CPythonInterpreter {
     // TODO: this is copying, should be replaced by a custom type
     val retPtr = CPythonAPI.PyList_New(seq.size)
     seq.zipWithIndex.foreach { case (v, i) =>
-      CPythonAPI.PyList_SetItem(retPtr, Platform.intToCLong(i), v.asInstanceOf[CPyValue].underlying)
       CPythonAPI.Py_IncRef(v.asInstanceOf[CPyValue].underlying)
+      CPythonAPI.PyList_SetItem(retPtr, Platform.intToCLong(i), v.asInstanceOf[CPyValue].underlying)
     }
 
     new CPyValue(retPtr)
@@ -73,8 +72,8 @@ class CPythonInterpreter {
     // TODO: this is copying, should be replaced by a custom type
     val retPtr = CPythonAPI.PyTuple_New(seq.size)
     seq.zipWithIndex.foreach { case (v, i) =>
-      CPythonAPI.PyTuple_SetItem(retPtr, Platform.intToCLong(i), v.asInstanceOf[CPyValue].underlying)
       CPythonAPI.Py_IncRef(v.asInstanceOf[CPyValue].underlying)
+      CPythonAPI.PyTuple_SetItem(retPtr, Platform.intToCLong(i), v.asInstanceOf[CPyValue].underlying)
     }
 
     new CPyValue(retPtr)
@@ -106,8 +105,6 @@ class CPythonInterpreter {
       val Py_eval_input = 258
       val result = CPythonAPI.PyRun_String(Platform.toCString(code), Py_eval_input, globals, globals)
       throwErrorIfOccured()
-
-      CPythonAPI.Py_IncRef(result)
 
       ret = new CPyValue(result)
     }
@@ -204,45 +201,41 @@ class CPythonInterpreter {
     })
   }
 
-  def callGlobal(method: String, args: PyValue*): PyValue = {
-    var callable: CPyValue = local {
-      var gottenAttr = CPythonAPI.PyDict_GetItemWithError(globals, valueFromString(method).asInstanceOf[CPyValue].underlying)
-      if (gottenAttr == null) {
-        CPythonAPI.PyErr_Clear()
-        gottenAttr = CPythonAPI.PyDict_GetItemWithError(builtins.underlying, valueFromString(method).asInstanceOf[CPyValue].underlying)
-      }
-
-      throwErrorIfOccured()
-      new CPyValue(gottenAttr)
-    }
-
+  private def runCallableAndDecref(callable: Platform.Pointer, args: Seq[PyValue]): PyValue = {
     val result = CPythonAPI.PyObject_Call(
-      callable.underlying,
+      callable,
       createTuple(args).asInstanceOf[CPyValue].underlying,
       null
     )
+
+    CPythonAPI.Py_DecRef(callable)
 
     throwErrorIfOccured()
 
     new CPyValue(result)
   }
 
-  def call(on: PyValue, method: String, args: Seq[PyValue]): PyValue = {
-    var callable: CPyValue = Platform.Zone { implicit zone =>
-      val gottenAttr = CPythonAPI.PyObject_GetAttrString(on.asInstanceOf[CPyValue].underlying, Platform.toCString(method))
+  def callGlobal(method: String, args: Seq[PyValue]): PyValue = {
+    Platform.Zone { implicit zone =>
+      var callable = CPythonAPI.PyDict_GetItemWithError(globals, valueFromString(method).asInstanceOf[CPyValue].underlying)
+      if (callable == null) {
+        CPythonAPI.PyErr_Clear()
+        callable = CPythonAPI.PyDict_GetItemWithError(builtins, valueFromString(method).asInstanceOf[CPyValue].underlying)
+      }
+
       throwErrorIfOccured()
-      new CPyValue(gottenAttr)
+
+      runCallableAndDecref(callable, args)
     }
+  }
 
-    val result = CPythonAPI.PyObject_Call(
-      callable.underlying,
-      createTuple(args).asInstanceOf[CPyValue].underlying,
-      null
-    )
+  def call(on: PyValue, method: String, args: Seq[PyValue]): PyValue = {
+    Platform.Zone { implicit zone =>
+      val callable = CPythonAPI.PyObject_GetAttrString(on.asInstanceOf[CPyValue].underlying, Platform.toCString(method))
+      throwErrorIfOccured()
 
-    throwErrorIfOccured()
-
-    new CPyValue(result)
+      runCallableAndDecref(callable, args)
+    }
   }
 
   def select(on: PyValue, value: String): PyValue = {
@@ -291,11 +284,12 @@ class CPyValue(val underlying: Platform.Pointer, safeGlobal: Boolean = false) ex
   def getStringified: String = {
     val pyStr = CPythonAPI.PyObject_Str(underlying)
     interpreter.throwErrorIfOccured()
+
     val cStr = CPythonAPI.PyUnicode_AsUTF8(pyStr)
-    interpreter.throwErrorIfOccured()
-    val ret = Platform.fromCString(cStr, java.nio.charset.Charset.forName("UTF-8"))
     CPythonAPI.Py_DecRef(pyStr)
-    ret
+    interpreter.throwErrorIfOccured()
+
+    Platform.fromCString(cStr, java.nio.charset.Charset.forName("UTF-8"))
   }
 
   def getString: String = {
@@ -305,8 +299,8 @@ class CPyValue(val underlying: Platform.Pointer, safeGlobal: Boolean = false) ex
   }
   
   def getBoolean: Boolean = {
-    if (underlying == interpreter.falsePtr) false
-    else if (underlying == interpreter.truePtr) true
+    if (underlying == interpreter.falseValue.underlying) false
+    else if (underlying == interpreter.trueValue.underlying) true
     else {
       throw new IllegalAccessException("Cannot convert a non-boolean value to a boolean")
     }
