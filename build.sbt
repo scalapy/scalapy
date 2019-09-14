@@ -70,7 +70,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
         s"""implicit def tuple${n}Writer[${(1 to n).map(t => s"T$t").mkString(", ")}](implicit ${(1 to n).map(t => s"r$t: Writer[T$t]").mkString(", ")}): Writer[(${(1 to n).map(t => s"T$t").mkString(", ")})] = {
            |  new Writer[(${(1 to n).map(t => s"T$t").mkString(", ")})] {
            |    override def write(v: (${(1 to n).map(t => s"T$t").mkString(", ")})): PyValue = {
-           |      interpreter.createTuple(Seq(${seqArgs}))
+           |      CPythonInterpreter.createTuple(Seq(${seqArgs}))
            |    }
            |  }
            |}"""

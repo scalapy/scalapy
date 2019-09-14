@@ -1,6 +1,6 @@
 package me.shadaj.scalapy.py
 
-class CPythonInterpreter {
+object CPythonInterpreter {
   CPythonAPI.Py_Initialize()
 
   val globals: Platform.Pointer = CPythonAPI.PyDict_New()
@@ -10,10 +10,10 @@ class CPythonInterpreter {
     throwErrorIfOccured()
   }
 
-  val falseValue = new CPyValue(CPythonAPI.PyBool_FromLong(Platform.intToCLong(0)), true)
-  val trueValue = new CPyValue(CPythonAPI.PyBool_FromLong(Platform.intToCLong(1)), true)
+  val falseValue = new PyValue(CPythonAPI.PyBool_FromLong(Platform.intToCLong(0)), true)
+  val trueValue = new PyValue(CPythonAPI.PyBool_FromLong(Platform.intToCLong(1)), true)
 
-  val noneValue: PyValue = new CPyValue(CPythonAPI.Py_BuildValue(Platform.emptyCString), true)
+  val noneValue: PyValue = new PyValue(CPythonAPI.Py_BuildValue(Platform.emptyCString), true)
   
   def eval(code: String): Unit = {
     Platform.Zone { implicit zone =>
@@ -25,7 +25,7 @@ class CPythonInterpreter {
 
   def set(variable: String, value: PyValue): Unit = {
     Platform.Zone { implicit zone =>
-      CPythonAPI.PyDict_SetItemString(globals, Platform.toCString(variable), value.asInstanceOf[CPyValue].underlying)
+      CPythonAPI.PyDict_SetItemString(globals, Platform.toCString(variable), value.underlying)
       throwErrorIfOccured()
     }
   }
@@ -36,7 +36,7 @@ class CPythonInterpreter {
     counter += 1
     
     Platform.Zone { implicit zone =>
-      CPythonAPI.PyDict_SetItemString(globals, Platform.toCString(variableName), value.asInstanceOf[CPyValue].underlying)
+      CPythonAPI.PyDict_SetItemString(globals, Platform.toCString(variableName), value.underlying)
       throwErrorIfOccured()
     }
 
@@ -44,12 +44,12 @@ class CPythonInterpreter {
   }
   
   def valueFromBoolean(b: Boolean): PyValue = if (b) trueValue else falseValue
-  def valueFromLong(long: Long): PyValue = new CPyValue(CPythonAPI.PyLong_FromLongLong(long))
-  def valueFromDouble(v: Double): PyValue = new CPyValue(CPythonAPI.PyFloat_FromDouble(v))
+  def valueFromLong(long: Long): PyValue = new PyValue(CPythonAPI.PyLong_FromLongLong(long))
+  def valueFromDouble(v: Double): PyValue = new PyValue(CPythonAPI.PyFloat_FromDouble(v))
   def valueFromString(v: String): PyValue = {
     var ret: PyValue = null
     Platform.Zone { implicit zone =>
-      ret = new CPyValue(CPythonAPI.PyUnicode_FromString(
+      ret = new PyValue(CPythonAPI.PyUnicode_FromString(
         Platform.toCString(v, java.nio.charset.Charset.forName("UTF-8"))
       ))
     }
@@ -61,22 +61,22 @@ class CPythonInterpreter {
     // TODO: this is copying, should be replaced by a custom type
     val retPtr = CPythonAPI.PyList_New(seq.size)
     seq.zipWithIndex.foreach { case (v, i) =>
-      CPythonAPI.Py_IncRef(v.asInstanceOf[CPyValue].underlying)
-      CPythonAPI.PyList_SetItem(retPtr, Platform.intToCLong(i), v.asInstanceOf[CPyValue].underlying)
+      CPythonAPI.Py_IncRef(v.underlying)
+      CPythonAPI.PyList_SetItem(retPtr, Platform.intToCLong(i), v.underlying)
     }
 
-    new CPyValue(retPtr)
+    new PyValue(retPtr)
   }
 
   def createTuple(seq: Seq[PyValue]): PyValue = {
     // TODO: this is copying, should be replaced by a custom type
     val retPtr = CPythonAPI.PyTuple_New(seq.size)
     seq.zipWithIndex.foreach { case (v, i) =>
-      CPythonAPI.Py_IncRef(v.asInstanceOf[CPyValue].underlying)
-      CPythonAPI.PyTuple_SetItem(retPtr, Platform.intToCLong(i), v.asInstanceOf[CPyValue].underlying)
+      CPythonAPI.Py_IncRef(v.underlying)
+      CPythonAPI.PyTuple_SetItem(retPtr, Platform.intToCLong(i), v.underlying)
     }
 
-    new CPyValue(retPtr)
+    new PyValue(retPtr)
   }
 
   def throwErrorIfOccured() = {
@@ -89,8 +89,8 @@ class CPythonInterpreter {
         CPythonAPI.PyErr_Fetch(pType, pValue, pTraceback)
 
         val errorMessage = local {
-          (new CPyValue(CPythonAPI.PyObject_Str(Platform.dereferencePointerToPointer(pType)))).getString + (if (Platform.dereferencePointerToPointer(pValue) != null) {
-            " " + (new CPyValue(CPythonAPI.PyObject_Str(Platform.dereferencePointerToPointer(pValue)))).getString
+          (new PyValue(CPythonAPI.PyObject_Str(Platform.dereferencePointerToPointer(pType)))).getString + (if (Platform.dereferencePointerToPointer(pValue) != null) {
+            " " + (new PyValue(CPythonAPI.PyObject_Str(Platform.dereferencePointerToPointer(pValue)))).getString
           } else "")
         }
 
@@ -100,22 +100,22 @@ class CPythonInterpreter {
   }
 
   def load(code: String): PyValue = {
-    var ret: CPyValue = null
+    var ret: PyValue = null
     Platform.Zone { implicit zone =>
       val Py_eval_input = 258
       val result = CPythonAPI.PyRun_String(Platform.toCString(code), Py_eval_input, globals, globals)
       throwErrorIfOccured()
 
-      ret = new CPyValue(result)
+      ret = new PyValue(result)
     }
 
     ret
   }
 
   def unaryNeg(a: PyValue): PyValue = {
-    new CPyValue({
+    new PyValue({
       val ret = CPythonAPI.PyNumber_Negative(
-        a.asInstanceOf[CPyValue].underlying
+        a.underlying
       )
 
       throwErrorIfOccured()
@@ -125,9 +125,9 @@ class CPythonInterpreter {
   }
 
   def unaryPos(a: PyValue): PyValue = {
-    new CPyValue({
+    new PyValue({
       val ret = CPythonAPI.PyNumber_Positive(
-        a.asInstanceOf[CPyValue].underlying
+        a.underlying
       )
 
       throwErrorIfOccured()
@@ -137,10 +137,10 @@ class CPythonInterpreter {
   }
 
   def binaryAdd(a: PyValue, b: PyValue): PyValue = {
-    new CPyValue({
+    new PyValue({
       val ret = CPythonAPI.PyNumber_Add(
-        a.asInstanceOf[CPyValue].underlying,
-        b.asInstanceOf[CPyValue].underlying
+        a.underlying,
+        b.underlying
       )
 
       throwErrorIfOccured()
@@ -150,10 +150,10 @@ class CPythonInterpreter {
   }
 
   def binarySub(a: PyValue, b: PyValue): PyValue = {
-    new CPyValue({
+    new PyValue({
       val ret = CPythonAPI.PyNumber_Subtract(
-        a.asInstanceOf[CPyValue].underlying,
-        b.asInstanceOf[CPyValue].underlying
+        a.underlying,
+        b.underlying
       )
 
       throwErrorIfOccured()
@@ -163,10 +163,10 @@ class CPythonInterpreter {
   }
 
   def binaryMul(a: PyValue, b: PyValue): PyValue = {
-    new CPyValue({
+    new PyValue({
       val ret = CPythonAPI.PyNumber_Multiply(
-        a.asInstanceOf[CPyValue].underlying,
-        b.asInstanceOf[CPyValue].underlying
+        a.underlying,
+        b.underlying
       )
 
       throwErrorIfOccured()
@@ -176,10 +176,10 @@ class CPythonInterpreter {
   }
 
   def binaryDiv(a: PyValue, b: PyValue): PyValue = {
-    new CPyValue({
+    new PyValue({
       val ret = CPythonAPI.PyNumber_TrueDivide(
-        a.asInstanceOf[CPyValue].underlying,
-        b.asInstanceOf[CPyValue].underlying
+        a.underlying,
+        b.underlying
       )
 
       throwErrorIfOccured()
@@ -189,10 +189,10 @@ class CPythonInterpreter {
   }
 
   def binaryMod(a: PyValue, b: PyValue): PyValue = {
-    new CPyValue({
+    new PyValue({
       val ret = CPythonAPI.PyNumber_Remainder(
-        a.asInstanceOf[CPyValue].underlying,
-        b.asInstanceOf[CPyValue].underlying
+        a.underlying,
+        b.underlying
       )
 
       throwErrorIfOccured()
@@ -204,7 +204,7 @@ class CPythonInterpreter {
   private def runCallableAndDecref(callable: Platform.Pointer, args: Seq[PyValue]): PyValue = {
     val result = CPythonAPI.PyObject_Call(
       callable,
-      createTuple(args).asInstanceOf[CPyValue].underlying,
+      createTuple(args).underlying,
       null
     )
 
@@ -212,15 +212,15 @@ class CPythonInterpreter {
 
     throwErrorIfOccured()
 
-    new CPyValue(result)
+    new PyValue(result)
   }
 
   def callGlobal(method: String, args: Seq[PyValue]): PyValue = {
     Platform.Zone { implicit zone =>
-      var callable = CPythonAPI.PyDict_GetItemWithError(globals, valueFromString(method).asInstanceOf[CPyValue].underlying)
+      var callable = CPythonAPI.PyDict_GetItemWithError(globals, valueFromString(method).underlying)
       if (callable == null) {
         CPythonAPI.PyErr_Clear()
-        callable = CPythonAPI.PyDict_GetItemWithError(builtins, valueFromString(method).asInstanceOf[CPyValue].underlying)
+        callable = CPythonAPI.PyDict_GetItemWithError(builtins, valueFromString(method).underlying)
       }
 
       throwErrorIfOccured()
@@ -231,7 +231,7 @@ class CPythonInterpreter {
 
   def call(on: PyValue, method: String, args: Seq[PyValue]): PyValue = {
     Platform.Zone { implicit zone =>
-      val callable = CPythonAPI.PyObject_GetAttrString(on.asInstanceOf[CPyValue].underlying, Platform.toCString(method))
+      val callable = CPythonAPI.PyObject_GetAttrString(on.underlying, Platform.toCString(method))
       throwErrorIfOccured()
 
       runCallableAndDecref(callable, args)
@@ -239,23 +239,23 @@ class CPythonInterpreter {
   }
 
   def select(on: PyValue, value: String): PyValue = {
-    local(new CPyValue(CPythonAPI.PyObject_GetAttr(
-      on.asInstanceOf[CPyValue].underlying,
-      valueFromString(value).asInstanceOf[CPyValue].underlying
+    local(new PyValue(CPythonAPI.PyObject_GetAttr(
+      on.underlying,
+      valueFromString(value).underlying
     )))
   }
 
   def update(on: PyValue, value: String, newValue: PyValue): Unit = {
     local(CPythonAPI.PyObject_SetAttr(
-      on.asInstanceOf[CPyValue].underlying,
-      valueFromString(value).asInstanceOf[CPyValue].underlying,
-      newValue.asInstanceOf[CPyValue].underlying
+      on.underlying,
+      valueFromString(value).underlying,
+      newValue.underlying
     ))
   }
 
   def selectList(on: PyValue, index: Int): PyValue = {
-    val ret = new CPyValue(CPythonAPI.PyList_GetItem(
-      on.asInstanceOf[CPyValue].underlying,
+    val ret = new PyValue(CPythonAPI.PyList_GetItem(
+      on.underlying,
       Platform.intToCLong(index)
     ))
 
@@ -265,9 +265,9 @@ class CPythonInterpreter {
   }
 
   def selectDictionary(on: PyValue, key: PyValue): PyValue = {
-    val ret = new CPyValue(CPythonAPI.PyDict_GetItemWithError(
-      on.asInstanceOf[CPyValue].underlying,
-      key.asInstanceOf[CPyValue].underlying
+    val ret = new PyValue(CPythonAPI.PyDict_GetItemWithError(
+      on.underlying,
+      key.underlying
     ))
 
     throwErrorIfOccured()
@@ -276,31 +276,35 @@ class CPythonInterpreter {
   }
 }
 
-class CPyValue(val underlying: Platform.Pointer, safeGlobal: Boolean = false) extends PyValue {
+final class PyValue(val underlying: Platform.Pointer, safeGlobal: Boolean = false) {
   if (Platform.isNative && PyValue.allocatedValues.isEmpty && !safeGlobal) {
     println(s"Warning: the value ${this.getStringified} was allocated into a global space, which means it will not be garbage collected in Scala Native")
   }
 
+  if (PyValue.allocatedValues.nonEmpty) {
+    PyValue.allocatedValues = (this :: PyValue.allocatedValues.head) :: PyValue.allocatedValues.tail
+  }
+
   def getStringified: String = {
     val pyStr = CPythonAPI.PyObject_Str(underlying)
-    interpreter.throwErrorIfOccured()
+    CPythonInterpreter.throwErrorIfOccured()
 
     val cStr = CPythonAPI.PyUnicode_AsUTF8(pyStr)
     CPythonAPI.Py_DecRef(pyStr)
-    interpreter.throwErrorIfOccured()
+    CPythonInterpreter.throwErrorIfOccured()
 
     Platform.fromCString(cStr, java.nio.charset.Charset.forName("UTF-8"))
   }
 
   def getString: String = {
     val cStr = CPythonAPI.PyUnicode_AsUTF8(underlying)
-    interpreter.throwErrorIfOccured()
+    CPythonInterpreter.throwErrorIfOccured()
     Platform.fromCString(cStr, java.nio.charset.Charset.forName("UTF-8"))
   }
   
   def getBoolean: Boolean = {
-    if (underlying == interpreter.falseValue.underlying) false
-    else if (underlying == interpreter.trueValue.underlying) true
+    if (underlying == CPythonInterpreter.falseValue.underlying) false
+    else if (underlying == CPythonInterpreter.trueValue.underlying) true
     else {
       throw new IllegalAccessException("Cannot convert a non-boolean value to a boolean")
     }
@@ -308,26 +312,26 @@ class CPyValue(val underlying: Platform.Pointer, safeGlobal: Boolean = false) ex
   
   def getLong: Long = {
     val ret = CPythonAPI.PyLong_AsLongLong(underlying)
-    interpreter.throwErrorIfOccured()
+    CPythonInterpreter.throwErrorIfOccured()
     ret
   }
   
   def getDouble: Double = {
     val ret = CPythonAPI.PyFloat_AsDouble(underlying)
-    interpreter.throwErrorIfOccured()
+    CPythonInterpreter.throwErrorIfOccured()
     ret
   }
 
   def getTuple: Seq[PyValue] = new Seq[PyValue] {
     def length: Int = {
       val ret = Platform.cLongToLong(CPythonAPI.PyTuple_Size(underlying)).toInt
-      interpreter.throwErrorIfOccured()
+      CPythonInterpreter.throwErrorIfOccured()
       ret
     }
     
-    def apply(idx: Int): PyValue = new CPyValue({
+    def apply(idx: Int): PyValue = new PyValue({
       val ret = CPythonAPI.PyTuple_GetItem(underlying, Platform.intToCLong(idx))
-      interpreter.throwErrorIfOccured()
+      CPythonInterpreter.throwErrorIfOccured()
       ret
     })
 
@@ -337,13 +341,13 @@ class CPyValue(val underlying: Platform.Pointer, safeGlobal: Boolean = false) ex
   def getSeq: Seq[PyValue] = new Seq[PyValue] {
     def length: Int = {
       val ret = Platform.cLongToLong(CPythonAPI.PyList_Size(underlying)).toInt
-      interpreter.throwErrorIfOccured()
+      CPythonInterpreter.throwErrorIfOccured()
       ret
     }
     
-    def apply(idx: Int): PyValue = new CPyValue({
+    def apply(idx: Int): PyValue = new PyValue({
       val ret = CPythonAPI.PyList_GetItem(underlying, Platform.intToCLong(idx))
-      interpreter.throwErrorIfOccured()
+      CPythonInterpreter.throwErrorIfOccured()
       CPythonAPI.Py_IncRef(ret)
       ret
     })
@@ -356,22 +360,22 @@ class CPyValue(val underlying: Platform.Pointer, safeGlobal: Boolean = false) ex
     def get(key: PyValue): Option[PyValue] = {
       val contains = CPythonAPI.PyDict_Contains(
         underlying,
-        key.asInstanceOf[CPyValue].underlying
+        key.underlying
       ) == 1
       
-      interpreter.throwErrorIfOccured()
+      CPythonInterpreter.throwErrorIfOccured()
 
       if (contains) {
-        val value = CPythonAPI.PyDict_GetItem(underlying, key.asInstanceOf[CPyValue].underlying)
-        interpreter.throwErrorIfOccured()
+        val value = CPythonAPI.PyDict_GetItem(underlying, key.underlying)
+        CPythonInterpreter.throwErrorIfOccured()
         CPythonAPI.Py_IncRef(value)
-        Some(new CPyValue(value))
+        Some(new PyValue(value))
       } else Option.empty[PyValue]
     }
     
     def iterator: Iterator[(PyValue, PyValue)] = {
-      val keysList = new CPyValue(CPythonAPI.PyDict_Keys(underlying))
-      interpreter.throwErrorIfOccured()
+      val keysList = new PyValue(CPythonAPI.PyDict_Keys(underlying))
+      CPythonInterpreter.throwErrorIfOccured()
       keysList.getSeq.toIterator.map { k =>
         (k, get(k).get)
       }
@@ -383,10 +387,17 @@ class CPyValue(val underlying: Platform.Pointer, safeGlobal: Boolean = false) ex
 
   private var cleaned = false
 
-  override def cleanup(): Unit = {
+  def cleanup(): Unit = {
     if (!cleaned) {
       cleaned = true
       CPythonAPI.Py_DecRef(underlying)
     }
   }
+
+  override def finalize(): Unit = cleanup()
+}
+
+object PyValue {
+  import scala.collection.mutable
+  private[py] var allocatedValues: List[List[PyValue]] = List.empty
 }

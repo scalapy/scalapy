@@ -5,21 +5,13 @@ import scala.collection.mutable
 import scala.concurrent.Future
 
 package object py {
-  private var _interpreter: CPythonInterpreter = null
-  def interpreter = {
-    if (_interpreter == null) {
-      _interpreter = new CPythonInterpreter
-    }
-    
-    _interpreter
-  }
-  
   def module(name: String) = Module(name)
   def module(name: String, subname: String) = Module(name, subname)
 
-  object None
+  @py.native trait None extends Any
+  val None = Any.populateWith(CPythonInterpreter.noneValue).as[None]
 
-  type NoneOr[T] = None.type | T
+  type NoneOr[T] = None | T
 
   def `with`[T <: py.Any, O](ref: T)(withValue: T => O): O = {
     ref.as[Dynamic](Reader.facadeReader[Dynamic](FacadeCreator.getCreator[Dynamic])).__enter__()
@@ -82,14 +74,14 @@ package object py {
         buf append strings.next
       }
       
-      val ret = PyAny.populateWith(interpreter.load(buf.toString)).as[Dynamic]
+      val ret = PyAny.populateWith(CPythonInterpreter.load(buf.toString)).as[Dynamic]
       toCleanup.foreach(_.cleanup())
       ret
     }
   }
 
   def eval(str: String): PyDynamic = {
-    PyAny.populateWith(interpreter.load(str.toString)).as[Dynamic]
+    PyAny.populateWith(CPythonInterpreter.load(str)).as[Dynamic]
   }
 
   import scala.language.experimental.macros

@@ -7,7 +7,7 @@ trait Any extends scala.Any { self =>
   private[py] def value: PyValue
   
   final def expr: VariableReference = {
-    interpreter.getVariableReference(value)
+    CPythonInterpreter.getVariableReference(value)
   }
 
   override def toString: String = value.getStringified

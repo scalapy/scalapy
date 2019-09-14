@@ -12,10 +12,6 @@ object Writer extends TupleWriters {
     override def write(v: T): PyValue = v.value
   }
 
-  implicit val noneWriter: Writer[None.type] = new Writer[None.type] {
-    override def write(v: None.type): PyValue = interpreter.noneValue
-  }
-
   implicit def unionWriter[A, B](implicit aClass: ClassTag[A], bClass: ClassTag[B], aWriter: Writer[A], bWriter: Writer[B]): Writer[A | B] = new Writer[A | B] {
     override def write(v: A | B): PyValue = {
       aClass.unapply(v.value) match {
@@ -26,36 +22,36 @@ object Writer extends TupleWriters {
   }
 
   implicit val byteWriter: Writer[Byte] = new Writer[Byte] {
-    override def write(v: Byte): PyValue = interpreter.valueFromLong(v)
+    override def write(v: Byte): PyValue = CPythonInterpreter.valueFromLong(v)
   }
 
   implicit val intWriter: Writer[Int] = new Writer[Int] {
-    override def write(v: Int): PyValue = interpreter.valueFromLong(v)
+    override def write(v: Int): PyValue = CPythonInterpreter.valueFromLong(v)
   }
 
   implicit val longWriter: Writer[Long] = new Writer[Long] {
-    override def write(v: Long): PyValue = interpreter.valueFromLong(v)
+    override def write(v: Long): PyValue = CPythonInterpreter.valueFromLong(v)
   }
 
   implicit val doubleWriter: Writer[Double] = new Writer[Double] {
-    override def write(v: Double): PyValue = interpreter.valueFromDouble(v)
+    override def write(v: Double): PyValue = CPythonInterpreter.valueFromDouble(v)
   }
 
   implicit val floatWriter: Writer[Float] = new Writer[Float] {
-    override def write(v: Float): PyValue = interpreter.valueFromDouble(v)
+    override def write(v: Float): PyValue = CPythonInterpreter.valueFromDouble(v)
   }
 
   implicit val booleanWriter: Writer[Boolean] = new Writer[Boolean] {
-    override def write(v: Boolean): PyValue = interpreter.valueFromBoolean(v)
+    override def write(v: Boolean): PyValue = CPythonInterpreter.valueFromBoolean(v)
   }
 
   implicit val stringWriter: Writer[String] = new Writer[String] {
-    override def write(v: String): PyValue = interpreter.valueFromString(v)
+    override def write(v: String): PyValue = CPythonInterpreter.valueFromString(v)
   }
 
   implicit def seqWriter[T, C](implicit ev1: C => Seq[T], tWriter: Writer[T]): Writer[C] = new Writer[C] {
     override def write(v: C): PyValue = {
-      interpreter.createList(v.view.map(tWriter.write))
+      CPythonInterpreter.createList(v.view.map(tWriter.write))
     }
   }
 
@@ -69,7 +65,7 @@ object Writer extends TupleWriters {
 
       val obj = py"{}"
       toAddLater.foreach { case (ko, vo) =>
-        interpreter.eval(s"${obj.expr}[${ko.expr}] = ${vo.expr}")
+        CPythonInterpreter.eval(s"${obj.expr}[${ko.expr}] = ${vo.expr}")
       }
 
       obj.value
