@@ -7,14 +7,12 @@ trait Any extends scala.Any { self =>
   private[py] def value: PyValue
   
   final def expr: VariableReference = {
-    interpreter.getVariableReference(value)
+    CPythonInterpreter.getVariableReference(value)
   }
 
   override def toString: String = value.getStringified
 
-  final def as[T: Reader]: T = implicitly[Reader[T]].read(new ValueAndRequestRef(value) {
-    override def getRef: Any = self
-  })
+  final def as[T: Reader]: T = implicitly[Reader[T]].read(value)
 }
 
 object Any {
@@ -25,6 +23,6 @@ object Any {
   }
 
   implicit def from[T](v: T)(implicit writer: Writer[T]): Any = {
-    writer.write(v).left.map(Any.populateWith).merge
+    Any.populateWith(writer.write(v))
   }
 }

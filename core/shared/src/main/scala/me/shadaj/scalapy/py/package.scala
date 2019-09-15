@@ -5,21 +5,13 @@ import scala.collection.mutable
 import scala.concurrent.Future
 
 package object py {
-  private var _interpreter: CPythonInterpreter = null
-  def interpreter = {
-    if (_interpreter == null) {
-      _interpreter = new CPythonInterpreter
-    }
-    
-    _interpreter
-  }
-  
   def module(name: String) = Module(name)
   def module(name: String, subname: String) = Module(name, subname)
 
-  object None
+  @py.native trait None extends Any
+  val None = Any.populateWith(CPythonInterpreter.noneValue).as[None]
 
-  type NoneOr[T] = None.type | T
+  type NoneOr[T] = None | T
 
   def `with`[T <: py.Any, O](ref: T)(withValue: T => O): O = {
     ref.as[Dynamic](Reader.facadeReader[Dynamic](FacadeCreator.getCreator[Dynamic])).__enter__()
@@ -51,36 +43,45 @@ package object py {
   import py.{Dynamic => PyDynamic, Any => PyAny}
   trait PyQuotable {
     def stringToInsert: String
+    def cleanup(): Unit
   }
 
   object PyQuotable {
     implicit def fromAny(any: py.Any): PyQuotable = new PyQuotable {
-      def stringToInsert: String = any.expr.toString
+      private val expr = any.expr
+      def stringToInsert: String = expr.toString
+      def cleanup() = expr.cleanup()
     }
 
     implicit def fromValue[V](value: V)(implicit writer: Writer[V]): PyQuotable = new PyQuotable {
-      def stringToInsert: String = writer.write(value).left.map(Any.populateWith).merge.expr.toString
+      private val expr = Any.populateWith(writer.write(value)).expr
+      def stringToInsert: String = expr.toString
+      def cleanup() = expr.cleanup()
     }
   }
 
   implicit class PyQuote(private val sc: StringContext) extends AnyVal {
     def py(values: PyQuotable*): PyDynamic = {
-      local {
-        val strings = sc.parts.iterator
-        val expressions = values.iterator
-        var buf = new StringBuffer(strings.next)
-        while (strings.hasNext) {
-          buf append expressions.next.stringToInsert
-          buf append strings.next
-        }
-        
-        PyAny.populateWith(interpreter.load(buf.toString)).as[Dynamic]
+      val strings = sc.parts.iterator
+      val expressions = values.iterator
+      var buf = new StringBuffer(strings.next)
+      val toCleanup = mutable.Queue[PyQuotable]()
+      while (strings.hasNext) {
+        val expr = expressions.next
+        buf append expr.stringToInsert
+        toCleanup += expr
+
+        buf append strings.next
       }
+      
+      val ret = PyAny.populateWith(CPythonInterpreter.load(buf.toString)).as[Dynamic]
+      toCleanup.foreach(_.cleanup())
+      ret
     }
   }
 
   def eval(str: String): PyDynamic = {
-    PyAny.populateWith(interpreter.load(str.toString)).as[Dynamic]
+    PyAny.populateWith(CPythonInterpreter.load(str)).as[Dynamic]
   }
 
   import scala.language.experimental.macros

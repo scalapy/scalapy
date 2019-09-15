@@ -21,7 +21,7 @@ class VariableReference(val variable: String) {
   def cleanup(): Unit = {
     if (!cleaned) {
       cleaned = true
-      interpreter.eval(s"del $variable")
+      CPythonInterpreter.eval(s"del $variable")
     }
   }
 
@@ -36,30 +36,3 @@ object VariableReference {
 }
 
 class PythonException(s: String) extends Exception(s) 
-
-trait PyValue {
-  if (PyValue.allocatedValues.nonEmpty) {
-    PyValue.allocatedValues = (this :: PyValue.allocatedValues.head) :: PyValue.allocatedValues.tail
-  }
-
-  def getString: String
-  def getLong: Long
-  def getDouble: Double
-  def getBoolean: Boolean
-  def getTuple: Seq[PyValue]
-  def getSeq: Seq[PyValue]
-
-  def getStringified: String
-
-  import scala.collection.mutable
-  def getMap: mutable.Map[PyValue, PyValue]
-
-  def cleanup(): Unit
-
-  override def finalize(): Unit = cleanup()
-}
-
-object PyValue {
-  import scala.collection.mutable
-  private[py] var allocatedValues: List[List[PyValue]] = List.empty
-}
