@@ -86,16 +86,16 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
       Seq(fileToWrite)
     }
   ).settings(
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.0-SNAP8" % Test,
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.0-RC2" % Test,
     libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
   ).jvmSettings(
     libraryDependencies += "net.java.dev.jna" % "jna" % "5.4.0",
-    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.0" % Test,
+    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.1" % Test,
     fork in Test := true,
     javaOptions in Test += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib"
   ).nativeSettings(
     scalaVersion := "2.11.12",
-    libraryDependencies += "com.github.lolgab" %%% "scalacheck" % "1.14.1" % Test,
+    libraryDependencies += "org.scalacheck" %%% "scalacheck" % "1.14.1" % Test,
     nativeLinkStubs := true,
     nativeLinkingOptions ++= "python3-config --ldflags".!!.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
   )

@@ -1,6 +1,9 @@
 package me.shadaj.scalapy.py
 
-import scala.scalanative.native._
+import scala.scalanative.unsafe._
+import scala.scalanative.annotation._
+import scala.scalanative.unsigned._
+import scala.scalanative.libc._
 
 @extern
 object CPythonAPI {
@@ -53,7 +56,7 @@ object CPythonAPI {
   def PyObject_GetAttrString(obj: Platform.Pointer, name: CString): Platform.Pointer = extern
   def PyObject_SetAttr(obj: Platform.Pointer, name: Platform.Pointer, newValue: Platform.Pointer): Platform.Pointer = extern
   def PyObject_SetAttrString(obj: Platform.Pointer, name: CString, newValue: Platform.Pointer): Platform.Pointer = extern
-  def PyObject_CallMethodObjArgs(obj: Platform.Pointer, name: Platform.Pointer, args: CVararg*): Platform.Pointer = extern
+  def PyObject_CallMethodObjArgs(obj: Platform.Pointer, name: Platform.Pointer, args: CVarArg*): Platform.Pointer = extern
   def PyObject_Call(obj: Platform.Pointer, args: Platform.Pointer, kwArgs: Platform.Pointer): Platform.Pointer = extern
 
   def PyErr_Occurred(): Platform.Pointer = extern
