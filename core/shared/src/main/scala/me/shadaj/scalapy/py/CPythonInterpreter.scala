@@ -80,7 +80,7 @@ object CPythonInterpreter {
   }
 
   def throwErrorIfOccured() = {
-    if (Platform.pointerToLong(CPythonAPI.PyErr_Occurred()) != 0) {
+    if (CPythonAPI.PyErr_Occurred() != null) {
       Platform.Zone { implicit zone =>
         val pType = Platform.allocPointerToPointer
         val pValue = Platform.allocPointerToPointer
