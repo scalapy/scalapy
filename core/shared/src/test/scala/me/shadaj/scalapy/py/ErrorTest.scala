@@ -3,6 +3,14 @@ package me.shadaj.scalapy.py
 import org.scalatest.FunSuite
 
 class ErrorTest extends FunSuite {
+  test("Gets exception when running Python fails") {
+    local {
+      assertThrows[PythonException] {
+        py"123[0]"
+      }
+    }
+  }
+
   test("Throwing a SyntaxError") {
     local {
       val exp = intercept[PythonException](py"(1 2)")
