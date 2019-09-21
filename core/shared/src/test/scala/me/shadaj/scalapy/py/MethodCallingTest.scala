@@ -51,12 +51,4 @@ class MethodCallingTest extends FunSuite with BeforeAndAfterAll {
       }
     }
   }
-
-  test("Gets exception when running Python fails") {
-    local {
-      assertThrows[PythonException] {
-        py"123[0]"
-      }
-    }
-  }
 }
