@@ -2,8 +2,6 @@ package me.shadaj.scalapy.py
 
 import scala.scalanative.unsafe._
 import scala.scalanative.annotation._
-import scala.scalanative.unsigned._
-import scala.scalanative.libc._
 
 @extern
 object CPythonAPI {
