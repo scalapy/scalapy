@@ -1,85 +1,60 @@
 package me.shadaj.scalapy.py
 
 import scala.reflect.ClassTag
-import scala.collection.JavaConverters._
-
-abstract class ValueAndRequestRef(val value: PyValue) {
-  protected def getRef: Any
-
-  private var refCache: Any = null
-  final def requestRef: Any = {
-    if (refCache == null) refCache = getRef
-    refCache
-  }
-}
 
 trait Reader[T] {
-  def read(r: ValueAndRequestRef): T
+  def read(r: PyValue): T
 }
 
 object Reader extends TupleReaders {
   implicit val anyReader = new Reader[Any] {
-    def read(r: ValueAndRequestRef): Any = r.requestRef
+    def read(r: PyValue): Any = Any.populateWith(r)
   }
 
   implicit def facadeReader[F <: Any](implicit creator: FacadeCreator[F]): Reader[F] = new Reader[F] {
-    override def read(r: ValueAndRequestRef): F = creator.create(r.requestRef.value)
+    override def read(r: PyValue): F = creator.create(r)
   }
 
   implicit val unitReader = new Reader[Unit] {
-    def read(r: ValueAndRequestRef): Unit = ()
+    def read(r: PyValue): Unit = ()
   }
 
   implicit val byteReader = new Reader[Byte] {
-    def read(r: ValueAndRequestRef): Byte = r.value.getLong.toByte
+    def read(r: PyValue): Byte = r.getLong.toByte
   }
 
   implicit val intReader = new Reader[Int] {
-    def read(r: ValueAndRequestRef): Int = r.value.getLong.toInt
+    def read(r: PyValue): Int = r.getLong.toInt
   }
 
   implicit val longReader = new Reader[Long] {
-    def read(r: ValueAndRequestRef): Long = r.value.getLong
+    def read(r: PyValue): Long = r.getLong
   }
 
   implicit val doubleReader = new Reader[Double] {
-    def read(r: ValueAndRequestRef): Double = r.value.getDouble
+    def read(r: PyValue): Double = r.getDouble
   }
 
   implicit val floatReader = new Reader[Float] {
-    def read(r: ValueAndRequestRef): Float = r.value.getDouble.toFloat
+    def read(r: PyValue): Float = r.getDouble.toFloat
   }
 
   implicit val booleanReader = new Reader[Boolean] {
-    def read(r: ValueAndRequestRef): Boolean = {
-      r.value.getBoolean
-    }
+    def read(r: PyValue): Boolean = r.getBoolean
   }
 
   implicit val stringReader = new Reader[String] {
-    def read(r: ValueAndRequestRef): String = r.value.getString
+    def read(r: PyValue): String = r.getString
   }
 
   implicit def seqReader[T](implicit reader: Reader[T]): Reader[Seq[T]] = new Reader[Seq[T]] {
-    def read(r: ValueAndRequestRef) = {
-      r.value.getSeq.zipWithIndex.map { case (v, i) =>
-        reader.read(new ValueAndRequestRef(v) {
-          def getRef = r.requestRef.as[Dynamic].arrayAccess(i)
-        })
-      }.toSeq
-    }
+    def read(r: PyValue) = r.getSeq.map(reader.read)
   }
 
   implicit def mapReader[I, O](implicit readerI: Reader[I], readerO: Reader[O]): Reader[Map[I, O]] = new Reader[Map[I, O]] {
-    override def read(r: ValueAndRequestRef): Map[I, O] = {
-      r.value.getMap.map { case (k, v) =>
-        readerI.read(new ValueAndRequestRef(k) {
-          def getRef = throw new IllegalAccessException("Cannot read a Python object for the key of a map")
-        }) -> readerO.read(new ValueAndRequestRef(v) {
-          def getRef = {
-            r.requestRef.as[Dynamic].dictionaryAccess(Any.populateWith(k))
-          }
-        })
+    override def read(r: PyValue): Map[I, O] = {
+      r.getMap.map { case (k, v) =>
+        readerI.read(k) -> readerO.read(v)
       }.toMap
     }
   }

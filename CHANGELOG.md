@@ -1,8 +1,16 @@
 # Changelog
 ## vNEXT
+### Highlights :tada:
++ The JVM interface to Python has been completely rewritten from scratch to share all of its logic with the Scala Native backend by binding directly to CPython with JNA. This means that moving forward, ScalaPy JVM and Native will always have the same features and use near-identical logic for talking to Python libraries
++ Readers and Writers have been simplified to always work in terms of Python interpreter values, simplifying the implementation and reducing intermediate allocations
+
+### Breaking Changes :warning:
++ The `CPythonInterpreter` object should now be used to access low-level interpreter functions instead of `py.interpreter`
+
 ### Bug Fixes :bug:
++ Various reference count manipulation bugs have been fixed to ensure that Python values are not being leaked
 + Fix a segfault in Scala Native when the interpreter is initialized outside of a `py.local { ... }` block
-+ Correctly handle reading a list-like object (such as a NumPy array) into a `Seq` in Scala Native
++ Correctly handle reading a list-like object (such as a NumPy array) into a `Seq`
 
 ## v0.3.0
 ### Highlights :tada:

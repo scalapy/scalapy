@@ -6,7 +6,7 @@ import scala.language.dynamics
 
 trait AnyDynamics extends scala.Any with Any with scala.Dynamic {
   def applyDynamic(method: String)(params: Any*): Dynamic = {
-    Any.populateWith(interpreter.call(value, method, params.map(_.value))).as[Dynamic]
+    Any.populateWith(CPythonInterpreter.call(value, method, params.map(_.value))).as[Dynamic]
   }
 
   def applyDynamicNamed(method: String)(params: (String, Any)*): Dynamic = {
@@ -14,46 +14,46 @@ trait AnyDynamics extends scala.Any with Any with scala.Dynamic {
   }
 
   def selectDynamic(term: String): Dynamic = {
-    Any.populateWith(interpreter.select(value, term)).as[Dynamic]
+    Any.populateWith(CPythonInterpreter.select(value, term)).as[Dynamic]
   }
 
   def updateDynamic(name: String)(newValue: Any): Unit = {
-    interpreter.update(value, name, newValue.value)
+    CPythonInterpreter.update(value, name, newValue.value)
   }
 
   def arrayAccess(index: Int): Dynamic = {
-    Any.populateWith(interpreter.selectList(value, index)).as[Dynamic]
+    Any.populateWith(CPythonInterpreter.selectList(value, index)).as[Dynamic]
   }
 
   def dictionaryAccess(key: Any): Dynamic = {
-    Any.populateWith(interpreter.selectDictionary(value, key.value)).as[Dynamic]
+    Any.populateWith(CPythonInterpreter.selectDictionary(value, key.value)).as[Dynamic]
   }
 
   def unary_+(): Dynamic = {
-    Any.populateWith(interpreter.unaryPos(value)).as[Dynamic]
+    Any.populateWith(CPythonInterpreter.unaryPos(value)).as[Dynamic]
   }
 
   def unary_-(): Dynamic = {
-    Any.populateWith(interpreter.unaryNeg(value)).as[Dynamic]
+    Any.populateWith(CPythonInterpreter.unaryNeg(value)).as[Dynamic]
   }
 
   def +(that: Any): Dynamic = {
-    Any.populateWith(interpreter.binaryAdd(value, that.value)).as[Dynamic]
+    Any.populateWith(CPythonInterpreter.binaryAdd(value, that.value)).as[Dynamic]
   }
 
   def -(that: Any): Dynamic = {
-    Any.populateWith(interpreter.binarySub(value, that.value)).as[Dynamic]
+    Any.populateWith(CPythonInterpreter.binarySub(value, that.value)).as[Dynamic]
   }
 
   def *(that: Any): Dynamic = {
-    Any.populateWith(interpreter.binaryMul(value, that.value)).as[Dynamic]
+    Any.populateWith(CPythonInterpreter.binaryMul(value, that.value)).as[Dynamic]
   }
 
   def /(that: Any): Dynamic = {
-    Any.populateWith(interpreter.binaryDiv(value, that.value)).as[Dynamic]
+    Any.populateWith(CPythonInterpreter.binaryDiv(value, that.value)).as[Dynamic]
   }
 
   def %(that: Any): Dynamic = {
-    Any.populateWith(interpreter.binaryMod(value, that.value)).as[Dynamic]
+    Any.populateWith(CPythonInterpreter.binaryMod(value, that.value)).as[Dynamic]
   }
 }

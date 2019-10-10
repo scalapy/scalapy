@@ -9,10 +9,10 @@ object Module {
   def apply(module: String): Module = {
     val loadedModuleName = "tmp_load_module"
 
-    interpreter.eval(s"import $module as $loadedModuleName")
-    val ret = Any.populateWith(interpreter.load(loadedModuleName)).as[Module]
+    CPythonInterpreter.eval(s"import $module as $loadedModuleName")
+    val ret = Any.populateWith(CPythonInterpreter.load(loadedModuleName)).as[Module]
 
-    interpreter.eval(s"del $loadedModuleName")
+    CPythonInterpreter.eval(s"del $loadedModuleName")
 
     ret
   }
@@ -20,10 +20,10 @@ object Module {
   def apply(module: String, subname: String): Module = {
     val loadedModuleName = "tmp_load_module"
 
-    interpreter.eval(s"from $module import $subname as $loadedModuleName")
-    val ret = Any.populateWith(interpreter.load(loadedModuleName)).as[Module]
+    CPythonInterpreter.eval(s"from $module import $subname as $loadedModuleName")
+    val ret = Any.populateWith(CPythonInterpreter.load(loadedModuleName)).as[Module]
 
-    interpreter.eval(s"del $loadedModuleName")
+    CPythonInterpreter.eval(s"del $loadedModuleName")
 
     ret
   }
