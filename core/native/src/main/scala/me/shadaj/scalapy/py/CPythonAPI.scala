@@ -49,12 +49,14 @@ object CPythonAPI {
   def PyTuple_SetItem(tuple: Platform.Pointer, index: CSize, item: Platform.Pointer): Int = extern
 
   def PyObject_Str(obj: Platform.Pointer): Platform.Pointer = extern
+  def PyObject_GetItem(obj: Platform.Pointer, idx: Platform.Pointer): Platform.Pointer = extern
   def PyObject_GetAttr(obj: Platform.Pointer, name: Platform.Pointer): Platform.Pointer = extern
   def PyObject_GetAttrString(obj: Platform.Pointer, name: CString): Platform.Pointer = extern
   def PyObject_SetAttr(obj: Platform.Pointer, name: Platform.Pointer, newValue: Platform.Pointer): Platform.Pointer = extern
   def PyObject_SetAttrString(obj: Platform.Pointer, name: CString, newValue: Platform.Pointer): Platform.Pointer = extern
   def PyObject_CallMethodObjArgs(obj: Platform.Pointer, name: Platform.Pointer, args: CVararg*): Platform.Pointer = extern
   def PyObject_Call(obj: Platform.Pointer, args: Platform.Pointer, kwArgs: Platform.Pointer): Platform.Pointer = extern
+  def PyObject_Length(obj: Platform.Pointer): CLong = extern
 
   def PyErr_Occurred(): Platform.Pointer = extern
   def PyErr_Fetch(pType: Platform.PointerToPointer, pValue: Platform.PointerToPointer, pTraceback: Platform.PointerToPointer): Unit = extern

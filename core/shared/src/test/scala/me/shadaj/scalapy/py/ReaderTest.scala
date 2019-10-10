@@ -85,6 +85,14 @@ class ReaderTest extends FunSuite with BeforeAndAfterAll {
     }
   }
 
+  test("Reading from a list-like object works") {
+    local {
+      val np = module("numpy")
+      val arr = np.array(Seq(1, 2, 3))
+      assert(arr.as[Seq[Int]] == Seq(1, 2, 3))
+    }
+  }
+
   test("Reading a map of int to int") {
     local {
       val read = py"{ 1: 2, 2: 3 }".as[Map[Int, Int]]

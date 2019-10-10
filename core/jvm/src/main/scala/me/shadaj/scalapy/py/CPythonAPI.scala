@@ -50,11 +50,13 @@ class CPythonAPIInterface {
   @scala.native def PyTuple_SetItem(tuple: Platform.Pointer, index: NativeLong, item: Platform.Pointer): Int 
 
   @scala.native def PyObject_Str(obj: Platform.Pointer): Platform.Pointer 
+  @scala.native def PyObject_GetItem(obj: Platform.Pointer, idx: Platform.Pointer): Platform.Pointer
   @scala.native def PyObject_GetAttr(obj: Platform.Pointer, name: Platform.Pointer): Platform.Pointer 
   @scala.native def PyObject_GetAttrString(obj: Platform.Pointer, name: String): Platform.Pointer 
   @scala.native def PyObject_SetAttr(obj: Platform.Pointer, name: Platform.Pointer, newValue: Platform.Pointer): Platform.Pointer 
   @scala.native def PyObject_SetAttrString(obj: Platform.Pointer, name: String, newValue: Platform.Pointer): Platform.Pointer 
   @scala.native def PyObject_Call(obj: Platform.Pointer, args: Platform.Pointer, kwArgs: Platform.Pointer): Platform.Pointer 
+  @scala.native def PyObject_Length(obj: Platform.Pointer): NativeLong
 
   @scala.native def PyErr_Occurred(): Platform.Pointer 
   @scala.native def PyErr_Fetch(pType: Platform.PointerToPointer, pValue: Platform.PointerToPointer, pTraceback: Platform.PointerToPointer): Unit 

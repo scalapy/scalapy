@@ -10,6 +10,7 @@
 ### Bug Fixes :bug:
 + Various reference count manipulation bugs have been fixed to ensure that Python values are not being leaked
 + Fix a segfault in Scala Native when the interpreter is initialized outside of a `py.local { ... }` block
++ Correctly handle reading a list-like object (such as a NumPy array) into a `Seq`
 
 ## v0.3.0
 ### Highlights :tada:

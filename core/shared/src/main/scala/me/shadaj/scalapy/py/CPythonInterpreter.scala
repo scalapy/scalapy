@@ -340,14 +340,16 @@ final class PyValue(val underlying: Platform.Pointer, safeGlobal: Boolean = fals
 
   def getSeq: Seq[PyValue] = new Seq[PyValue] {
     def length: Int = {
-      val ret = Platform.cLongToLong(CPythonAPI.PyList_Size(underlying)).toInt
+      val ret = Platform.cLongToLong(CPythonAPI.PyObject_Length(underlying)).toInt
       CPythonInterpreter.throwErrorIfOccured()
       ret
     }
     
     def apply(idx: Int): PyValue = new PyValue({
-      val ret = CPythonAPI.PyList_GetItem(underlying, Platform.intToCLong(idx))
-      CPythonInterpreter.throwErrorIfOccured()
+      val indexValue = CPythonAPI.PyLong_FromLongLong(idx)
+      val ret = CPythonAPI.PyObject_GetItem(underlying, indexValue)
+      CPythonAPI.Py_DecRef(indexValue)
+
       CPythonAPI.Py_IncRef(ret)
       ret
     })
