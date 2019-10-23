@@ -6,11 +6,15 @@ import scala.language.dynamics
 
 trait AnyDynamics extends scala.Any with Any with scala.Dynamic {
   def applyDynamic(method: String)(params: Any*): Dynamic = {
-    Any.populateWith(CPythonInterpreter.call(value, method, params.map(_.value))).as[Dynamic]
+    // Trick to distinguish positional Python arguments in Scala follows
+    val tupled = params.map(value => ("", value))
+    applyDynamicNamed(method)(tupled: _*)
   }
 
   def applyDynamicNamed(method: String)(params: (String, Any)*): Dynamic = {
-    eval(s"${this.expr}.$method(${params.map(t => s"${t._1} = ${t._2.expr}").mkString(",")})")
+    eval(s"${this.expr}.$method(${params.map{ case (name, value) =>
+      if(name.isEmpty) Arg(value) else Arg(name, value)  // Positional arguments have no name
+    }.mkString(",")})")
   }
 
   def selectDynamic(term: String): Dynamic = {

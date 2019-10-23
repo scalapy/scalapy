@@ -1,6 +1,7 @@
 package me.shadaj.scalapy.py
 
 import org.scalatest.{FunSuite, BeforeAndAfterAll}
+import Reader._
 
 @native trait StringObjectFacade extends Object {
   def replace(old: String, newValue: String): String = native
@@ -32,6 +33,22 @@ class MethodCallingTest extends FunSuite with BeforeAndAfterAll {
       val num1 = py"4"
       val num2 = py"2"
       assert((num1.as[Dynamic] / num2).as[Double] == 2)
+    }
+  }
+
+  test("Can mix positional and keyword arguments of global functions") {
+    local {
+      val numbers = py"[3, 2, 1]"
+      val sorted = global.sorted(numbers, reverse=py"True")
+      assert(sorted.as[Seq[Int]] == Seq(3, 2, 1))
+    }
+  }
+
+  test("Can mix positional and keyword arguments of methods") {
+    local {
+      val numbers = py"[3, 2, 1]"
+      numbers.as[Dynamic].sort(reverse=py"True")
+      assert(numbers.as[Seq[Int]] == Seq(3, 2, 1))
     }
   }
 
