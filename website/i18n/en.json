@@ -5,22 +5,6 @@
     "previous": "Previous",
     "tagline": "Use Python libraries from the comfort of Scala",
     "docs": {
-      "doc1": {
-        "title": "Latin-ish",
-        "sidebar_label": "Example Page"
-      },
-      "doc2": {
-        "title": "document number 2"
-      },
-      "doc3": {
-        "title": "This is document number 3"
-      },
-      "doc4": {
-        "title": "Other Document"
-      },
-      "doc5": {
-        "title": "Fifth Document"
-      },
       "getting-started": {
         "title": "Getting Started with ScalaPy",
         "sidebar_label": "Getting Started"
@@ -33,10 +17,23 @@
         "title": "Jupyter Notebooks with Almond",
         "sidebar_label": "Jupyter Notebooks"
       },
-      "running-python-code": {
-        "title": "running-python-code"
-      },
       "static-types": {
+        "title": "Static Types in ScalaPy",
+        "sidebar_label": "Static Types"
+      },
+      "version-0.3.0/version-0.3.0-getting-started": {
+        "title": "Getting Started with ScalaPy",
+        "sidebar_label": "Getting Started"
+      },
+      "version-0.3.0/version-0.3.0-interacting-with-python": {
+        "title": "Interacting with Python",
+        "sidebar_label": "Interacting with Python"
+      },
+      "version-0.3.0/version-0.3.0-jupyter-notebooks": {
+        "title": "Jupyter Notebooks with Almond",
+        "sidebar_label": "Jupyter Notebooks"
+      },
+      "version-0.3.0/version-0.3.0-static-types": {
         "title": "Static Types in ScalaPy",
         "sidebar_label": "Static Types"
       }

@@ -20,6 +20,8 @@ const users = [
   },
 ];
 
+const rootDoc = 'getting-started';
+
 const siteConfig = {
   customDocsPath: "built-docs/target/mdoc",
   title: 'ScalaPy', // Title for your website.
@@ -39,9 +41,12 @@ const siteConfig = {
 
   // For no header links in the top nav bar -> headerLinks: [],
   headerLinks: [
-    {doc: 'getting-started', label: 'Docs'},
+    {doc: rootDoc, label: 'Docs'},
     {href: 'https://github.com/shadaj/scalapy/blob/master/CHANGELOG.md', label: 'Releases'},
   ],
+
+  // Root document to link to when linking to the docs
+  rootDoc: rootDoc,
 
   // If you have users set above, you add it here:
   users,
