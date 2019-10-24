@@ -18,7 +18,7 @@ libraryDependencies += "me.shadaj" %% "scalapy-core" % "0.3.0"
 If you're running on the JVM, you'll need to install Jep, which provides the bindings between the JVM and CPython.
 
 ```bash
-$ pip install jep
+$ pip install jep==3.8.2
 ```
 
 Then, add the Jep native libraries to your project and configure SBT to run your code in a separate JVM instance.
