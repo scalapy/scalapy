@@ -238,6 +238,20 @@ object CPythonInterpreter {
     }
   }
 
+  def selectGlobal(name: String): PyValue = {
+    Platform.Zone { implicit zone =>
+      var gottenValue = CPythonAPI.PyDict_GetItemWithError(globals, valueFromString(name).underlying)
+      if (gottenValue == null) {
+        CPythonAPI.PyErr_Clear()
+        gottenValue = CPythonAPI.PyDict_GetItemWithError(builtins, valueFromString(name).underlying)
+      }
+
+      throwErrorIfOccured()
+
+      new PyValue(gottenValue)
+    }
+  }
+
   def select(on: PyValue, value: String): PyValue = {
     local(new PyValue(CPythonAPI.PyObject_GetAttr(
       on.underlying,

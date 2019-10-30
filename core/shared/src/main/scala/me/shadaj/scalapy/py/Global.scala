@@ -4,9 +4,7 @@ import scala.language.dynamics
 
 object global extends scala.Dynamic {
   def applyDynamic(method: String)(params: Any*): Dynamic = {
-    // Trick to distinguish positional Python arguments in Scala follows
-    val tupled = params.map(value => ("", value))
-    applyDynamicNamed(method)(tupled: _*)
+    Any.populateWith(CPythonInterpreter.callGlobal(method, params.map(_.value))).as[Dynamic]
   }
 
   def applyDynamicNamed(method: String)(params: (String, Any)*): Dynamic = {
@@ -16,6 +14,6 @@ object global extends scala.Dynamic {
   }
 
   def selectDynamic(value: String): Any = {
-    eval(value)
+    Any.populateWith(CPythonInterpreter.selectGlobal(value))
   }
 }
