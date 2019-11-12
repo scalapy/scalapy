@@ -47,6 +47,17 @@ object Reader extends TupleReaders {
     def read(r: PyValue): String = r.getString
   }
 
+  implicit val charReader = new Reader[Char] {
+    def read(r: PyValue): Char = {
+      val rStr = r.getString
+      if (rStr.length != 1) {
+        throw new IllegalArgumentException("Cannot extract a char from a string with length != 1")
+      } else {
+        rStr.head
+      }
+    }
+  }
+
   implicit def seqReader[T](implicit reader: Reader[T]): Reader[Seq[T]] = new Reader[Seq[T]] {
     def read(r: PyValue) = r.getSeq.map(reader.read)
   }
