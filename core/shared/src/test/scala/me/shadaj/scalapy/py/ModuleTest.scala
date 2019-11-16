@@ -1,12 +1,12 @@
 package me.shadaj.scalapy.py
 
-import org.scalatest.FunSuite
+import org.scalatest.funsuite.AnyFunSuite
 
 @native trait StringModuleFacade extends Object {
   def digits: String = native
 }
 
-class ModuleTest extends FunSuite {
+class ModuleTest extends AnyFunSuite {
   test("Can read value from module") {
     local {
       assert(module("string").digits.as[String] == "0123456789")
