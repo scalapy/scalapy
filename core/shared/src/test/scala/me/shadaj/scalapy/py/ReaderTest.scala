@@ -5,8 +5,8 @@ import org.scalatest.funsuite.AnyFunSuite
 class ReaderTest extends AnyFunSuite {
   test("Reading a boolean") {
     local {
-      assert(py"False".as[Boolean] == false)
-      assert(py"True".as[Boolean] == true)
+      assert(!py"False".as[Boolean])
+      assert(py"True".as[Boolean])
     }
   }
 

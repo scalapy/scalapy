@@ -10,7 +10,7 @@ import org.scalatest.funsuite.AnyFunSuite
 class MethodCallingTest extends AnyFunSuite {
   test("Can access global values") {
     local {
-      assert(global.selectDynamic("True").as[Boolean] == true)
+      assert(global.selectDynamic("True").as[Boolean])
     }
   }
 
