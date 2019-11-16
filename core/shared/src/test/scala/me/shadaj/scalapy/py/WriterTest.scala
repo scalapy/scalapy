@@ -1,12 +1,8 @@
 package me.shadaj.scalapy.py
 
-import java.util
+import org.scalatest.funsuite.AnyFunSuite
 
-import org.scalatest.{FunSuite, BeforeAndAfterAll}
-
-import scala.collection.JavaConverters._
-
-class WriterTest extends FunSuite with BeforeAndAfterAll {
+class WriterTest extends AnyFunSuite {
   test("Writing a none value") {
     local {
       assert(Any.from(None).toString == "None")

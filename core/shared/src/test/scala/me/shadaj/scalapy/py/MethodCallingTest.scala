@@ -1,16 +1,16 @@
 package me.shadaj.scalapy.py
 
-import org.scalatest.{FunSuite, BeforeAndAfterAll}
 import Reader._
+import org.scalatest.funsuite.AnyFunSuite
 
 @native trait StringObjectFacade extends Object {
   def replace(old: String, newValue: String): String = native
 }
 
-class MethodCallingTest extends FunSuite with BeforeAndAfterAll {
+class MethodCallingTest extends AnyFunSuite {
   test("Can access global values") {
     local {
-      assert(global.selectDynamic("True").as[Boolean] == true)
+      assert(global.selectDynamic("True").as[Boolean])
     }
   }
 

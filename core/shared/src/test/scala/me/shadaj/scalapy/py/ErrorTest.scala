@@ -1,9 +1,9 @@
 package me.shadaj.scalapy.py
 
-import org.scalatest.{FunSuite, BeforeAndAfterAll}
+import org.scalatest.funsuite.AnyFunSuite
 
 
-class ErrorTest extends FunSuite with BeforeAndAfterAll {
+class ErrorTest extends AnyFunSuite {
   test("Gets exception when running Python fails") {
     local {
       assertThrows[PythonException] {
