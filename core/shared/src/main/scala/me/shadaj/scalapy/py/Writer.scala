@@ -51,7 +51,7 @@ object Writer extends TupleWriters {
 
   implicit def seqWriter[T, C](implicit ev1: C => Seq[T], tWriter: Writer[T]): Writer[C] = new Writer[C] {
     override def write(v: C): PyValue = {
-      CPythonInterpreter.createList(v.view.map(tWriter.write))
+      CPythonInterpreter.createList(v.map(tWriter.write))
     }
   }
 

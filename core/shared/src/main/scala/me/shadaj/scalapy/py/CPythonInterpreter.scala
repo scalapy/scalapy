@@ -382,7 +382,7 @@ final class PyValue private[PyValue](val underlying: Platform.Pointer, safeGloba
   }
 
   import scala.collection.mutable
-  def getMap: mutable.Map[PyValue, PyValue] = new mutable.Map[PyValue, PyValue] {
+  def getMap: mutable.Map[PyValue, PyValue] = new Compat.MutableMap[PyValue, PyValue] {
     def get(key: PyValue): Option[PyValue] = {
       val contains = CPythonAPI.PyDict_Contains(
         underlying,
@@ -406,8 +406,8 @@ final class PyValue private[PyValue](val underlying: Platform.Pointer, safeGloba
       }
     }
 
-    def +=(kv: (PyValue, PyValue)): this.type = ???
-    def -=(k: PyValue): this.type = ???
+    override def addOne(kv: (PyValue, PyValue)): this.type = ???
+    override def subtractOne(k: PyValue): this.type = ???
   }
 
   private var cleaned = false
