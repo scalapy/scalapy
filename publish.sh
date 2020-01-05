@@ -6,4 +6,4 @@ openssl aes-256-cbc -K $encrypted_876a1fdcb9d7_key -iv $encrypted_876a1fdcb9d7_i
 
 tar xvf secrets.tar
 
-sbt +publishSignedAll sonatypeRelease
+sbt publishSignedAll sonatypeRelease
