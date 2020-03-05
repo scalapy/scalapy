@@ -37,7 +37,6 @@ object CPythonInterpreter {
     counter += 1
 
     Platform.Zone { implicit zone =>
-      CPythonAPI.Py_IncRef(value.underlying)
       CPythonAPI.PyDict_SetItemString(globals, Platform.toCString(variableName), value.underlying)
       throwErrorIfOccured()
     }
