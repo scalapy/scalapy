@@ -1,5 +1,7 @@
 package me.shadaj.scalapy.py
 
+import me.shadaj.scalapy.py.CPythonInterpreter.{globals, throwErrorIfOccured}
+
 class VariableReference(val variable: String) {
   // For tracing down variable reference creation
   // try {
@@ -21,7 +23,10 @@ class VariableReference(val variable: String) {
   def cleanup(): Unit = {
     if (!cleaned) {
       cleaned = true
-      CPythonInterpreter.eval(s"del $variable")
+      Platform.Zone { implicit zone =>
+        CPythonAPI.PyDict_DelItemString(globals, Platform.toCString(variable))
+        throwErrorIfOccured()
+      }
     }
   }
 
@@ -35,4 +40,4 @@ object VariableReference {
   private[py] var allocatedReferences: List[List[VariableReference]] = List.empty
 }
 
-class PythonException(s: String) extends Exception(s) 
+class PythonException(s: String) extends Exception(s)

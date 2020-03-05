@@ -27,6 +27,7 @@ object CPythonInterpreter {
 
   def set(variable: String, value: PyValue): Unit = {
     Platform.Zone { implicit zone =>
+      CPythonAPI.Py_IncRef(value.underlying)
       CPythonAPI.PyDict_SetItemString(globals, Platform.toCString(variable), value.underlying)
       throwErrorIfOccured()
     }
@@ -220,6 +221,7 @@ object CPythonInterpreter {
         callable = CPythonAPI.PyDict_GetItemWithError(builtins, methodString)
       }
 
+      CPythonAPI.Py_IncRef(callable)
       CPythonAPI.Py_DecRef(methodString)
 
       throwErrorIfOccured()
