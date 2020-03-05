@@ -24,7 +24,7 @@ class VariableReference(val variable: String) {
     if (!cleaned) {
       cleaned = true
       Platform.Zone { implicit zone =>
-        CPythonAPI.PyDict_DelItemString(globals, Platform.toCStringNativeStringJVM(variable))
+        CPythonAPI.PyDict_DelItemString(globals, Platform.toCString(variable))
         throwErrorIfOccured()
       }
     }

@@ -14,13 +14,7 @@ object Platform {
     sn.fromCString(ptr, charset)
   }
 
-  def toCString(str: String,
-    charset: Charset = Charset.defaultCharset())(implicit zone: sn.Zone): CString =
-    sn.toCString(str, charset)
-
-  def toCStringNativeStringJVM(str: String,
-    charset: Charset = Charset.defaultCharset())(implicit zone: sn.Zone): CString =
-    toCString(str, charset)
+  def toCString(str: String, charset: Charset = Charset.defaultCharset())(implicit zone: sn.Zone): CString = sn.toCString(str, charset)
 
   val emptyCString: CString = c""
 
