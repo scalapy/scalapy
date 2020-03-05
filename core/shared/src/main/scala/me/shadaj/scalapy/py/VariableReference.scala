@@ -23,8 +23,10 @@ class VariableReference(val variable: String) {
   def cleanup(): Unit = {
     if (!cleaned) {
       cleaned = true
-      CPythonAPI.PyDict_DelItemString(globals, variable)
-      throwErrorIfOccured()
+      Platform.Zone { implicit zone =>
+        CPythonAPI.PyDict_DelItemString(globals, Platform.toCStringNativeStringJVM(variable))
+        throwErrorIfOccured()
+      }
     }
   }
 

@@ -13,7 +13,11 @@ object Platform {
     ptr.getString(0, charset.name())
   }
 
-  def toCString(str: String, charset: Charset = Charset.defaultCharset()): CString = str
+  def toCString(str: String, charset: Charset = Charset.defaultCharset()): CString =
+    str
+
+  def toCStringNativeStringJVM(str: String, charset: Charset = Charset.defaultCharset()): String =
+    str
 
   val emptyCString: CString = ""
 
