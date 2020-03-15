@@ -4,6 +4,8 @@ object CPythonInterpreter {
   CPythonAPI.Py_Initialize()
 
   val globals: Platform.Pointer = CPythonAPI.PyDict_New()
+  CPythonAPI.Py_IncRef(globals)
+
   val builtins = CPythonAPI.PyEval_GetBuiltins()
   Platform.Zone { implicit zone =>
     CPythonAPI.PyDict_SetItemString(globals, Platform.toCString("__builtins__"), builtins)
