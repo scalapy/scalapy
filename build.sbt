@@ -101,7 +101,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
     }
   ).jvmSettings(
     crossScalaVersions := supportedScalaVersions,    
-    libraryDependencies += "net.java.dev.jna" % "jna" % "5.4.0",
+    libraryDependencies += "net.java.dev.jna" % "jna" % "5.5.0",
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.0" % Test,
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.0" % Test,
     fork in Test := true,
