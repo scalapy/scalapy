@@ -66,8 +66,8 @@ object CPythonInterpreter {
   }
 
   def valueFromBoolean(b: Boolean): PyValue = if (b) trueValue else falseValue
-  def valueFromLong(long: Long): PyValue = PyValue.fromNew(withGil(CPythonAPI.PyLong_FromLongLong(long)))
-  def valueFromDouble(v: Double): PyValue = PyValue.fromNew(withGil(CPythonAPI.PyFloat_FromDouble(v)))
+  def valueFromLong(long: Long): PyValue = withGil(PyValue.fromNew(CPythonAPI.PyLong_FromLongLong(long)))
+  def valueFromDouble(v: Double): PyValue = withGil(PyValue.fromNew(CPythonAPI.PyFloat_FromDouble(v)))
   def valueFromString(v: String): PyValue = PyValue.fromNew(toNewString(v))
 
   // Hack to patch around Scala Native not letting us auto-box pointers
@@ -75,7 +75,7 @@ object CPythonInterpreter {
 
   private def toNewString(v: String) = {
     (Platform.Zone { implicit zone =>
-      new PointerBox(withGil(CPythonAPI.PyUnicode_FromString(
+      withGil(new PointerBox(CPythonAPI.PyUnicode_FromString(
         Platform.toCString(v, java.nio.charset.Charset.forName("UTF-8"))
       )))
     }).ptr
@@ -107,12 +107,12 @@ object CPythonInterpreter {
     }
   }
 
-  private def pointerPointerToString(pointer: Platform.PointerToPointer) = {
-    Platform.fromCString(withGil(CPythonAPI.PyUnicode_AsUTF8(
+  private def pointerPointerToString(pointer: Platform.PointerToPointer) = withGil {
+    Platform.fromCString(CPythonAPI.PyUnicode_AsUTF8(
       CPythonAPI.PyObject_Str(
         Platform.dereferencePointerToPointer(pointer)
       )
-    )), java.nio.charset.Charset.forName("UTF-8"))
+    ), java.nio.charset.Charset.forName("UTF-8"))
   }
 
   def throwErrorIfOccured() = {
@@ -395,11 +395,11 @@ final class PyValue private[PyValue](val underlying: Platform.Pointer, safeGloba
       ret
     }
 
-    def apply(idx: Int): PyValue = new PyValue(CPythonInterpreter.withGil {
+    def apply(idx: Int): PyValue = CPythonInterpreter.withGil {
       val ret = CPythonAPI.PyTuple_GetItem(underlying, Platform.intToCLong(idx))
       CPythonInterpreter.throwErrorIfOccured()
-      ret
-    })
+      new PyValue(ret)
+    }
 
     def iterator: Iterator[PyValue] = (0 until length).toIterator.map(apply)
   }
@@ -472,9 +472,7 @@ object PyValue {
   }
 
   def fromBorrowed(underlying: Platform.Pointer): PyValue = {
-    CPythonInterpreter.withGil {
-      CPythonAPI.Py_IncRef(underlying)
-    }
+    CPythonInterpreter.withGil(CPythonAPI.Py_IncRef(underlying))
     new PyValue(underlying)
   }
 }
