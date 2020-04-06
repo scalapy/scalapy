@@ -22,11 +22,11 @@ object CPythonInterpreter {
   @inline private[py] def withGil[T](fn: => T): T = {
     val handle = CPythonAPI.PyGILState_Ensure()
 
-    val ret = fn
-
-    CPythonAPI.PyGILState_Release(handle)
-
-    ret
+    try {
+      fn
+    } finally {
+      CPythonAPI.PyGILState_Release(handle)
+    }
   }
 
   def eval(code: String): Unit = {
