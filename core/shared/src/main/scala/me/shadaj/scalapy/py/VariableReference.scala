@@ -20,21 +20,17 @@ class VariableReference(val variable: String) {
 
   private var cleaned = false
 
-  def cleanup(): Unit = {
+  def cleanup(): Unit = CPythonInterpreter.withGil {
     if (!cleaned) {
       cleaned = true
       Platform.Zone { implicit zone =>
-        CPythonInterpreter.withGil {
-          CPythonAPI.PyDict_DelItemString(globals, Platform.toCString(variable))
-          throwErrorIfOccured()
-        }
+        CPythonAPI.PyDict_DelItemString(globals, Platform.toCString(variable))
+        throwErrorIfOccured()
       }
     }
   }
 
-  override def finalize(): Unit = {
-    cleanup()
-  }
+  override def finalize(): Unit = cleanup()
 }
 
 object VariableReference {

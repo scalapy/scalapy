@@ -17,6 +17,8 @@ object CPythonInterpreter {
 
   private[py] val noneValue: PyValue = PyValue.fromNew(CPythonAPI.Py_BuildValue(Platform.emptyCString), true)
 
+  CPythonAPI.PyEval_SaveThread() // release the lock created by Py_Initialize
+
   @inline private[py] def withGil[T](fn: => T): T = {
     val handle = CPythonAPI.PyGILState_Ensure()
 
@@ -453,7 +455,7 @@ final class PyValue private[PyValue](val underlying: Platform.Pointer, safeGloba
 
   private var cleaned = false
 
-  def cleanup(): Unit = {
+  def cleanup(): Unit = CPythonInterpreter.withGil {
     if (!cleaned) {
       cleaned = true
       CPythonAPI.Py_DecRef(underlying)
