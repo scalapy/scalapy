@@ -35,8 +35,11 @@ object CPythonInterpreter {
 
   private var counter = 0
   def getVariableReference(value: PyValue): VariableReference = {
-    val variableName = "spy_o_" + counter
-    counter += 1
+    val variableName = synchronized {
+      val ret = "spy_o_" + counter
+      counter += 1
+      ret
+    }
 
     Platform.Zone { implicit zone =>
       CPythonAPI.PyDict_SetItemString(globals, Platform.toCString(variableName), value.underlying)
