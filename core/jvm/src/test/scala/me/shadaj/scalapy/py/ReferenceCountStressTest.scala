@@ -9,8 +9,18 @@ class ReferenceCountStressTest extends AnyFunSuite {
 
   test("Repeated global function calls maintain constant reference counts") {
     val slice = global.slice(0)
+
+    // first run GC to stabilize the default reference count
+    (0 to 1000).foreach { _ =>
+      System.gc()
+      System.runFinalization()
+      gc.collect()
+    }
+
     val baseCount = referenceCount(slice)
-    (0 to 10000).foreach { _ =>
+    (0 to 1000).foreach { _ =>
+      val myNewSlice = global.slice(0)
+
       System.gc()
       System.runFinalization()
       gc.collect()
