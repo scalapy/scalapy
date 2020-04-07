@@ -20,7 +20,7 @@ class VariableReference(val variable: String) {
 
   private var cleaned = false
 
-  def cleanup(): Unit = {
+  def cleanup(): Unit = CPythonInterpreter.withGil {
     if (!cleaned) {
       cleaned = true
       Platform.Zone { implicit zone =>
@@ -30,9 +30,7 @@ class VariableReference(val variable: String) {
     }
   }
 
-  override def finalize(): Unit = {
-    cleanup()
-  }
+  override def finalize(): Unit = cleanup()
 }
 
 object VariableReference {
