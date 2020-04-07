@@ -10,7 +10,6 @@ class CPythonAPIInterface {
   @scala.native def PyEval_SaveThread(): Platform.Pointer
   @scala.native def PyGILState_Ensure(): Int
   @scala.native def PyGILState_Release(state: Int): Unit
-  @scala.native def PyGILState_Check(): Int
 
   @scala.native def PyRun_String(str: String, start: Int, globals: Platform.Pointer, locals: Platform.Pointer): Platform.Pointer
 
