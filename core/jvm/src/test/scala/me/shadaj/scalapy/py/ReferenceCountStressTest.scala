@@ -7,16 +7,25 @@ class ReferenceCountStressTest extends AnyFunSuite {
   val sys = module("sys")
   def referenceCount(obj: Dynamic): Int = sys.getrefcount(obj).as[Int]
 
-  test("Repeated global function calls maintain constant reference counts") {
-    val slice = global.slice(0)
-    val baseCount = referenceCount(slice)
-    (0 to 10000).foreach { _ =>
+  def assertReferenceCountSettles(obj: Dynamic, to: Int) = {
+    // add 1 because getrefcount takes one reference during exectuion
+    assert((1 to 500).exists { _ =>
+      // make sure any reference count changes that need to happen do happen
       System.gc()
       System.runFinalization()
       gc.collect()
 
-      val count = referenceCount(slice)
-      assert(baseCount == count)
+      referenceCount(obj) == to + 1
+    })
+  }
+
+  test("Repeated global function calls maintain constant reference counts") {
+    val slice = global.slice(0)
+    assertReferenceCountSettles(slice, 1)
+
+    (1 to 500).foreach { i =>
+      val myNewSlice = global.slice(0)
+      assertReferenceCountSettles(slice, 1)
     }
   }
 }

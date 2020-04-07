@@ -9,7 +9,7 @@ object global extends scala.Dynamic {
 
   def applyDynamicNamed(method: String)(params: (String, Any)*): Dynamic = {
     eval(s"$method(${params.map{ case (name, value) =>
-      if(name.isEmpty) Arg(value) else Arg(name, value)  // Positional arguments have no name
+      if (name.isEmpty) Arg(value) else Arg(name, value)  // Positional arguments have no name
     }.mkString(",")})")
   }
 

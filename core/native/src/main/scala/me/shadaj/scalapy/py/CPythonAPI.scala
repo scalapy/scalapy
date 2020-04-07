@@ -6,6 +6,10 @@ import scala.scalanative.native._
 object CPythonAPI {
   def Py_Initialize(): Unit = extern
 
+  def PyEval_SaveThread(): Platform.Pointer = extern
+  def PyGILState_Ensure(): Int = extern
+  def PyGILState_Release(state: Int): Unit = extern
+
   def PyRun_String(str: CString, start: Int, globals: Platform.Pointer, locals: Platform.Pointer): Platform.Pointer = extern
 
   def PyUnicode_FromString(cStr: CString): Platform.Pointer = extern
