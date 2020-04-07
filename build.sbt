@@ -108,7 +108,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
     javaOptions in Test += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib"
   ).nativeSettings(
     scalaVersion := scala211Version,
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.0-SNAP8" % Test,
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.0-RC3" % Test,
     libraryDependencies += "com.github.lolgab" %%% "scalacheck" % "1.14.1" % Test,
     nativeLinkStubs := true,
     nativeLinkingOptions ++= "python3-config --ldflags".!!.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
