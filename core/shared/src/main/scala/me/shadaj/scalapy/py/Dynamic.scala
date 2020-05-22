@@ -10,7 +10,17 @@ trait AnyDynamics extends scala.Any with Any with scala.Dynamic {
   }
 
   def applyDynamicNamed(method: String)(params: (String, Any)*): Dynamic = {
-    eval(s"${this.expr}.$method(${params.map{ case (name, value) =>
+    // Because its custom Any we cant check if it's an instance of Map
+    // however Option cant be even passed in place of this Any maybe sth with reads/writes
+    val otherParams: List[(String, Any)] = params.toList
+      .filterNot(_._1 == "kwargs")
+      .map{ case (name, value) => name -> value}
+    val mapParams: List[(String, Any)] = params.toList
+      .filter(_._1 == "kwargs")
+      .flatMap { case (_ , value) => value.as[Map[String, Any]].toList }
+    val allParams: List[(String, Any)] = otherParams ++ mapParams
+
+    eval(s"${this.expr}.$method(${allParams.map{ case (name, value) =>
       if (name.isEmpty) Arg(value) else Arg(name, value)  // Positional arguments have no name
     }.mkString(",")})")
   }

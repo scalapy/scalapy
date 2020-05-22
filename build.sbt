@@ -8,7 +8,7 @@ lazy val scala212Version = "2.12.8"
 lazy val scala213Version = "2.13.1"
 lazy val supportedScalaVersions = List(scala212Version, scala213Version)
 
-scalaVersion in ThisBuild := scala213Version
+scalaVersion in ThisBuild := scala212Version; version in ThisBuild ~= (_.replaceFirst("\\+[^+]+$", ""))
 
 lazy val scalapy = project.in(file(".")).aggregate(
   macrosJVM, macrosNative,
