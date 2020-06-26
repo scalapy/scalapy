@@ -8,4 +8,4 @@ addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.9.3")
 
 addSbtPlugin("com.dwijnand" % "sbt-dynver" % "4.0.0")
 
-addSbtPlugin("org.scalameta" % "sbt-mdoc" % "2.2.2" )
+addSbtPlugin("org.scalameta" % "sbt-mdoc" % "2.2.3" )
