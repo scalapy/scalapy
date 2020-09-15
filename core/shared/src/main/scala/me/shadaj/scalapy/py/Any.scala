@@ -3,6 +3,8 @@ package me.shadaj.scalapy.py
 import scala.language.dynamics
 import scala.collection.mutable
 
+import me.shadaj.scalapy.py.interpreter.{CPythonInterpreter, PyValue, VariableReference}
+
 trait Any extends scala.Any { self =>
   private[py] def value: PyValue
   

@@ -1,4 +1,9 @@
-package me.shadaj.scalapy.py
+package me.shadaj.scalapy.py.interpreter
+
+import java.{util => ju}
+
+import me.shadaj.scalapy.py.PythonException
+import me.shadaj.scalapy.py.IndexError
 
 object CPythonInterpreter {
   CPythonAPI.Py_Initialize()
@@ -17,6 +22,118 @@ object CPythonInterpreter {
 
   private[py] val noneValue: PyValue = PyValue.fromNew(CPythonAPI.Py_BuildValue(Platform.emptyCString), true)
 
+  private val liveWrappedValues = new ju.IdentityHashMap[AnyRef, PointerBox]
+  private val reverseLiveWrappedValues = new ju.HashMap[Long, AnyRef]
+
+  val (doNotFreeMeOtherwiseJNAFuncPtrBreaks, cleanupFunctionPointer) = Platform.getFnPtr2 { (self, args) =>
+    val id = CPythonAPI.PyLong_AsLongLong(CPythonAPI.PyTuple_GetItem(args, Platform.intToCLong(0)))
+    val pointedTo = reverseLiveWrappedValues.remove(id)
+    liveWrappedValues.remove(pointedTo)
+
+    CPythonAPI.Py_IncRef(noneValue.underlying)
+    noneValue.underlying
+  }
+
+  val emptyStrPtr = Platform.alloc(1)
+  Platform.setPtrByte(emptyStrPtr, 0, 0)
+
+  val cleanupLambdaMethodDef = Platform.alloc(Platform.ptrSize + Platform.ptrSize + 4 + Platform.ptrSize)
+  Platform.setPtrLong(cleanupLambdaMethodDef, 0, Platform.pointerToLong(emptyStrPtr)) // ml_name
+  Platform.setPtrLong(cleanupLambdaMethodDef, Platform.ptrSize, Platform.pointerToLong(cleanupFunctionPointer)) // ml_meth
+  Platform.setPtrInt(cleanupLambdaMethodDef, Platform.ptrSize + Platform.ptrSize, 0x0001) // ml_flags (https://github.com/python/cpython/blob/master/Include/methodobject.h)
+  Platform.setPtrLong(cleanupLambdaMethodDef, Platform.ptrSize + Platform.ptrSize + 4, Platform.pointerToLong(emptyStrPtr)) // ml_doc
+  val pyCleanupLambda = PyValue.fromNew(CPythonAPI.PyCFunction_New(cleanupLambdaMethodDef, noneValue.underlying), safeGlobal = true)
+  throwErrorIfOccured()
+
+  val weakRefModule = PyValue.fromNew(Platform.Zone { implicit zone =>
+    CPythonAPI.PyImport_ImportModule(Platform.toCString("weakref"))
+  }, safeGlobal = true)
+
+  val typesModule = PyValue.fromNew(Platform.Zone { implicit zone =>
+    CPythonAPI.PyImport_ImportModule(Platform.toCString("types"))
+  }, safeGlobal = true)
+
+  val trackerClass = call(typesModule, "new_class", Seq(valueFromString("tracker")))
+  throwErrorIfOccured()
+
+  // must be decrefed after being sent to Python
+  def wrapIntoPyObject(value: AnyRef): PyValue = withGil {
+    if (liveWrappedValues.containsKey(value)) {
+      val underlying = liveWrappedValues.get(value).ptr
+      CPythonAPI.Py_IncRef(underlying)
+      PyValue.fromNew(underlying)
+    } else {
+      CPythonAPI.Py_IncRef(trackerClass.underlying)
+      val trackingPtr = runCallableAndDecref(trackerClass.underlying, Seq())
+
+      val id = Platform.pointerToLong(trackingPtr.underlying)
+
+      liveWrappedValues.put(value, new PointerBox(trackingPtr.underlying))
+      reverseLiveWrappedValues.put(id, value)
+
+      call(weakRefModule, "finalize", Seq(trackingPtr, pyCleanupLambda, valueFromLong(id)))
+      throwErrorIfOccured()
+
+      trackingPtr
+    }
+  }
+
+  // lambda wrapper
+  val (doNotFreeMeOtherwiseJNAFuncPtrBreaks2, lambdaFunctionPointer) = Platform.getFnPtr2 { (self, args) =>
+    val id = Platform.pointerToLong(self)
+    val pointedTo = reverseLiveWrappedValues.get(id).asInstanceOf[PyValue => PyValue]
+
+    try {
+      val res = pointedTo(PyValue.fromBorrowed(args))
+      CPythonAPI.Py_IncRef(res.underlying)
+      res.underlying
+    } catch {
+      case e: IndexError =>
+        val exception = selectGlobal("IndexError")
+        Platform.Zone { implicit zone =>
+          CPythonAPI.PyErr_SetString(exception.underlying,
+            Platform.toCString(e.message)
+          )
+        }
+        null
+      case e: Throwable =>
+        val exception = selectGlobal("RuntimeError")
+        Platform.Zone { implicit zone =>
+          CPythonAPI.PyErr_SetString(exception.underlying,
+            Platform.toCString(e.getMessage())
+          )
+        }
+        null
+    }
+  }
+
+  val lambdaMethodDef = Platform.alloc(Platform.ptrSize + Platform.ptrSize + 4 + Platform.ptrSize)
+  Platform.setPtrLong(lambdaMethodDef, 0, Platform.pointerToLong(emptyStrPtr)) // ml_name
+  Platform.setPtrLong(lambdaMethodDef, Platform.ptrSize, Platform.pointerToLong(lambdaFunctionPointer)) // ml_meth
+  Platform.setPtrInt(lambdaMethodDef, Platform.ptrSize + Platform.ptrSize, 0x0001) // ml_flags (https://github.com/python/cpython/blob/master/Include/methodobject.h)
+  Platform.setPtrLong(lambdaMethodDef, Platform.ptrSize + Platform.ptrSize + 4, Platform.pointerToLong(emptyStrPtr)) // ml_doc
+
+  Platform.Zone { implicit zone =>
+    CPythonAPI.PyRun_String(
+      Platform.toCString(
+        """import collections.abc
+          |class SequenceProxy(collections.abc.Sequence):
+          |  def __init__(self, len_fn, get_fn):
+          |    self.len_fn = len_fn
+          |    self.get_fn = get_fn
+          |  def __len__(self):
+          |    return self.len_fn()
+          |  def __getitem__(self, idx):
+          |    return self.get_fn(idx)""".stripMargin
+      ),
+      257,
+      globals,
+      globals
+    )
+
+    throwErrorIfOccured()
+  }
+
   CPythonAPI.PyEval_SaveThread() // release the lock created by Py_Initialize
 
   @inline private[py] def withGil[T](fn: => T): T = {
@@ -34,6 +151,21 @@ object CPythonInterpreter {
       val Py_single_input = 256
       withGil {
         CPythonAPI.PyRun_String(Platform.toCString(code), Py_single_input, globals, globals)
+        throwErrorIfOccured()
+      }
+    }
+  }
+
+  def execManyLines(code: String): Unit = {
+    Platform.Zone { implicit zone =>
+      withGil {
+        CPythonAPI.PyRun_String(
+          Platform.toCString(code),
+          257,
+          globals,
+          globals
+        )
+
         throwErrorIfOccured()
       }
     }
@@ -83,21 +215,35 @@ object CPythonInterpreter {
     }).ptr
   }
 
-  def createList(seq: Seq[PyValue]): PyValue = {
-    // TODO: this is copying, should be replaced by a custom type
+  def createListCopy[T](seq: Seq[T], elemConv: T => PyValue): PyValue = {
     withGil {
       val retPtr = CPythonAPI.PyList_New(seq.size)
       seq.zipWithIndex.foreach { case (v, i) =>
-        CPythonAPI.Py_IncRef(v.underlying) // SetItem steals reference
-        CPythonAPI.PyList_SetItem(retPtr, Platform.intToCLong(i), v.underlying)
+        val converted = elemConv(v)
+        CPythonAPI.Py_IncRef(converted.underlying) // SetItem steals reference
+        CPythonAPI.PyList_SetItem(retPtr, Platform.intToCLong(i), converted.underlying)
       }
 
       PyValue.fromNew(retPtr)
     }
   }
 
+  val seqProxyClass = selectGlobal("SequenceProxy")
+  def createListProxy[T](seq: Seq[T], elemConv: T => PyValue): PyValue = {
+    call(seqProxyClass, Seq(
+      createLambda0(() => valueFromLong(seq.size)),
+      createLambda1(idx => {
+        val index = idx.getLong.toInt
+        if (index < seq.size) {
+          elemConv(seq(index))
+        } else {
+          throw new IndexError(s"Scala sequence proxy index out of range: $index")
+        }
+      })
+    ))
+  }
+
   def createTuple(seq: Seq[PyValue]): PyValue = {
-    // TODO: this is copying, should be replaced by a custom type
     withGil {
       val retPtr = CPythonAPI.PyTuple_New(seq.size)
       seq.zipWithIndex.foreach { case (v, i) =>
@@ -106,6 +252,44 @@ object CPythonInterpreter {
       }
 
       PyValue.fromNew(retPtr)
+    }
+  }
+
+  def createLambda0(fn: () => PyValue): PyValue = {
+    val handlerFnPtr = (args: PyValue) => fn.apply()
+
+    withGil {
+      PyValue.fromNew(CPythonAPI.PyCFunction_New(lambdaMethodDef, wrapIntoPyObject(handlerFnPtr).underlying))
+    }
+  }
+
+  def createLambda1(fn: PyValue => PyValue): PyValue = {
+    val handlerFnPtr = (args: PyValue) => {
+      fn.apply(args.getTuple(0))
+    }
+
+    withGil {
+      PyValue.fromNew(CPythonAPI.PyCFunction_New(lambdaMethodDef, wrapIntoPyObject(handlerFnPtr).underlying))
+    }
+  }
+
+  def createLambda2(fn: (PyValue, PyValue) => PyValue): PyValue = {
+    val handlerFnPtr = (args: PyValue) => {
+      fn.apply(args.getTuple(0), args.getTuple(1))
+    }
+
+    withGil {
+      PyValue.fromNew(CPythonAPI.PyCFunction_New(lambdaMethodDef, wrapIntoPyObject(handlerFnPtr).underlying))
+    }
+  }
+
+  def createLambda3(fn: (PyValue, PyValue, PyValue) => PyValue): PyValue = {
+    val handlerFnPtr = (args: PyValue) => {
+      fn.apply(args.getTuple(0), args.getTuple(1), args.getTuple(2))
+    }
+
+    withGil {
+      PyValue.fromNew(CPythonAPI.PyCFunction_New(lambdaMethodDef, wrapIntoPyObject(handlerFnPtr).underlying))
     }
   }
 
@@ -270,6 +454,17 @@ object CPythonInterpreter {
     }
   }
 
+  def call(callable: PyValue, args: Seq[PyValue]): PyValue = {
+    Platform.Zone { implicit zone =>
+      withGil {
+        throwErrorIfOccured()
+
+        CPythonAPI.Py_IncRef(callable.underlying)
+        runCallableAndDecref(callable.underlying, args)
+      }
+    }
+  }
+
   def selectGlobal(name: String): PyValue = {
     Platform.Zone { implicit zone =>
       val nameString = toNewString(name)
@@ -290,7 +485,7 @@ object CPythonInterpreter {
     }
   }
 
-  def select(on: PyValue, value: String): PyValue = {
+  def select(on: PyValue, value: String, safeGlobal: Boolean = false): PyValue = {
     val valueString = toNewString(value)
 
     withGil {
@@ -303,7 +498,7 @@ object CPythonInterpreter {
 
       throwErrorIfOccured()
 
-      PyValue.fromNew(underlying)
+      PyValue.fromNew(underlying, safeGlobal)
     }
   }
 
@@ -318,6 +513,8 @@ object CPythonInterpreter {
       )
 
       CPythonAPI.Py_DecRef(valueString)
+
+      throwErrorIfOccured()
     }
   }
 
@@ -342,139 +539,21 @@ object CPythonInterpreter {
 
     PyValue.fromBorrowed(ret)
   }
+
+  def updateDictionary(on: PyValue, value: String, newValue: PyValue): Unit = {
+    val valueString = toNewString(value)
+
+    withGil {
+      CPythonAPI.PyDict_SetItem(
+        on.underlying,
+        valueString,
+        newValue.underlying
+      )
+
+      CPythonAPI.Py_DecRef(valueString)
+
+      throwErrorIfOccured()
+    }
+  }
 }
 
-final class PyValue private[PyValue](val underlying: Platform.Pointer, safeGlobal: Boolean = false) {
-  if (Platform.isNative && PyValue.allocatedValues.isEmpty && !safeGlobal) {
-    println(s"Warning: the value ${this.getStringified} was allocated into a global space, which means it will not be garbage collected in Scala Native")
-  }
-
-  if (PyValue.allocatedValues.nonEmpty) {
-    PyValue.allocatedValues = (this :: PyValue.allocatedValues.head) :: PyValue.allocatedValues.tail
-  }
-
-  def getStringified: String = CPythonInterpreter.withGil {
-    val pyStr = CPythonAPI.PyObject_Str(underlying)
-    CPythonInterpreter.throwErrorIfOccured()
-
-    val cStr = CPythonAPI.PyUnicode_AsUTF8(pyStr)
-    CPythonAPI.Py_DecRef(pyStr)
-    CPythonInterpreter.throwErrorIfOccured()
-
-    Platform.fromCString(cStr, java.nio.charset.Charset.forName("UTF-8"))
-  }
-
-  def getString: String = CPythonInterpreter.withGil {
-    val cStr = CPythonAPI.PyUnicode_AsUTF8(underlying)
-    CPythonInterpreter.throwErrorIfOccured()
-    Platform.fromCString(cStr, java.nio.charset.Charset.forName("UTF-8"))
-  }
-
-  def getBoolean: Boolean = {
-    if (underlying == CPythonInterpreter.falseValue.underlying) false
-    else if (underlying == CPythonInterpreter.trueValue.underlying) true
-    else {
-      throw new IllegalAccessException("Cannot convert a non-boolean value to a boolean")
-    }
-  }
-
-  def getLong: Long = CPythonInterpreter.withGil {
-    val ret = CPythonAPI.PyLong_AsLongLong(underlying)
-    CPythonInterpreter.throwErrorIfOccured()
-    ret
-  }
-
-  def getDouble: Double = CPythonInterpreter.withGil {
-    val ret = CPythonAPI.PyFloat_AsDouble(underlying)
-    CPythonInterpreter.throwErrorIfOccured()
-    ret
-  }
-
-  def getTuple: Seq[PyValue] = new Seq[PyValue] {
-    def length: Int = CPythonInterpreter.withGil {
-      val ret = Platform.cLongToLong(CPythonAPI.PyTuple_Size(underlying)).toInt
-      CPythonInterpreter.throwErrorIfOccured()
-      ret
-    }
-
-    def apply(idx: Int): PyValue = CPythonInterpreter.withGil {
-      val ret = CPythonAPI.PyTuple_GetItem(underlying, Platform.intToCLong(idx))
-      CPythonInterpreter.throwErrorIfOccured()
-      new PyValue(ret)
-    }
-
-    def iterator: Iterator[PyValue] = (0 until length).toIterator.map(apply)
-  }
-
-  def getSeq: Seq[PyValue] = new Seq[PyValue] {
-    def length: Int = CPythonInterpreter.withGil {
-      val ret = Platform.cLongToLong(CPythonAPI.PyObject_Length(underlying)).toInt
-      CPythonInterpreter.throwErrorIfOccured()
-      ret
-    }
-
-    def apply(idx: Int): PyValue = CPythonInterpreter.withGil {
-      val indexValue = CPythonAPI.PyLong_FromLongLong(idx)
-      val ret = CPythonAPI.PyObject_GetItem(underlying, indexValue)
-      CPythonAPI.Py_DecRef(indexValue)
-
-      PyValue.fromBorrowed(ret)
-    }
-
-    def iterator: Iterator[PyValue] = (0 until length).toIterator.map(apply)
-  }
-
-  import scala.collection.mutable
-  def getMap: mutable.Map[PyValue, PyValue] = new Compat.MutableMap[PyValue, PyValue] {
-    def get(key: PyValue): Option[PyValue] = CPythonInterpreter.withGil {
-      val contains = CPythonAPI.PyDict_Contains(
-        underlying,
-        key.underlying
-      ) == 1
-
-      CPythonInterpreter.throwErrorIfOccured()
-
-      if (contains) {
-        val value = CPythonAPI.PyDict_GetItem(underlying, key.underlying)
-        CPythonInterpreter.throwErrorIfOccured()
-        Some(PyValue.fromBorrowed(value))
-      } else Option.empty[PyValue]
-    }
-
-    def iterator: Iterator[(PyValue, PyValue)] = CPythonInterpreter.withGil {
-      val keysList = new PyValue(CPythonAPI.PyDict_Keys(underlying))
-      CPythonInterpreter.throwErrorIfOccured()
-      keysList.getSeq.toIterator.map { k =>
-        (k, get(k).get)
-      }
-    }
-
-    override def addOne(kv: (PyValue, PyValue)): this.type = ???
-    override def subtractOne(k: PyValue): this.type = ???
-  }
-
-  private var cleaned = false
-
-  def cleanup(): Unit = CPythonInterpreter.withGil {
-    if (!cleaned) {
-      cleaned = true
-      CPythonAPI.Py_DecRef(underlying)
-    }
-  }
-
-  override def finalize(): Unit = cleanup()
-}
-
-object PyValue {
-  import scala.collection.mutable
-  private[py] var allocatedValues: List[List[PyValue]] = List.empty
-
-  def fromNew(underlying: Platform.Pointer, safeGlobal: Boolean = false): PyValue = {
-    new PyValue(underlying, safeGlobal)
-  }
-
-  def fromBorrowed(underlying: Platform.Pointer): PyValue = {
-    CPythonInterpreter.withGil(CPythonAPI.Py_IncRef(underlying))
-    new PyValue(underlying)
-  }
-}

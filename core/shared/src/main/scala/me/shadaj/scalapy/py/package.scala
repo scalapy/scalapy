@@ -4,6 +4,8 @@ import scala.collection.mutable
 
 import scala.concurrent.Future
 
+import me.shadaj.scalapy.py.interpreter.{CPythonInterpreter, PyValue, VariableReference}
+
 package object py {
   def module(name: String) = Module(name)
   def module(name: String, subname: String) = Module(name, subname)
@@ -21,22 +23,22 @@ package object py {
   }
 
   def local[T](f: => T): T = {
-    py.PyValue.allocatedValues = List.empty[PyValue] :: py.PyValue.allocatedValues
-    py.VariableReference.allocatedReferences = List.empty[VariableReference] :: py.VariableReference.allocatedReferences
+    PyValue.allocatedValues = List.empty[PyValue] :: PyValue.allocatedValues
+    VariableReference.allocatedReferences = List.empty[VariableReference] :: VariableReference.allocatedReferences
 
     try {
       f
     } finally {
-      py.PyValue.allocatedValues.head.foreach { c =>
+      PyValue.allocatedValues.head.foreach { c =>
         c.cleanup()
       }
 
-      py.VariableReference.allocatedReferences.head.foreach { c =>
+      VariableReference.allocatedReferences.head.foreach { c =>
         c.cleanup()
       }
 
-      py.PyValue.allocatedValues = py.PyValue.allocatedValues.tail
-      py.VariableReference.allocatedReferences = py.VariableReference.allocatedReferences.tail
+      PyValue.allocatedValues = PyValue.allocatedValues.tail
+      VariableReference.allocatedReferences = VariableReference.allocatedReferences.tail
     }
   }
 

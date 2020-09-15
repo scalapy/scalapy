@@ -4,9 +4,9 @@ import scala.sys.process._
 organization in ThisBuild := "me.shadaj"
 
 lazy val scala211Version = "2.11.12"
-lazy val scala212Version = "2.12.8"
+lazy val scala212Version = "2.12.9"
 lazy val scala213Version = "2.13.1"
-lazy val supportedScalaVersions = List(scala212Version, scala213Version)
+lazy val supportedScalaVersions = List(scala211Version, scala212Version, scala213Version)
 
 scalaVersion in ThisBuild := scala213Version
 
@@ -63,6 +63,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
     
       val toWrite =
         s"""package me.shadaj.scalapy.py
+           |import me.shadaj.scalapy.py.interpreter.PyValue
            |trait TupleReaders {
            |${methods.mkString("\n")}
            |}""".stripMargin
@@ -85,6 +86,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
     
       val toWrite =
         s"""package me.shadaj.scalapy.py
+           |import me.shadaj.scalapy.py.interpreter.{CPythonInterpreter, PyValue}
            |trait TupleWriters {
            |${methods.mkString("\n")}
            |}""".stripMargin
@@ -141,7 +143,8 @@ lazy val bench = crossProject(JVMPlatform, NativePlatform)
     javaOptions += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib"
   ).nativeSettings(
     scalaVersion := scala211Version,
-    nativeLinkingOptions ++= "python3-config --ldflags".!!.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
+    nativeLinkingOptions ++= "python3-config --ldflags".!!.split(' ').map(_.trim).filter(_.nonEmpty).toSeq,
+    nativeMode := "release-fast"
   ).dependsOn(core)
 
 lazy val benchJVM = bench.jvm

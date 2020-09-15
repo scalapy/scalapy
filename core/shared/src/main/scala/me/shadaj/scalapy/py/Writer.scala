@@ -3,6 +3,8 @@ package me.shadaj.scalapy.py
 import scala.collection.mutable
 import scala.reflect.ClassTag
 
+import me.shadaj.scalapy.py.interpreter.{CPythonInterpreter, PyValue}
+
 abstract class Writer[T] {
   def write(v: T): PyValue
 }
@@ -47,12 +49,6 @@ object Writer extends TupleWriters {
 
   implicit val stringWriter: Writer[String] = new Writer[String] {
     override def write(v: String): PyValue = CPythonInterpreter.valueFromString(v)
-  }
-
-  implicit def seqWriter[T, C](implicit ev1: C => Seq[T], tWriter: Writer[T]): Writer[C] = new Writer[C] {
-    override def write(v: C): PyValue = {
-      CPythonInterpreter.createList(v.map(tWriter.write))
-    }
   }
 
   implicit def mapWriter[I, O](implicit iWriter: Writer[I], oWriter: Writer[O]) = new Writer[Map[I, O]] {

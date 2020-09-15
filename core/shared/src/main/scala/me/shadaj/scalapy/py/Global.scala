@@ -2,6 +2,8 @@ package me.shadaj.scalapy.py
 
 import scala.language.dynamics
 
+import me.shadaj.scalapy.py.interpreter.CPythonInterpreter
+
 object global extends scala.Dynamic {
   def applyDynamic(method: String)(params: Any*): Dynamic = {
     Any.populateWith(CPythonInterpreter.callGlobal(method, params.map(_.value))).as[Dynamic]

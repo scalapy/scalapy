@@ -3,6 +3,8 @@ package me.shadaj.scalapy.py
 import scala.language.dynamics
 import scala.reflect.ClassTag
 
+import me.shadaj.scalapy.py.interpreter.CPythonInterpreter
+
 @native trait Module extends Dynamic
 
 object Module {

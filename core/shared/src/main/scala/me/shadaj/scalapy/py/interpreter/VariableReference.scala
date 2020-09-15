@@ -1,6 +1,6 @@
-package me.shadaj.scalapy.py
+package me.shadaj.scalapy.py.interpreter
 
-import me.shadaj.scalapy.py.CPythonInterpreter.{globals, throwErrorIfOccured}
+import me.shadaj.scalapy.py.interpreter.CPythonInterpreter.{globals, throwErrorIfOccured}
 
 class VariableReference(val variable: String) {
   // For tracing down variable reference creation
@@ -37,5 +37,3 @@ object VariableReference {
   import scala.collection.mutable
   private[py] var allocatedReferences: List[List[VariableReference]] = List.empty
 }
-
-class PythonException(s: String) extends Exception(s)
