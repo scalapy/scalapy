@@ -3,7 +3,7 @@ package me.shadaj.scalapy.py
 import scala.collection.mutable
 import scala.reflect.ClassTag
 
-import me.shadaj.scalapy.py.interpreter.{CPythonInterpreter, PyValue}
+import me.shadaj.scalapy.interpreter.{CPythonInterpreter, PyValue}
 
 abstract class Writer[T] {
   def write(v: T): PyValue

@@ -15,7 +15,7 @@ object FacadeImpl {
     }
     
     q"""new _root_.me.shadaj.scalapy.py.FacadeCreator[${tag.tpe}] {
-      def create(value: _root_.me.shadaj.scalapy.py.interpreter.PyValue) = new _root_.me.shadaj.scalapy.py.FacadeValueProvider(value) with ${tag.tpe} {}
+      def create(value: _root_.me.shadaj.scalapy.interpreter.PyValue) = new _root_.me.shadaj.scalapy.py.FacadeValueProvider(value) with ${tag.tpe} {}
     }"""
   }
 

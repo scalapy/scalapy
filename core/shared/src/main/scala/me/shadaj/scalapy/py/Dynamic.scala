@@ -2,7 +2,7 @@ package me.shadaj.scalapy.py
 
 import scala.language.dynamics
 
-import me.shadaj.scalapy.py.interpreter.CPythonInterpreter
+import me.shadaj.scalapy.interpreter.CPythonInterpreter
 
 @native trait Dynamic extends Any with AnyDynamics
 

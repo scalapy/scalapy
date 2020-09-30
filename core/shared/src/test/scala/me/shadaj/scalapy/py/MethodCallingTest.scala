@@ -1,5 +1,6 @@
 package me.shadaj.scalapy.py
 
+import me.shadaj.scalapy.interpreter
 import PyConverters._
 
 import org.scalatest.funsuite.AnyFunSuite

@@ -1,6 +1,6 @@
 package me.shadaj.scalapy.py
 
-import me.shadaj.scalapy.py.interpreter.CPythonInterpreter
+import me.shadaj.scalapy.interpreter.CPythonInterpreter
 
 object PyConverters {
   implicit class SeqConverters[T, C <% Seq[T]](seq: C) {

@@ -1,7 +1,7 @@
 package me.shadaj.scalapy.py
 
 import PyConverters._
-import me.shadaj.scalapy.py.interpreter.PyValue
+import me.shadaj.scalapy.interpreter.PyValue
 
 object DataSendingBench extends App {
   PyValue.disableAllocationWarning()

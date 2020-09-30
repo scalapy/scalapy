@@ -1,4 +1,4 @@
-package me.shadaj.scalapy.py.interpreter
+package me.shadaj.scalapy.interpreter
 
 import com.sun.jna.{Native, NativeLong, Memory}
 

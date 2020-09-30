@@ -2,8 +2,8 @@ package me.shadaj.scalapy.py
 
 import org.scalatest.funsuite.AnyFunSuite
 
-import me.shadaj.scalapy.py.interpreter.CPythonInterpreter
-import me.shadaj.scalapy.py.interpreter.PyValue
+import me.shadaj.scalapy.interpreter.CPythonInterpreter
+import me.shadaj.scalapy.interpreter.PyValue
 
 class LambdaTest extends AnyFunSuite {
   test("Calls to Python proxy to Scala lambda have correct results") {

@@ -1,4 +1,4 @@
-package me.shadaj.scalapy.py.interpreter
+package me.shadaj.scalapy.interpreter
 
 import me.shadaj.scalapy.py.Compat
 
@@ -112,7 +112,7 @@ final class PyValue private[PyValue](val underlying: Platform.Pointer, safeGloba
     override def subtractOne(k: PyValue): this.type = ???
   }
 
-  private[py] var cleaned = false
+  private[scalapy] var cleaned = false
 
   def cleanup(): Unit = CPythonInterpreter.withGil {
     if (!cleaned) {
@@ -126,8 +126,8 @@ final class PyValue private[PyValue](val underlying: Platform.Pointer, safeGloba
 
 object PyValue {
   import scala.collection.mutable
-  private[py] var allocatedValues: List[List[PyValue]] = List.empty
-  private[py] var disabledAllocationWarning = false
+  private[scalapy] var allocatedValues: List[List[PyValue]] = List.empty
+  private[scalapy] var disabledAllocationWarning = false
 
   def fromNew(underlying: Platform.Pointer, safeGlobal: Boolean = false): PyValue = {
     new PyValue(underlying, safeGlobal)

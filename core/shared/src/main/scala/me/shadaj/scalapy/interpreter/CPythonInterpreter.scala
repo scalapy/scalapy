@@ -1,4 +1,4 @@
-package me.shadaj.scalapy.py.interpreter
+package me.shadaj.scalapy.interpreter
 
 import java.{util => ju}
 
@@ -8,7 +8,7 @@ import me.shadaj.scalapy.py.IndexError
 object CPythonInterpreter {
   CPythonAPI.Py_Initialize()
 
-  private[py] val globals: Platform.Pointer = CPythonAPI.PyDict_New()
+  private[scalapy] val globals: Platform.Pointer = CPythonAPI.PyDict_New()
   CPythonAPI.Py_IncRef(globals)
 
   private val builtins = CPythonAPI.PyEval_GetBuiltins()
@@ -17,10 +17,10 @@ object CPythonInterpreter {
     throwErrorIfOccured()
   }
 
-  private[py] val falseValue = PyValue.fromNew(CPythonAPI.PyBool_FromLong(Platform.intToCLong(0)), true)
-  private[py] val trueValue = PyValue.fromNew(CPythonAPI.PyBool_FromLong(Platform.intToCLong(1)), true)
+  private[scalapy] val falseValue = PyValue.fromNew(CPythonAPI.PyBool_FromLong(Platform.intToCLong(0)), true)
+  private[scalapy] val trueValue = PyValue.fromNew(CPythonAPI.PyBool_FromLong(Platform.intToCLong(1)), true)
 
-  private[py] val noneValue: PyValue = PyValue.fromNew(CPythonAPI.Py_BuildValue(Platform.emptyCString), true)
+  private[scalapy] val noneValue: PyValue = PyValue.fromNew(CPythonAPI.Py_BuildValue(Platform.emptyCString), true)
 
   private val liveWrappedValues = new ju.IdentityHashMap[AnyRef, PointerBox]
   private val reverseLiveWrappedValues = new ju.HashMap[Long, AnyRef]
@@ -136,7 +136,7 @@ object CPythonInterpreter {
 
   CPythonAPI.PyEval_SaveThread() // release the lock created by Py_Initialize
 
-  @inline private[py] def withGil[T](fn: => T): T = {
+  @inline private[scalapy] def withGil[T](fn: => T): T = {
     val handle = CPythonAPI.PyGILState_Ensure()
 
     try {

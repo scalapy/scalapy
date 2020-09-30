@@ -1,6 +1,6 @@
 package me.shadaj.scalapy.py
 
-import me.shadaj.scalapy.py.interpreter.Platform
+import me.shadaj.scalapy.interpreter.Platform
 
 import java.io.PrintWriter
 

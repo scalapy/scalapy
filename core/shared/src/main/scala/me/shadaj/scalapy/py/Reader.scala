@@ -2,7 +2,7 @@ package me.shadaj.scalapy.py
 
 import scala.reflect.ClassTag
 
-import me.shadaj.scalapy.py.interpreter.PyValue
+import me.shadaj.scalapy.interpreter.PyValue
 
 trait Reader[T] {
   def read(r: PyValue): T

@@ -6,3 +6,4 @@ website/build
 website/node_modules
 *.bench.txt
 lowered.hnir
+.vscode/

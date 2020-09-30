@@ -1,4 +1,4 @@
-package me.shadaj.scalapy.py.interpreter
+package me.shadaj.scalapy.interpreter
 
 import scala.scalanative.{unsafe => sn, libc => lc}
 import scala.scalanative.unsafe.Ptr

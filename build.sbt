@@ -63,7 +63,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
     
       val toWrite =
         s"""package me.shadaj.scalapy.py
-           |import me.shadaj.scalapy.py.interpreter.PyValue
+           |import me.shadaj.scalapy.interpreter.PyValue
            |trait TupleReaders {
            |${methods.mkString("\n")}
            |}""".stripMargin
@@ -86,7 +86,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
     
       val toWrite =
         s"""package me.shadaj.scalapy.py
-           |import me.shadaj.scalapy.py.interpreter.{CPythonInterpreter, PyValue}
+           |import me.shadaj.scalapy.interpreter.{CPythonInterpreter, PyValue}
            |trait TupleWriters {
            |${methods.mkString("\n")}
            |}""".stripMargin
