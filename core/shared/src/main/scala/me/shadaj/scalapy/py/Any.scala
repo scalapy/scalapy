@@ -4,9 +4,10 @@ import scala.language.dynamics
 import scala.collection.mutable
 
 import me.shadaj.scalapy.interpreter.{CPythonInterpreter, PyValue, VariableReference}
+import me.shadaj.scalapy.readwrite.{Reader, Writer}
 
 trait Any extends scala.Any { self =>
-  private[py] def value: PyValue
+  private[scalapy] def value: PyValue
   
   final def expr: VariableReference = {
     CPythonInterpreter.getVariableReference(value)

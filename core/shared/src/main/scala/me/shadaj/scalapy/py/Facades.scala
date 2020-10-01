@@ -4,7 +4,7 @@ import scala.language.experimental.macros
 
 import me.shadaj.scalapy.interpreter.PyValue
 
-class FacadeValueProvider(private[py] val value: PyValue) extends Any
+class FacadeValueProvider(private[scalapy] val value: PyValue) extends Any
 
 abstract class FacadeCreator[F <: Any] {
   def create(value: PyValue): F

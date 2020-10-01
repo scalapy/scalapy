@@ -1,19 +1,21 @@
-package me.shadaj.scalapy.py
+package me.shadaj.scalapy.readwrite
 
 import scala.reflect.ClassTag
 
 import me.shadaj.scalapy.interpreter.PyValue
+import me.shadaj.scalapy.py
+import me.shadaj.scalapy.py.FacadeCreator
 
 trait Reader[T] {
   def read(r: PyValue): T
 }
 
 object Reader extends TupleReaders {
-  implicit val anyReader = new Reader[Any] {
-    def read(r: PyValue): Any = Any.populateWith(r)
+  implicit val anyReader = new Reader[py.Any] {
+    def read(r: PyValue): py.Any = py.Any.populateWith(r)
   }
 
-  implicit def facadeReader[F <: Any](implicit creator: FacadeCreator[F]): Reader[F] = new Reader[F] {
+  implicit def facadeReader[F <: py.Any](implicit creator: FacadeCreator[F]): Reader[F] = new Reader[F] {
     override def read(r: PyValue): F = creator.create(r)
   }
 

@@ -1,7 +1,6 @@
-package me.shadaj.scalapy.py
+package me.shadaj.scalapy.util
 
 object Compat {
-
   /**
    * This trait extends the Scala 2.12 mutable.Map to implement the Scala 2.13 mutable.Map API.
    * This bridges the following source incompatibility:

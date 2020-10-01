@@ -1,6 +1,6 @@
 package me.shadaj.scalapy.interpreter
 
-import me.shadaj.scalapy.py.Compat
+import me.shadaj.scalapy.util.Compat
 
 final class PyValue private[PyValue](val underlying: Platform.Pointer, safeGlobal: Boolean = false) {
   if (Platform.isNative && PyValue.allocatedValues.isEmpty && !safeGlobal && !PyValue.disabledAllocationWarning) {

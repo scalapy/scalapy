@@ -1,16 +1,19 @@
-package me.shadaj.scalapy.py
+package me.shadaj.scalapy.readwrite
 
 import scala.collection.mutable
 import scala.reflect.ClassTag
 
 import me.shadaj.scalapy.interpreter.{CPythonInterpreter, PyValue}
+import me.shadaj.scalapy.py
+import me.shadaj.scalapy.py.|
+import me.shadaj.scalapy.py.PyQuote
 
 abstract class Writer[T] {
   def write(v: T): PyValue
 }
 
 object Writer extends TupleWriters {
-  implicit def anyWriter[T <: Any]: Writer[T] = new Writer[T] {
+  implicit def anyWriter[T <: py.Any]: Writer[T] = new Writer[T] {
     override def write(v: T): PyValue = v.value
   }
 
@@ -53,10 +56,10 @@ object Writer extends TupleWriters {
 
   implicit def mapWriter[I, O](implicit iWriter: Writer[I], oWriter: Writer[O]) = new Writer[Map[I, O]] {
     override def write(map: Map[I, O]): PyValue = {
-      val toAddLater = mutable.Queue.empty[(Any, Any)]
+      val toAddLater = mutable.Queue.empty[(py.Any, py.Any)]
 
       map.foreach { case (i, o) =>
-        toAddLater.enqueue((Any.populateWith(iWriter.write(i)), Any.populateWith(oWriter.write(o))))
+        toAddLater.enqueue((py.Any.populateWith(iWriter.write(i)), py.Any.populateWith(oWriter.write(o))))
       }
 
       val obj = py"{}"

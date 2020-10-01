@@ -5,6 +5,7 @@ import scala.collection.mutable
 import scala.concurrent.Future
 
 import me.shadaj.scalapy.interpreter.{CPythonInterpreter, PyValue, VariableReference}
+import me.shadaj.scalapy.readwrite.{Reader, Writer}
 
 package object py {
   def module(name: String) = Module(name)
