@@ -29,7 +29,7 @@ object Platform {
   def pointerToLong(pointer: Pointer): Long = {
     jna.Pointer.nativeValue(pointer)
   }
-  
+
   def cLongToLong(cLong: jna.NativeLong): Long = cLong.longValue()
 
   def intToCLong(int: Int): jna.NativeLong = new jna.NativeLong(int)
