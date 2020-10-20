@@ -12,7 +12,7 @@ abstract class Writer[T] {
   def write(v: T): PyValue
 }
 
-object Writer extends TupleWriters {
+object Writer extends TupleWriters with FunctionWriters {
   implicit def anyWriter[T <: py.Any]: Writer[T] = new Writer[T] {
     override def write(v: T): PyValue = v.value
   }

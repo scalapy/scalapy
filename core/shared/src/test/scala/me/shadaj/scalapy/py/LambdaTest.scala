@@ -9,24 +9,21 @@ class LambdaTest extends AnyFunSuite {
   test("Calls to Python proxy to Scala lambda have correct results") {
     local {
       var count = 0
-      val testLambda = Any.populateWith(CPythonInterpreter.createLambda(_ => {
+      val testLambda = Any.from(() => {
         count += 1
-        (s"count: $count": Any).value
-      }))
+        s"count: $count"
+      })
 
       assert(py"$testLambda()".as[String] == "count: 1")
       assert(py"$testLambda()".as[String] == "count: 2")
     }
   }
 
-  test("Create list proxy") {
+  test("Calls to Python lambda through read Scala function have correct results") {
     local {
-      val mySeq = Seq(CPythonInterpreter.valueFromLong(1), CPythonInterpreter.valueFromLong(2), CPythonInterpreter.valueFromLong(3))
-      val proxy = Any.populateWith(CPythonInterpreter.createListProxy[PyValue](mySeq, identity))
-      assert(py"len($proxy)".as[Int] == 3)
-      assert(py"$proxy[0]".as[Int] == 1)
-      assert(py"$proxy[1]".as[Int] == 2)
-      assert(py"$proxy[2]".as[Int] == 3)
+      val lambdaToScala = global.len.as[Any => Int]
+      assert(lambdaToScala(Seq[Any]().toPythonProxy) == 0)
+      assert(lambdaToScala(Seq(1, 2, 3).toPythonProxy) == 3)
     }
   }
 }

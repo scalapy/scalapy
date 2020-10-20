@@ -93,6 +93,55 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
     
       IO.write(fileToWrite, toWrite)
       Seq(fileToWrite)
+    },
+    sourceGenerators in Compile += Def.task {
+      val fileToWrite = (sourceManaged in Compile).value / "FunctionReaders.scala"
+      val methods = (0 to 22).map { n =>
+        val functionArgs = (1 to n).map(t => s"w$t.write(i$t)")
+          .mkString(", ")
+        s"""implicit def function${n}Reader[${((1 to n).map(t => s"T$t") :+ "O").mkString(", ")}](implicit ${((1 to n).map(t => s"w$t: Writer[T$t]") :+ "oReader: Reader[O]").mkString(", ")}): Reader[(${(1 to n).map(t => s"T$t").mkString(", ")}) => O] = {
+           |  new Reader[(${(1 to n).map(t => s"T$t").mkString(", ")}) => O] {
+           |    override def read(orig: PyValue) = {
+           |      (${(1 to n).map(t => s"i$t: T$t").mkString(", ")}) => {
+           |        oReader.read(CPythonInterpreter.call(orig, Seq($functionArgs)))
+           |      }
+           |    }
+           |  }
+           |}"""
+      }
+    
+      val toWrite =
+        s"""package me.shadaj.scalapy.readwrite
+           |import me.shadaj.scalapy.interpreter.{CPythonInterpreter, PyValue}
+           |trait FunctionReaders {
+           |${methods.mkString("\n")}
+           |}""".stripMargin
+    
+      IO.write(fileToWrite, toWrite)
+      Seq(fileToWrite)
+    },
+    sourceGenerators in Compile += Def.task  {
+      val fileToWrite = (sourceManaged in Compile).value / "FunctionWriters.scala"
+      val methods = (0 to 22).map { n =>
+        val seqArgs = (1 to n).map(t => s"r$t.read(args(${t - 1}))").mkString(", ")
+        s"""implicit def function${n}Writer[${((1 to n).map(t => s"T$t") :+ "O").mkString(", ")}](implicit ${((1 to n).map(t => s"r$t: Reader[T$t]") :+ "oWriter: Writer[O]").mkString(", ")}): Writer[(${(1 to n).map(t => s"T$t").mkString(", ")}) => O] = {
+           |  new Writer[(${(1 to n).map(t => s"T$t").mkString(", ")}) => O] {
+           |    override def write(v: (${(1 to n).map(t => s"T$t").mkString(", ")}) => O): PyValue = {
+           |      CPythonInterpreter.createLambda(args => oWriter.write(v($seqArgs)))
+           |    }
+           |  }
+           |}"""
+      }
+    
+      val toWrite =
+        s"""package me.shadaj.scalapy.readwrite
+           |import me.shadaj.scalapy.interpreter.{CPythonInterpreter, PyValue}
+           |trait FunctionWriters {
+           |${methods.mkString("\n")}
+           |}""".stripMargin
+    
+      IO.write(fileToWrite, toWrite)
+      Seq(fileToWrite)
     }
   ).settings(
     libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value,

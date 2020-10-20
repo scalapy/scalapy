@@ -1,7 +1,5 @@
 package me.shadaj.scalapy.py
 
-import PyConverters._
-
 import org.scalatest.funsuite.AnyFunSuite
 
 class WriterTest extends AnyFunSuite {
@@ -61,31 +59,31 @@ class WriterTest extends AnyFunSuite {
     }
   }
 
-  test("Writing an empty sequence") {
+  test("Writing an empty sequence as a proxy") {
     local {
       assert(global.list(Seq.empty[Int].toPythonProxy).toString == "[]")
     }
   }
 
-  test("Writing a sequence of ints") {
+  test("Writing a sequence of ints as a proxy") {
     local {
       assert(global.list(Seq[Int](1, 2, 3).toPythonProxy).toString == "[1, 2, 3]")
     }
   }
 
-  test("Writing a sequence of doubles") {
+  test("Writing a sequence of doubles as a proxy") {
     local {
       assert(global.list(Seq[Double](1.1, 2.2, 3.3).toPythonProxy).toString == "[1.1, 2.2, 3.3]")
     }
   }
 
-  test("Writing a sequence of strings") {
+  test("Writing a sequence of strings as a proxy") {
     local {
       assert(global.list(Seq[String]("hello", "world").toPythonProxy).toString == "['hello', 'world']")
     }
   }
 
-  test("Writing a sequence of arrays") {
+  test("Writing a sequence of arrays as a copy") {
     local {
       assert(global.list(
         global.map(
@@ -96,7 +94,7 @@ class WriterTest extends AnyFunSuite {
     }
   }
 
-  test("Writing a sequence of sequences") {
+  test("Writing a sequence of sequences as a copy") {
     local {
       assert(global.list(
         global.map(
@@ -107,7 +105,7 @@ class WriterTest extends AnyFunSuite {
     }
   }
 
-  test("Writing a sequence of Python objects preserves original objects") {
+  test("Writing a sequence of Python objects as a copy preserves original object elements") {
     local {
       val objects = Any.from(Seq[Any](py"object()", py"object()").toPythonCopy)
       assert(py"type($objects[0])".toString == "<class 'object'>")

@@ -10,7 +10,7 @@ trait Reader[T] {
   def read(r: PyValue): T
 }
 
-object Reader extends TupleReaders {
+object Reader extends TupleReaders with FunctionReaders {
   implicit val anyReader = new Reader[py.Any] {
     def read(r: PyValue): py.Any = py.Any.populateWith(r)
   }
