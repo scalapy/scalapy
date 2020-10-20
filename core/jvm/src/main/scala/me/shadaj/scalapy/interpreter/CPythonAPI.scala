@@ -3,7 +3,7 @@ package me.shadaj.scalapy.interpreter
 import com.sun.jna.{Native, NativeLong, Memory}
 
 class CPythonAPIInterface {
-  Native.register("python3.7m")
+  Native.register("python3")
 
   @scala.native def Py_Initialize(): Unit
 
