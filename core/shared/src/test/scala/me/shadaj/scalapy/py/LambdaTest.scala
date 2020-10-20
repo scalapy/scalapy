@@ -9,7 +9,7 @@ class LambdaTest extends AnyFunSuite {
   test("Calls to Python proxy to Scala lambda have correct results") {
     local {
       var count = 0
-      val testLambda = Any.populateWith(CPythonInterpreter.createLambda0(() => {
+      val testLambda = Any.populateWith(CPythonInterpreter.createLambda(_ => {
         count += 1
         (s"count: $count": Any).value
       }))

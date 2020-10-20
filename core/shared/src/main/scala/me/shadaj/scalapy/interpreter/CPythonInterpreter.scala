@@ -231,9 +231,9 @@ object CPythonInterpreter {
   val seqProxyClass = selectGlobal("SequenceProxy")
   def createListProxy[T](seq: Seq[T], elemConv: T => PyValue): PyValue = {
     call(seqProxyClass, Seq(
-      createLambda0(() => valueFromLong(seq.size)),
-      createLambda1(idx => {
-        val index = idx.getLong.toInt
+      createLambda(_ => valueFromLong(seq.size)),
+      createLambda(args => {
+        val index = args(0).getLong.toInt
         if (index < seq.size) {
           elemConv(seq(index))
         } else {
@@ -255,38 +255,8 @@ object CPythonInterpreter {
     }
   }
 
-  def createLambda0(fn: () => PyValue): PyValue = {
-    val handlerFnPtr = (args: PyValue) => fn.apply()
-
-    withGil {
-      PyValue.fromNew(CPythonAPI.PyCFunction_New(lambdaMethodDef, wrapIntoPyObject(handlerFnPtr).underlying))
-    }
-  }
-
-  def createLambda1(fn: PyValue => PyValue): PyValue = {
-    val handlerFnPtr = (args: PyValue) => {
-      fn.apply(args.getTuple(0))
-    }
-
-    withGil {
-      PyValue.fromNew(CPythonAPI.PyCFunction_New(lambdaMethodDef, wrapIntoPyObject(handlerFnPtr).underlying))
-    }
-  }
-
-  def createLambda2(fn: (PyValue, PyValue) => PyValue): PyValue = {
-    val handlerFnPtr = (args: PyValue) => {
-      fn.apply(args.getTuple(0), args.getTuple(1))
-    }
-
-    withGil {
-      PyValue.fromNew(CPythonAPI.PyCFunction_New(lambdaMethodDef, wrapIntoPyObject(handlerFnPtr).underlying))
-    }
-  }
-
-  def createLambda3(fn: (PyValue, PyValue, PyValue) => PyValue): PyValue = {
-    val handlerFnPtr = (args: PyValue) => {
-      fn.apply(args.getTuple(0), args.getTuple(1), args.getTuple(2))
-    }
+  def createLambda(fn: Seq[PyValue] => PyValue): PyValue = {
+    val handlerFnPtr = (args: PyValue) => fn.apply(args.getTuple)
 
     withGil {
       PyValue.fromNew(CPythonAPI.PyCFunction_New(lambdaMethodDef, wrapIntoPyObject(handlerFnPtr).underlying))
