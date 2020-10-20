@@ -25,12 +25,12 @@ trait AnyDynamics extends scala.Any with Any with scala.Dynamic {
     CPythonInterpreter.update(value, name, newValue.value)
   }
 
-  def arrayAccess(index: Int): Dynamic = {
-    Any.populateWith(CPythonInterpreter.selectList(value, index)).as[Dynamic]
+  def bracketAccess(key: Any): Dynamic = {
+    Any.populateWith(CPythonInterpreter.selectBracket(value, key.value)).as[Dynamic]
   }
 
-  def dictionaryAccess(key: Any): Dynamic = {
-    Any.populateWith(CPythonInterpreter.selectDictionary(value, key.value)).as[Dynamic]
+  def bracketUpdate(key: Any, newValue: Any): Unit = {
+    CPythonInterpreter.updateBracket(value, key.value, newValue.value)
   }
 
   def unary_+(): Dynamic = {

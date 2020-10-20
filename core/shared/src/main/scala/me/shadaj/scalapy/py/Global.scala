@@ -15,7 +15,7 @@ object global extends scala.Dynamic {
     }.mkString(",")})")
   }
 
-  def selectDynamic(value: String): Any = {
-    Any.populateWith(CPythonInterpreter.selectGlobal(value))
+  def selectDynamic(value: String): Dynamic = {
+    Any.populateWith(CPythonInterpreter.selectGlobal(value)).as[Dynamic]
   }
 }

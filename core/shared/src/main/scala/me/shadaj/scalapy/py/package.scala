@@ -18,9 +18,11 @@ package object py {
 
   def `with`[T <: py.Any, O](ref: T)(withValue: T => O): O = {
     ref.as[Dynamic](Reader.facadeReader[Dynamic](FacadeCreator.getCreator[Dynamic])).__enter__()
-    val ret = withValue(ref)
-    ref.as[Dynamic].__exit__(None, None, None)
-    ret
+    try {
+      withValue(ref)
+    } finally {
+      ref.as[Dynamic].__exit__(None, None, None)
+    }
   }
 
   def local[T](f: => T): T = {

@@ -54,6 +54,7 @@ object CPythonAPI {
 
   def PyObject_Str(obj: Platform.Pointer): Platform.Pointer = extern
   def PyObject_GetItem(obj: Platform.Pointer, idx: Platform.Pointer): Platform.Pointer = extern
+  def PyObject_SetItem(obj: Platform.Pointer, key: Platform.Pointer, newValue: Platform.Pointer): Int = extern
   def PyObject_GetAttr(obj: Platform.Pointer, name: Platform.Pointer): Platform.Pointer = extern
   def PyObject_GetAttrString(obj: Platform.Pointer, name: CString): Platform.Pointer = extern
   def PyObject_SetAttr(obj: Platform.Pointer, name: Platform.Pointer, newValue: Platform.Pointer): Platform.Pointer = extern

@@ -518,19 +518,8 @@ object CPythonInterpreter {
     }
   }
 
-  def selectList(on: PyValue, index: Int): PyValue = withGil {
-    val ret = CPythonAPI.PyList_GetItem(
-      on.underlying,
-      Platform.intToCLong(index)
-    )
-
-    throwErrorIfOccured()
-
-    PyValue.fromBorrowed(ret)
-  }
-
-  def selectDictionary(on: PyValue, key: PyValue): PyValue = withGil {
-    val ret = CPythonAPI.PyDict_GetItemWithError(
+  def selectBracket(on: PyValue, key: PyValue): PyValue = withGil {
+    val ret = CPythonAPI.PyObject_GetItem(
       on.underlying,
       key.underlying
     )
@@ -540,17 +529,13 @@ object CPythonInterpreter {
     PyValue.fromBorrowed(ret)
   }
 
-  def updateDictionary(on: PyValue, value: String, newValue: PyValue): Unit = {
-    val valueString = toNewString(value)
-
+  def updateBracket(on: PyValue, key: PyValue, newValue: PyValue): Unit = {
     withGil {
-      CPythonAPI.PyDict_SetItem(
+      CPythonAPI.PyObject_SetItem(
         on.underlying,
-        valueString,
+        key.underlying,
         newValue.underlying
       )
-
-      CPythonAPI.Py_DecRef(valueString)
 
       throwErrorIfOccured()
     }
