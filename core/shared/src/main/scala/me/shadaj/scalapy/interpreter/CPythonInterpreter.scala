@@ -182,7 +182,7 @@ object CPythonInterpreter {
   }
 
   private var counter = 0
-  def getVariableReference(value: PyValue): VariableReference = {
+  def getVariableReference(value: PyValue): String = {
     val variableName = synchronized {
       val ret = "spy_o_" + counter
       counter += 1
@@ -196,7 +196,16 @@ object CPythonInterpreter {
       }
     }
 
-    new VariableReference(variableName)
+    variableName
+  }
+
+  def cleanupVariableReference(variable: String) = {
+    Platform.Zone { implicit zone =>
+      withGil {
+        CPythonAPI.PyDict_DelItemString(globals, Platform.toCString(variable))
+        throwErrorIfOccured()
+      }
+    }
   }
 
   def valueFromBoolean(b: Boolean): PyValue = if (b) trueValue else falseValue

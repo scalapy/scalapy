@@ -4,7 +4,7 @@ import scala.collection.mutable
 
 import scala.concurrent.Future
 
-import me.shadaj.scalapy.interpreter.{CPythonInterpreter, PyValue, VariableReference}
+import me.shadaj.scalapy.interpreter.{CPythonInterpreter, PyValue}
 import me.shadaj.scalapy.readwrite.{Reader, Writer}
 
 package object py {
@@ -27,7 +27,6 @@ package object py {
 
   def local[T](f: => T): T = {
     PyValue.allocatedValues = List.empty[PyValue] :: PyValue.allocatedValues
-    VariableReference.allocatedReferences = List.empty[VariableReference] :: VariableReference.allocatedReferences
 
     try {
       f
@@ -36,12 +35,7 @@ package object py {
         c.cleanup()
       }
 
-      VariableReference.allocatedReferences.head.foreach { c =>
-        c.cleanup()
-      }
-
       PyValue.allocatedValues = PyValue.allocatedValues.tail
-      VariableReference.allocatedReferences = VariableReference.allocatedReferences.tail
     }
   }
 
@@ -55,48 +49,41 @@ package object py {
     }
   }
 
-  import py.{Dynamic => PyDynamic, Any => PyAny}
-  trait PyQuotable {
-    def stringToInsert: String
-    def cleanup(): Unit
+  def eval(str: String): Dynamic = {
+    Any.populateWith(CPythonInterpreter.load(str)).as[Dynamic]
+  }
+
+  final class PyQuotable(val variable: String) extends AnyVal {
+    def cleanup() = CPythonInterpreter.cleanupVariableReference(variable)
   }
 
   object PyQuotable {
-    implicit def fromAny(any: py.Any): PyQuotable = new PyQuotable {
-      private val expr = CPythonInterpreter.getVariableReference(any.value)
-      def stringToInsert: String = expr.toString
-      def cleanup() = expr.cleanup()
+    implicit def fromAny(any: py.Any): PyQuotable = {
+      new PyQuotable(CPythonInterpreter.getVariableReference(any.value))
     }
 
-    implicit def fromValue[V](value: V)(implicit writer: Writer[V]): PyQuotable = new PyQuotable {
-      private val expr = CPythonInterpreter.getVariableReference(writer.write(value))
-      def stringToInsert: String = expr.toString
-      def cleanup() = expr.cleanup()
+    implicit def fromValue[V](value: V)(implicit writer: Writer[V]): PyQuotable = {
+      new PyQuotable(CPythonInterpreter.getVariableReference(writer.write(value)))
     }
   }
 
   implicit class PyQuote(private val sc: StringContext) extends AnyVal {
-    def py(values: PyQuotable*): PyDynamic = {
+    def py(values: PyQuotable*): Dynamic = {
       val strings = sc.parts.iterator
       val expressions = values.iterator
-      var buf = new StringBuffer(strings.next)
-      val toCleanup = mutable.Queue[PyQuotable]()
+      val buf = new StringBuffer(strings.next)
       while (strings.hasNext) {
         val expr = expressions.next
-        buf append expr.stringToInsert
-        toCleanup += expr
-
-        buf append strings.next
+        buf.append(expr.variable)
+        buf.append(strings.next)
       }
-      
-      val ret = PyAny.populateWith(CPythonInterpreter.load(buf.toString)).as[Dynamic]
-      toCleanup.foreach(_.cleanup())
-      ret
-    }
-  }
 
-  def eval(str: String): PyDynamic = {
-    PyAny.populateWith(CPythonInterpreter.load(str)).as[Dynamic]
+      try {
+        eval(buf.toString)
+      } finally {
+        values.foreach(_.cleanup())
+      }
+    }
   }
 
   import scala.language.experimental.macros

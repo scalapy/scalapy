@@ -3,7 +3,7 @@ package me.shadaj.scalapy.py
 import scala.language.dynamics
 import scala.collection.mutable
 
-import me.shadaj.scalapy.interpreter.{CPythonInterpreter, PyValue, VariableReference}
+import me.shadaj.scalapy.interpreter.{CPythonInterpreter, PyValue}
 import me.shadaj.scalapy.readwrite.{Reader, Writer}
 
 trait Any extends scala.Any { self =>
