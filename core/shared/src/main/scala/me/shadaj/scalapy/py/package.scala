@@ -63,13 +63,13 @@ package object py {
 
   object PyQuotable {
     implicit def fromAny(any: py.Any): PyQuotable = new PyQuotable {
-      private val expr = any.expr
+      private val expr = CPythonInterpreter.getVariableReference(any.value)
       def stringToInsert: String = expr.toString
       def cleanup() = expr.cleanup()
     }
 
     implicit def fromValue[V](value: V)(implicit writer: Writer[V]): PyQuotable = new PyQuotable {
-      private val expr = Any.populateWith(writer.write(value)).expr
+      private val expr = CPythonInterpreter.getVariableReference(writer.write(value))
       def stringToInsert: String = expr.toString
       def cleanup() = expr.cleanup()
     }

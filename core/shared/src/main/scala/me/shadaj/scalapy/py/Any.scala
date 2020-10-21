@@ -8,10 +8,6 @@ import me.shadaj.scalapy.readwrite.{Reader, Writer}
 
 trait Any extends scala.Any { self =>
   private[scalapy] def value: PyValue
-  
-  final def expr: VariableReference = {
-    CPythonInterpreter.getVariableReference(value)
-  }
 
   override def toString: String = value.getStringified
 

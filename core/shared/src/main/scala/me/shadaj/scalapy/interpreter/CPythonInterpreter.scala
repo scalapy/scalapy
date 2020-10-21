@@ -53,7 +53,7 @@ object CPythonInterpreter {
     CPythonAPI.PyImport_ImportModule(Platform.toCString("types"))
   }, safeGlobal = true)
 
-  val trackerClass = call(typesModule, "new_class", Seq(valueFromString("tracker")))
+  val trackerClass = call(typesModule, "new_class", Seq(valueFromString("tracker")), Seq())
   throwErrorIfOccured()
 
   // must be decrefed after being sent to Python
@@ -64,14 +64,14 @@ object CPythonInterpreter {
       PyValue.fromNew(underlying)
     } else {
       CPythonAPI.Py_IncRef(trackerClass.underlying)
-      val trackingPtr = runCallableAndDecref(trackerClass.underlying, Seq())
+      val trackingPtr = runCallableAndDecref(trackerClass.underlying, Seq(), Seq())
 
       val id = Platform.pointerToLong(trackingPtr.underlying)
 
       liveWrappedValues.put(value, new PointerBox(trackingPtr.underlying))
       reverseLiveWrappedValues.put(id, value)
 
-      call(weakRefModule, "finalize", Seq(trackingPtr, pyCleanupLambda, valueFromLong(id)))
+      call(weakRefModule, "finalize", Seq(trackingPtr, pyCleanupLambda, valueFromLong(id)), Seq())
       throwErrorIfOccured()
 
       trackingPtr
@@ -240,7 +240,7 @@ object CPythonInterpreter {
           throw new IndexError(s"Scala sequence proxy index out of range: $index")
         }
       })
-    ))
+    ), Seq())
   }
 
   def createTuple(seq: Seq[PyValue]): PyValue = {
@@ -379,11 +379,18 @@ object CPythonInterpreter {
     PyValue.fromNew(ret)
   }
 
-  private def runCallableAndDecref(callable: Platform.Pointer, args: Seq[PyValue]): PyValue = withGil {
+  private def runCallableAndDecref(callable: Platform.Pointer, args: Seq[PyValue], kwArgs: Seq[(String, PyValue)]): PyValue = withGil {
+    val kwArgsDictionary = if (kwArgs.nonEmpty) newDictionary() else null
+    Platform.Zone { implicit zone =>
+      kwArgs.foreach { case (key, value) =>
+        CPythonAPI.PyDict_SetItemString(kwArgsDictionary.underlying, Platform.toCString(key), value.underlying)
+      }
+    }
+
     val result = CPythonAPI.PyObject_Call(
       callable,
       createTuple(args).underlying,
-      null
+      if (kwArgs.nonEmpty) kwArgsDictionary.underlying else null
     )
 
     CPythonAPI.Py_DecRef(callable)
@@ -393,7 +400,7 @@ object CPythonInterpreter {
     PyValue.fromNew(result)
   }
 
-  def callGlobal(method: String, args: Seq[PyValue]): PyValue = {
+  def callGlobal(method: String, args: Seq[PyValue], kwArgs: Seq[(String, PyValue)]): PyValue = {
     Platform.Zone { implicit zone =>
       withGil {
         val methodString = toNewString(method)
@@ -408,30 +415,26 @@ object CPythonInterpreter {
 
         throwErrorIfOccured()
 
-        runCallableAndDecref(callable, args)
+        runCallableAndDecref(callable, args, kwArgs)
       }
     }
   }
 
-  def call(on: PyValue, method: String, args: Seq[PyValue]): PyValue = {
+  def call(on: PyValue, method: String, args: Seq[PyValue], kwArgs: Seq[(String, PyValue)]): PyValue = {
     Platform.Zone { implicit zone =>
       withGil {
         val callable = CPythonAPI.PyObject_GetAttrString(on.underlying, Platform.toCString(method))
         throwErrorIfOccured()
 
-        runCallableAndDecref(callable, args)
+        runCallableAndDecref(callable, args, kwArgs)
       }
     }
   }
 
-  def call(callable: PyValue, args: Seq[PyValue]): PyValue = {
-    Platform.Zone { implicit zone =>
-      withGil {
-        throwErrorIfOccured()
-
-        CPythonAPI.Py_IncRef(callable.underlying)
-        runCallableAndDecref(callable.underlying, args)
-      }
+  def call(callable: PyValue, args: Seq[PyValue], kwArgs: Seq[(String, PyValue)]): PyValue = {
+    withGil {
+      CPythonAPI.Py_IncRef(callable.underlying)
+      runCallableAndDecref(callable.underlying, args, kwArgs)
     }
   }
 
@@ -486,6 +489,12 @@ object CPythonInterpreter {
 
       throwErrorIfOccured()
     }
+  }
+
+  def newDictionary(): PyValue = withGil {
+    val newDictReference = CPythonAPI.PyDict_New()
+    throwErrorIfOccured()
+    PyValue.fromNew(newDictReference)
   }
 
   def selectBracket(on: PyValue, key: PyValue): PyValue = withGil {

@@ -54,20 +54,14 @@ object Writer extends TupleWriters with FunctionWriters {
     override def write(v: String): PyValue = CPythonInterpreter.valueFromString(v)
   }
 
-  implicit def mapWriter[I, O](implicit iWriter: Writer[I], oWriter: Writer[O]) = new Writer[Map[I, O]] {
-    override def write(map: Map[I, O]): PyValue = {
-      val toAddLater = mutable.Queue.empty[(py.Any, py.Any)]
-
-      map.foreach { case (i, o) =>
-        toAddLater.enqueue((py.Any.populateWith(iWriter.write(i)), py.Any.populateWith(oWriter.write(o))))
+  implicit def mapWriter[K, V](implicit kWriter: Writer[K], vWriter: Writer[V]) = new Writer[Map[K, V]] {
+    override def write(map: Map[K, V]): PyValue = {
+      val obj = CPythonInterpreter.newDictionary()
+      map.foreach { case (k, v) =>
+        CPythonInterpreter.updateBracket(obj, py.Any.from(k).value, py.Any.from(v).value)
       }
 
-      val obj = py"{}"
-      toAddLater.foreach { case (ko, vo) =>
-        CPythonInterpreter.eval(s"${obj.expr}[${ko.expr}] = ${vo.expr}")
-      }
-
-      obj.value
+      obj
     }
   }
 }

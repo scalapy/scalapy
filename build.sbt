@@ -103,7 +103,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
            |  new Reader[(${(1 to n).map(t => s"T$t").mkString(", ")}) => O] {
            |    override def read(orig: PyValue) = {
            |      (${(1 to n).map(t => s"i$t: T$t").mkString(", ")}) => {
-           |        oReader.read(CPythonInterpreter.call(orig, Seq($functionArgs)))
+           |        oReader.read(CPythonInterpreter.call(orig, Seq($functionArgs), Seq()))
            |      }
            |    }
            |  }
