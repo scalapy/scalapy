@@ -4,9 +4,9 @@ import scala.sys.process._
 organization in ThisBuild := "me.shadaj"
 
 lazy val scala211Version = "2.11.12"
-lazy val scala212Version = "2.12.8"
+lazy val scala212Version = "2.12.9"
 lazy val scala213Version = "2.13.1"
-lazy val supportedScalaVersions = List(scala212Version, scala213Version)
+lazy val supportedScalaVersions = List(scala211Version, scala212Version, scala213Version)
 
 scalaVersion in ThisBuild := scala213Version
 
@@ -62,7 +62,8 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
       }
     
       val toWrite =
-        s"""package me.shadaj.scalapy.py
+        s"""package me.shadaj.scalapy.readwrite
+           |import me.shadaj.scalapy.interpreter.PyValue
            |trait TupleReaders {
            |${methods.mkString("\n")}
            |}""".stripMargin
@@ -84,8 +85,58 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
       }
     
       val toWrite =
-        s"""package me.shadaj.scalapy.py
+        s"""package me.shadaj.scalapy.readwrite
+           |import me.shadaj.scalapy.interpreter.{CPythonInterpreter, PyValue}
            |trait TupleWriters {
+           |${methods.mkString("\n")}
+           |}""".stripMargin
+    
+      IO.write(fileToWrite, toWrite)
+      Seq(fileToWrite)
+    },
+    sourceGenerators in Compile += Def.task {
+      val fileToWrite = (sourceManaged in Compile).value / "FunctionReaders.scala"
+      val methods = (0 to 22).map { n =>
+        val functionArgs = (1 to n).map(t => s"w$t.write(i$t)")
+          .mkString(", ")
+        s"""implicit def function${n}Reader[${((1 to n).map(t => s"T$t") :+ "O").mkString(", ")}](implicit ${((1 to n).map(t => s"w$t: Writer[T$t]") :+ "oReader: Reader[O]").mkString(", ")}): Reader[(${(1 to n).map(t => s"T$t").mkString(", ")}) => O] = {
+           |  new Reader[(${(1 to n).map(t => s"T$t").mkString(", ")}) => O] {
+           |    override def read(orig: PyValue) = {
+           |      (${(1 to n).map(t => s"i$t: T$t").mkString(", ")}) => {
+           |        oReader.read(CPythonInterpreter.call(orig, Seq($functionArgs), Seq()))
+           |      }
+           |    }
+           |  }
+           |}"""
+      }
+    
+      val toWrite =
+        s"""package me.shadaj.scalapy.readwrite
+           |import me.shadaj.scalapy.interpreter.{CPythonInterpreter, PyValue}
+           |trait FunctionReaders {
+           |${methods.mkString("\n")}
+           |}""".stripMargin
+    
+      IO.write(fileToWrite, toWrite)
+      Seq(fileToWrite)
+    },
+    sourceGenerators in Compile += Def.task  {
+      val fileToWrite = (sourceManaged in Compile).value / "FunctionWriters.scala"
+      val methods = (0 to 22).map { n =>
+        val seqArgs = (1 to n).map(t => s"r$t.read(args(${t - 1}))").mkString(", ")
+        s"""implicit def function${n}Writer[${((1 to n).map(t => s"T$t") :+ "O").mkString(", ")}](implicit ${((1 to n).map(t => s"r$t: Reader[T$t]") :+ "oWriter: Writer[O]").mkString(", ")}): Writer[(${(1 to n).map(t => s"T$t").mkString(", ")}) => O] = {
+           |  new Writer[(${(1 to n).map(t => s"T$t").mkString(", ")}) => O] {
+           |    override def write(v: (${(1 to n).map(t => s"T$t").mkString(", ")}) => O): PyValue = {
+           |      CPythonInterpreter.createLambda(args => oWriter.write(v($seqArgs)))
+           |    }
+           |  }
+           |}"""
+      }
+    
+      val toWrite =
+        s"""package me.shadaj.scalapy.readwrite
+           |import me.shadaj.scalapy.interpreter.{CPythonInterpreter, PyValue}
+           |trait FunctionWriters {
            |${methods.mkString("\n")}
            |}""".stripMargin
     
@@ -141,7 +192,8 @@ lazy val bench = crossProject(JVMPlatform, NativePlatform)
     javaOptions += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib"
   ).nativeSettings(
     scalaVersion := scala211Version,
-    nativeLinkingOptions ++= "python3-config --ldflags".!!.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
+    nativeLinkingOptions ++= "python3-config --ldflags".!!.split(' ').map(_.trim).filter(_.nonEmpty).toSeq,
+    nativeMode := "release-fast"
   ).dependsOn(core)
 
 lazy val benchJVM = bench.jvm

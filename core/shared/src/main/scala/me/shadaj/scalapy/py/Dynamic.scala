@@ -2,17 +2,21 @@ package me.shadaj.scalapy.py
 
 import scala.language.dynamics
 
+import me.shadaj.scalapy.interpreter.CPythonInterpreter
+
 @native trait Dynamic extends Any with AnyDynamics
 
 trait AnyDynamics extends scala.Any with Any with scala.Dynamic {
   def applyDynamic(method: String)(params: Any*): Dynamic = {
-    Any.populateWith(CPythonInterpreter.call(value, method, params.map(_.value))).as[Dynamic]
+    Any.populateWith(CPythonInterpreter.call(value, method, params.map(_.value), Seq())).as[Dynamic]
   }
 
   def applyDynamicNamed(method: String)(params: (String, Any)*): Dynamic = {
-    eval(s"${this.expr}.$method(${params.map{ case (name, value) =>
-      if (name.isEmpty) Arg(value) else Arg(name, value)  // Positional arguments have no name
-    }.mkString(",")})")
+    Any.populateWith(CPythonInterpreter.call(
+      value, method,
+      params.filter(_._1.isEmpty).map(_._2.value),
+      params.filter(_._1.nonEmpty).map(t => (t._1, t._2.value))
+    )).as[Dynamic]
   }
 
   def selectDynamic(term: String): Dynamic = {
@@ -23,12 +27,12 @@ trait AnyDynamics extends scala.Any with Any with scala.Dynamic {
     CPythonInterpreter.update(value, name, newValue.value)
   }
 
-  def arrayAccess(index: Int): Dynamic = {
-    Any.populateWith(CPythonInterpreter.selectList(value, index)).as[Dynamic]
+  def bracketAccess(key: Any): Dynamic = {
+    Any.populateWith(CPythonInterpreter.selectBracket(value, key.value)).as[Dynamic]
   }
 
-  def dictionaryAccess(key: Any): Dynamic = {
-    Any.populateWith(CPythonInterpreter.selectDictionary(value, key.value)).as[Dynamic]
+  def bracketUpdate(key: Any, newValue: Any): Unit = {
+    CPythonInterpreter.updateBracket(value, key.value, newValue.value)
   }
 
   def unary_+(): Dynamic = {

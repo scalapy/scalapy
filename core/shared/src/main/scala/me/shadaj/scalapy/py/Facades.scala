@@ -2,7 +2,13 @@ package me.shadaj.scalapy.py
 
 import scala.language.experimental.macros
 
-class FacadeValueProvider(private[py] val value: PyValue) extends Any
+import me.shadaj.scalapy.interpreter.PyValue
+
+class FacadeValueProvider(private[scalapy] val value: PyValue) extends Any
+
+class StaticModule(name: String) extends Module {
+  private[scalapy] val value = module(name).value
+}
 
 abstract class FacadeCreator[F <: Any] {
   def create(value: PyValue): F

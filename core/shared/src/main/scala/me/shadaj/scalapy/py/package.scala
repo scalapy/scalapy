@@ -4,6 +4,9 @@ import scala.collection.mutable
 
 import scala.concurrent.Future
 
+import me.shadaj.scalapy.interpreter.{CPythonInterpreter, PyValue}
+import me.shadaj.scalapy.readwrite.{Reader, Writer}
+
 package object py {
   def module(name: String) = Module(name)
   def module(name: String, subname: String) = Module(name, subname)
@@ -15,73 +18,72 @@ package object py {
 
   def `with`[T <: py.Any, O](ref: T)(withValue: T => O): O = {
     ref.as[Dynamic](Reader.facadeReader[Dynamic](FacadeCreator.getCreator[Dynamic])).__enter__()
-    val ret = withValue(ref)
-    ref.as[Dynamic].__exit__(None, None, None)
-    ret
+    try {
+      withValue(ref)
+    } finally {
+      ref.as[Dynamic].__exit__(None, None, None)
+    }
   }
 
   def local[T](f: => T): T = {
-    py.PyValue.allocatedValues = List.empty[PyValue] :: py.PyValue.allocatedValues
-    py.VariableReference.allocatedReferences = List.empty[VariableReference] :: py.VariableReference.allocatedReferences
+    PyValue.allocatedValues = List.empty[PyValue] :: PyValue.allocatedValues
 
     try {
       f
     } finally {
-      py.PyValue.allocatedValues.head.foreach { c =>
+      PyValue.allocatedValues.head.foreach { c =>
         c.cleanup()
       }
 
-      py.VariableReference.allocatedReferences.head.foreach { c =>
-        c.cleanup()
-      }
-
-      py.PyValue.allocatedValues = py.PyValue.allocatedValues.tail
-      py.VariableReference.allocatedReferences = py.VariableReference.allocatedReferences.tail
+      PyValue.allocatedValues = PyValue.allocatedValues.tail
     }
   }
 
-  import py.{Dynamic => PyDynamic, Any => PyAny}
-  trait PyQuotable {
-    def stringToInsert: String
-    def cleanup(): Unit
+  implicit class SeqConverters[T, C <% Seq[T]](seq: C) {
+    def toPythonCopy(implicit elemWriter: Writer[T]): Any = {
+      Any.populateWith(CPythonInterpreter.createListCopy(seq, elemWriter.write))
+    }
+
+    def toPythonProxy(implicit elemWriter: Writer[T]): Any = {
+      Any.populateWith(CPythonInterpreter.createListProxy(seq, elemWriter.write))
+    }
+  }
+
+  def eval(str: String): Dynamic = {
+    Any.populateWith(CPythonInterpreter.load(str)).as[Dynamic]
+  }
+
+  final class PyQuotable(val variable: String) extends AnyVal {
+    def cleanup() = CPythonInterpreter.cleanupVariableReference(variable)
   }
 
   object PyQuotable {
-    implicit def fromAny(any: py.Any): PyQuotable = new PyQuotable {
-      private val expr = any.expr
-      def stringToInsert: String = expr.toString
-      def cleanup() = expr.cleanup()
+    implicit def fromAny(any: py.Any): PyQuotable = {
+      new PyQuotable(CPythonInterpreter.getVariableReference(any.value))
     }
 
-    implicit def fromValue[V](value: V)(implicit writer: Writer[V]): PyQuotable = new PyQuotable {
-      private val expr = Any.populateWith(writer.write(value)).expr
-      def stringToInsert: String = expr.toString
-      def cleanup() = expr.cleanup()
+    implicit def fromValue[V](value: V)(implicit writer: Writer[V]): PyQuotable = {
+      new PyQuotable(CPythonInterpreter.getVariableReference(writer.write(value)))
     }
   }
 
   implicit class PyQuote(private val sc: StringContext) extends AnyVal {
-    def py(values: PyQuotable*): PyDynamic = {
+    def py(values: PyQuotable*): Dynamic = {
       val strings = sc.parts.iterator
       val expressions = values.iterator
-      var buf = new StringBuffer(strings.next)
-      val toCleanup = mutable.Queue[PyQuotable]()
+      val buf = new StringBuffer(strings.next)
       while (strings.hasNext) {
         val expr = expressions.next
-        buf append expr.stringToInsert
-        toCleanup += expr
-
-        buf append strings.next
+        buf.append(expr.variable)
+        buf.append(strings.next)
       }
-      
-      val ret = PyAny.populateWith(CPythonInterpreter.load(buf.toString)).as[Dynamic]
-      toCleanup.foreach(_.cleanup())
-      ret
-    }
-  }
 
-  def eval(str: String): PyDynamic = {
-    PyAny.populateWith(CPythonInterpreter.load(str)).as[Dynamic]
+      try {
+        eval(buf.toString)
+      } finally {
+        values.foreach(_.cleanup())
+      }
+    }
   }
 
   import scala.language.experimental.macros
