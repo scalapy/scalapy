@@ -1,9 +1,16 @@
 package me.shadaj.scalapy.interpreter
 
+import scala.sys
+import scala.util.Try
+
 import com.sun.jna.{Native, NativeLong, Memory}
 
 class CPythonAPIInterface {
-  Native.register("python3")
+  val pythonLibrariesToTry =
+    sys.env.get("SCALAPY_PYTHON_LIBRARY").toSeq ++
+      Seq("python3", "python3.7")
+
+  pythonLibrariesToTry.find(n => Try(Native.register(n)).isSuccess)
 
   @scala.native def Py_Initialize(): Unit
 

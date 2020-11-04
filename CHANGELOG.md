@@ -8,6 +8,7 @@
 + Introduces `StaticModule` API for loading modules into statically-typed objects
 + Expands support of `bracketAccess` to any `py.Any` type for the index
 + Adds `bracketUpdate` API to perform the equivalent of a Python `obj[key] = newValue`
++ The version of the Python native library can now be controlled with `SCALAPY_PYTHON_LIBRARY`
 
 ### Breaking Changes :warning:
 + The `CPythonInterpreter` object should now be used to access low-level interpreter functions instead of `py.interpreter`
