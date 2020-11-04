@@ -9,24 +9,11 @@ import me.shadaj.scalapy.interpreter.CPythonInterpreter
 
 object Module {
   def apply(module: String): Module = {
-    val loadedModuleName = "tmp_load_module"
-
-    CPythonInterpreter.eval(s"import $module as $loadedModuleName")
-    val ret = Any.populateWith(CPythonInterpreter.load(loadedModuleName)).as[Module]
-
-    CPythonInterpreter.eval(s"del $loadedModuleName")
-
-    ret
+    Any.populateWith(CPythonInterpreter.importModule(module)).as[Module]
   }
 
-  def apply(module: String, subname: String): Module = {
-    val loadedModuleName = "tmp_load_module"
-
-    CPythonInterpreter.eval(s"from $module import $subname as $loadedModuleName")
-    val ret = Any.populateWith(CPythonInterpreter.load(loadedModuleName)).as[Module]
-
-    CPythonInterpreter.eval(s"del $loadedModuleName")
-
-    ret
+  def apply(module: String, subname: String): Any = {
+    Any.populateWith(CPythonInterpreter.importModule(module))
+      .as[Dynamic].selectDynamic(subname)
   }
 }

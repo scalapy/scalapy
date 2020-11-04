@@ -26,4 +26,10 @@ class ModuleTest extends AnyFunSuite {
       assert(StringModuleStaticFacade.digits == "0123456789")
     }
   }
+
+  test("Can import module attributes through subname") {
+    local {
+      assert(module("string", "digits").as[String] == "0123456789")
+    }
+  }
 }
