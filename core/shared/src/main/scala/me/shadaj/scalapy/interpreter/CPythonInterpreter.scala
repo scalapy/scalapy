@@ -208,6 +208,16 @@ object CPythonInterpreter {
     }
   }
 
+  def importModule(moduleName: String): PyValue = {
+    Platform.Zone { implicit zone =>
+      withGil {
+        val newModule = CPythonAPI.PyImport_ImportModule(
+          Platform.toCString(moduleName))
+        PyValue.fromNew(newModule)
+      }
+    }
+  }
+
   def valueFromBoolean(b: Boolean): PyValue = if (b) trueValue else falseValue
   def valueFromLong(long: Long): PyValue = withGil(PyValue.fromNew(CPythonAPI.PyLong_FromLongLong(long)))
   def valueFromDouble(v: Double): PyValue = withGil(PyValue.fromNew(CPythonAPI.PyFloat_FromDouble(v)))
