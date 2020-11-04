@@ -1,6 +1,6 @@
-package me.shadaj.scalapy.py
+package me.shadaj.scalapy.interpreter
 
-import scala.scalanative.native._
+import scala.scalanative.unsafe._
 
 @extern
 object CPythonAPI {
@@ -54,13 +54,17 @@ object CPythonAPI {
 
   def PyObject_Str(obj: Platform.Pointer): Platform.Pointer = extern
   def PyObject_GetItem(obj: Platform.Pointer, idx: Platform.Pointer): Platform.Pointer = extern
+  def PyObject_SetItem(obj: Platform.Pointer, key: Platform.Pointer, newValue: Platform.Pointer): Int = extern
   def PyObject_GetAttr(obj: Platform.Pointer, name: Platform.Pointer): Platform.Pointer = extern
   def PyObject_GetAttrString(obj: Platform.Pointer, name: CString): Platform.Pointer = extern
   def PyObject_SetAttr(obj: Platform.Pointer, name: Platform.Pointer, newValue: Platform.Pointer): Platform.Pointer = extern
   def PyObject_SetAttrString(obj: Platform.Pointer, name: CString, newValue: Platform.Pointer): Platform.Pointer = extern
-  def PyObject_CallMethodObjArgs(obj: Platform.Pointer, name: Platform.Pointer, args: CVararg*): Platform.Pointer = extern
+  def PyObject_CallMethodObjArgs(obj: Platform.Pointer, name: Platform.Pointer, args: CVarArg*): Platform.Pointer = extern
   def PyObject_Call(obj: Platform.Pointer, args: Platform.Pointer, kwArgs: Platform.Pointer): Platform.Pointer = extern
   def PyObject_Length(obj: Platform.Pointer): CLong = extern
+
+  def PySequence_GetItem(obj: Platform.Pointer, idx: Int): Platform.Pointer = extern
+  def PySequence_Length(obj: Platform.Pointer): CLong = extern
 
   def PyErr_Occurred(): Platform.Pointer = extern
   def PyErr_Fetch(pType: Platform.PointerToPointer, pValue: Platform.PointerToPointer, pTraceback: Platform.PointerToPointer): Unit = extern
@@ -70,6 +74,12 @@ object CPythonAPI {
   def PyEval_GetBuiltins(): Platform.Pointer = extern
 
   def Py_BuildValue(str: CString): Platform.Pointer = extern
+
+  def PyLong_FromVoidPtr(ptr: Platform.Pointer): Unit = extern
+  def PyCFunction_New(ptr: Platform.Pointer, self: Platform.Pointer): Platform.Pointer = extern
+  def PyImport_ImportModule(str: CString): Platform.Pointer = extern
+
+  def PyErr_SetString(tpe: Platform.Pointer, message: CString): Unit = extern
 
   def Py_IncRef(ptr: Platform.Pointer): Unit = extern
   def Py_DecRef(ptr: Platform.Pointer): Unit = extern

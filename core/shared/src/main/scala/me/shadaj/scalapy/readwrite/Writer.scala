@@ -1,14 +1,19 @@
-package me.shadaj.scalapy.py
+package me.shadaj.scalapy.readwrite
 
 import scala.collection.mutable
 import scala.reflect.ClassTag
+
+import me.shadaj.scalapy.interpreter.{CPythonInterpreter, PyValue}
+import me.shadaj.scalapy.py
+import me.shadaj.scalapy.py.|
+import me.shadaj.scalapy.py.PyQuote
 
 abstract class Writer[T] {
   def write(v: T): PyValue
 }
 
-object Writer extends TupleWriters {
-  implicit def anyWriter[T <: Any]: Writer[T] = new Writer[T] {
+object Writer extends TupleWriters with FunctionWriters {
+  implicit def anyWriter[T <: py.Any]: Writer[T] = new Writer[T] {
     override def write(v: T): PyValue = v.value
   }
 
@@ -49,26 +54,14 @@ object Writer extends TupleWriters {
     override def write(v: String): PyValue = CPythonInterpreter.valueFromString(v)
   }
 
-  implicit def seqWriter[T, C](implicit ev1: C => Seq[T], tWriter: Writer[T]): Writer[C] = new Writer[C] {
-    override def write(v: C): PyValue = {
-      CPythonInterpreter.createList(v.map(tWriter.write))
-    }
-  }
-
-  implicit def mapWriter[I, O](implicit iWriter: Writer[I], oWriter: Writer[O]) = new Writer[Map[I, O]] {
-    override def write(map: Map[I, O]): PyValue = {
-      val toAddLater = mutable.Queue.empty[(Any, Any)]
-
-      map.foreach { case (i, o) =>
-        toAddLater.enqueue((Any.populateWith(iWriter.write(i)), Any.populateWith(oWriter.write(o))))
+  implicit def mapWriter[K, V](implicit kWriter: Writer[K], vWriter: Writer[V]) = new Writer[Map[K, V]] {
+    override def write(map: Map[K, V]): PyValue = {
+      val obj = CPythonInterpreter.newDictionary()
+      map.foreach { case (k, v) =>
+        CPythonInterpreter.updateBracket(obj, py.Any.from(k).value, py.Any.from(v).value)
       }
 
-      val obj = py"{}"
-      toAddLater.foreach { case (ko, vo) =>
-        CPythonInterpreter.eval(s"${obj.expr}[${ko.expr}] = ${vo.expr}")
-      }
-
-      obj.value
+      obj
     }
   }
 }

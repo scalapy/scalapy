@@ -59,55 +59,55 @@ class WriterTest extends AnyFunSuite {
     }
   }
 
-  test("Writing an empty sequence") {
+  test("Writing an empty sequence as a proxy") {
     local {
-      assert(global.list(Any.from(Seq.empty[Int])).toString == "[]")
+      assert(global.list(Seq.empty[Int].toPythonProxy).toString == "[]")
     }
   }
 
-  test("Writing a sequence of ints") {
+  test("Writing a sequence of ints as a proxy") {
     local {
-      assert(global.list(Any.from(Seq[Int](1, 2, 3))).toString == "[1, 2, 3]")
+      assert(global.list(Seq[Int](1, 2, 3).toPythonProxy).toString == "[1, 2, 3]")
     }
   }
 
-  test("Writing a sequence of doubles") {
+  test("Writing a sequence of doubles as a proxy") {
     local {
-      assert(global.list(Any.from(Seq[Double](1.1, 2.2, 3.3))).toString == "[1.1, 2.2, 3.3]")
+      assert(global.list(Seq[Double](1.1, 2.2, 3.3).toPythonProxy).toString == "[1.1, 2.2, 3.3]")
     }
   }
 
-  test("Writing a sequence of strings") {
+  test("Writing a sequence of strings as a proxy") {
     local {
-      assert(global.list(Any.from(Seq[String]("hello", "world"))).toString == "['hello', 'world']")
+      assert(global.list(Seq[String]("hello", "world").toPythonProxy).toString == "['hello', 'world']")
     }
   }
 
-  test("Writing a sequence of arrays") {
+  test("Writing a sequence of arrays as a copy") {
     local {
       assert(global.list(
         global.map(
           global.list,
-          Any.from(Seq[Array[Int]](Array(1), Array(2)))
+          Seq[Array[Int]](Array(1), Array(2)).map(_.toPythonCopy).toPythonCopy
         )
       ).toString == "[[1], [2]]")
     }
   }
 
-  test("Writing a sequence of sequences") {
+  test("Writing a sequence of sequences as a copy") {
     local {
       assert(global.list(
         global.map(
           global.list,
-          Any.from(Seq[Seq[Int]](Seq(1), Seq(2)))
+          Seq[Seq[Int]](Seq(1), Seq(2)).map(_.toPythonCopy).toPythonCopy
         )
       ).toString == "[[1], [2]]")
     }
   }
 
-  test("Writing a sequence of Python objects preserves original objects") {
+  test("Writing a sequence of Python objects as a copy preserves original object elements") {
     local {
-      val objects = Any.from(Seq[Any](py"object()", py"object()"))
+      val objects = Any.from(Seq[Any](py"object()", py"object()").toPythonCopy)
       assert(py"type($objects[0])".toString == "<class 'object'>")
     }
   }
