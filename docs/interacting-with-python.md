@@ -13,12 +13,13 @@ For example, we can create a Python range with the `range()` method, and calcula
 
 ```scala mdoc
 import me.shadaj.scalapy.py
+import me.shadaj.scalapy.py.SeqConverters
 
 // Python ranges are exclusive
-val list = py.global.range(1, 3 + 1)
+val list = py.Dynamic.global.range(1, 3 + 1)
 
 // 1 + 2 + 3 == 6
-val listSum = py.global.sum(list)
+val listSum = py.Dynamic.global.sum(list)
 ```
 
 ## Importing Modules
@@ -30,16 +31,11 @@ For example we can import NumPy, a popular package for scientific computing with
 val np = py.module("numpy")
 
 val a = np.array(Seq(
-  Seq(1, 0),
-  Seq(0, 1)
-))
+  Seq(1, 0).toPythonProxy,
+  Seq(0, 12).toPythonProxy
+).toPythonProxy)
 
-val b = np.array(Seq(
-  Seq(4, 1),
-  Seq(2, 2)
-))
-
-val aTimesB = np.matmul(a, b)
+val aSquared = np.matmul(a, a)
 ```
 
 In this example, you'll notice that we passed in a Scala `Seq` into `np.array`, which usually takes a Python list. When using Python APIs, ScalaPy will automatically convert Scala values into their Python equivalents, in this case converting the sequences into Python lists.
@@ -48,13 +44,13 @@ In this example, you'll notice that we passed in a Scala `Seq` into `np.array`, 
 ## Custom Python Snippets
 Sometimes, you might run into a situation where you need to express a Python construct that can't be done through an existing ScalaPy API. For this situation and to make converting Python code easier, ScalaPy provides an escape hatch via the `py""` string interpolator. This lets you run arbitrary strings as Python code with the additional power of being able to interpolate in Scala values.
 
-For example, we might want to use Python `map` which takes a `lambda`, something that can't be directly expressed in Scala code yet. Instead, we can use the `py""` interpolator to write the expression as a piece of Python code.
+For example, we might want to use Python `map` which takes a `lambda`. Instead, we can use the `py""` interpolator to write the expression as a piece of Python code.
 
 ```scala mdoc
 import py.PyQuote
 
-val mappedList = py.global.list(
-  py"map(lambda elem: elem + 1, ${Seq(1, 2, 3)})"
+val mappedList = py.Dynamic.global.list(
+  py"map(lambda elem: elem + 1, ${Seq(1, 2, 3).toPythonProxy})"
 )
 ```
 
