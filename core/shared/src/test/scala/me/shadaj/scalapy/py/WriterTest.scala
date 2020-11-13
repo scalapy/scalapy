@@ -61,33 +61,33 @@ class WriterTest extends AnyFunSuite {
 
   test("Writing an empty sequence as a proxy") {
     local {
-      assert(global.list(Seq.empty[Int].toPythonProxy).toString == "[]")
+      assert(Dynamic.global.list(Seq.empty[Int].toPythonProxy).toString == "[]")
     }
   }
 
   test("Writing a sequence of ints as a proxy") {
     local {
-      assert(global.list(Seq[Int](1, 2, 3).toPythonProxy).toString == "[1, 2, 3]")
+      assert(Dynamic.global.list(Seq[Int](1, 2, 3).toPythonProxy).toString == "[1, 2, 3]")
     }
   }
 
   test("Writing a sequence of doubles as a proxy") {
     local {
-      assert(global.list(Seq[Double](1.1, 2.2, 3.3).toPythonProxy).toString == "[1.1, 2.2, 3.3]")
+      assert(Dynamic.global.list(Seq[Double](1.1, 2.2, 3.3).toPythonProxy).toString == "[1.1, 2.2, 3.3]")
     }
   }
 
   test("Writing a sequence of strings as a proxy") {
     local {
-      assert(global.list(Seq[String]("hello", "world").toPythonProxy).toString == "['hello', 'world']")
+      assert(Dynamic.global.list(Seq[String]("hello", "world").toPythonProxy).toString == "['hello', 'world']")
     }
   }
 
   test("Writing a sequence of arrays as a copy") {
     local {
-      assert(global.list(
-        global.map(
-          global.list,
+      assert(Dynamic.global.list(
+        Dynamic.global.map(
+          Dynamic.global.list,
           Seq[Array[Int]](Array(1), Array(2)).map(_.toPythonCopy).toPythonCopy
         )
       ).toString == "[[1], [2]]")
@@ -96,9 +96,9 @@ class WriterTest extends AnyFunSuite {
 
   test("Writing a sequence of sequences as a copy") {
     local {
-      assert(global.list(
-        global.map(
-          global.list,
+      assert(Dynamic.global.list(
+        Dynamic.global.map(
+          Dynamic.global.list,
           Seq[Seq[Int]](Seq(1), Seq(2)).map(_.toPythonCopy).toPythonCopy
         )
       ).toString == "[[1], [2]]")
@@ -123,7 +123,7 @@ class WriterTest extends AnyFunSuite {
     local {
       val tuple = Any.from((1, 2))
       assert(py"type($tuple)".toString == "<class 'tuple'>")
-      assert(global.tuple(tuple).toString == "(1, 2)")
+      assert(Dynamic.global.tuple(tuple).toString == "(1, 2)")
     }
   }
 }

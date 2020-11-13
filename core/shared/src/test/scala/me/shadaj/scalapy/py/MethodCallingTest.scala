@@ -11,13 +11,13 @@ import org.scalatest.funsuite.AnyFunSuite
 class MethodCallingTest extends AnyFunSuite {
   test("Can access global values") {
     local {
-      assert(global.selectDynamic("True").as[Boolean])
+      assert(Dynamic.global.selectDynamic("True").as[Boolean])
     }
   }
 
   test("Can call global len with Scala sequence") {
     local {
-      assert(global.len(Seq(1, 2, 3).toPythonProxy).as[Int] == 3)
+      assert(Dynamic.global.len(Seq(1, 2, 3).toPythonProxy).as[Int] == 3)
     }
   }
 
@@ -40,7 +40,7 @@ class MethodCallingTest extends AnyFunSuite {
   test("Can mix positional and keyword arguments of global functions") {
     local {
       val numbers = py"[3, 2, 1]"
-      val sorted = global.sorted(numbers, reverse=py"True")
+      val sorted = Dynamic.global.sorted(numbers, reverse=py"True")
       assert(sorted.as[Seq[Int]] == Seq(3, 2, 1))
     }
   }
@@ -62,8 +62,8 @@ class MethodCallingTest extends AnyFunSuite {
   test("Can use with statement with file object") {
     local {
       val opened = if (interpreter.Platform.isNative) {
-        global.open("./README.md", "r")
-      } else global.open("../../README.md", "r")
+        Dynamic.global.open("./README.md", "r")
+      } else Dynamic.global.open("../../README.md", "r")
       `with`(opened) { file =>
         assert(file.as[Dynamic].encoding.as[String] == "UTF-8")
       }

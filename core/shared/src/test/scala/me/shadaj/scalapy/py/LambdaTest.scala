@@ -21,7 +21,7 @@ class LambdaTest extends AnyFunSuite {
 
   test("Calls to Python lambda through read Scala function have correct results") {
     local {
-      val lambdaToScala = global.len.as[Any => Int]
+      val lambdaToScala = Dynamic.global.len.as[Any => Int]
       assert(lambdaToScala(Seq[Any]().toPythonProxy) == 0)
       assert(lambdaToScala(Seq(1, 2, 3).toPythonProxy) == 3)
     }

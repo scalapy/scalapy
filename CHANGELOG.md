@@ -11,9 +11,10 @@
 + The version of the Python native library can now be controlled with `SCALAPY_PYTHON_LIBRARY`
 
 ### Breaking Changes :warning:
-+ The `CPythonInterpreter` object should now be used to access low-level interpreter functions instead of `py.interpreter`
++ Renamed `py.global` to `py.Dynamic.global` to emphasize that global access through it is not type-safe
 + Drops automatic conversion of Scala collections to Python in favor of `toPythonCopy` and `toPythonProxy` methods from the `py.SeqConverters` extension
 + Renames `arrayAccess` to `bracketAccess`
++ The `CPythonInterpreter` object should now be used to access low-level interpreter functions instead of `py.interpreter`
 
 ### Bug Fixes :bug:
 + Various reference count synchronization bugs have been fixed to ensure that Python values are not being leaked or used after being freed
