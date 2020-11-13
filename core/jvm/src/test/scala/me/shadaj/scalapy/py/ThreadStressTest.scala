@@ -4,7 +4,7 @@ import org.scalatest.funsuite.AnyFunSuite
 
 class ThreadStressTest extends AnyFunSuite {
   test("Accessing the same list from many different threads works") {
-    val list = global.list()
+    val list = Dynamic.global.list()
 
     val threads = (1 to 5000).map { i =>
       val t = new Thread(() => {
