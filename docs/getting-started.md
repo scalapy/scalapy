@@ -1,4 +1,5 @@
 ---
+slug: /
 id: getting-started
 title: Getting Started with ScalaPy
 sidebar_label: Getting Started
@@ -9,7 +10,7 @@ ScalaPy makes it easy to use Python libraries from Scala code. With a simple API
 ## Installation
 First, add ScalaPy to your SBT build:
 ```scala
-libraryDependencies += "me.shadaj" %% "scalapy-core" % "0.3.0"
+libraryDependencies += "me.shadaj" %% "scalapy-core" % "0.4.0"
 ```
 
 You'll then need to add the Python native libraries to your project and configure SBT to run your code in a separate JVM instance.
@@ -18,16 +19,24 @@ You'll then need to add the Python native libraries to your project and configur
 fork := true
 
 import scala.sys.process._
-javaOptions in Test += s"-Djava.library.path=${"python3-config --ldflags".!! + "/lib"}"
+javaOptions += s"-Djava.library.path=${"python3-config --ldflags".!! + "/lib"}"
+```
+
+If you'd like to use [Scala Native](https://scala-native.readthedocs.io/), follow the instructions there to create a project with Scala Native `0.4.0-M2`. Then, add the following additional configuration to your SBT build to link the Python interpreter.
+
+```scala
+import scala.sys.proces._
+nativeLinkingOptions ++= "python3-config --ldflags".!!.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
 ```
 
 ## Hello World!
-Now that ScalaPy is installed, let's start with a simple example. ScalaPy offers a dynamically typed API that's great for making quick Python calls with little ceremony. First, we can use the Python `len` function to calculate the length of a list. Using `py.global`, you can access any members of the global scope.
+Now that ScalaPy is installed, let's start with a simple example. ScalaPy offers a dynamically typed API that's great for making quick Python calls with little ceremony. First, we can use the Python `len` function to calculate the length of a list. Using `py.Dynamic.global`, you can access any members of the global scope.
 
 ```scala mdoc
 import me.shadaj.scalapy.py
+import me.shadaj.scalapy.py.SeqConverters
 
-val listLengthPython = py.global.len(List(1, 2, 3))
+val listLengthPython = py.Dynamic.global.len(List(1, 2, 3).toPythonProxy)
 ```
 
 Here, we took a Scala `List`, converted it to a Python list, sent it to the `len` function, and got back a Python number.
