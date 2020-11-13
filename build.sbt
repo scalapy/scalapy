@@ -178,7 +178,14 @@ lazy val docs = project
   .settings(
     fork := true,
     connectInput := true,
-    javaOptions += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib"
+    javaOptions += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib",
+    docusaurusCreateSite := {
+      mdoc.in(Compile).toTask(" ").value
+      Process(List("yarn", "install"), cwd = DocusaurusPlugin.website.value).!
+      Process(List("yarn", "run", "build"), cwd = DocusaurusPlugin.website.value).!
+      val out = DocusaurusPlugin.website.value / "build"
+      out
+    }
   )
 
 lazy val bench = crossProject(JVMPlatform, NativePlatform)
