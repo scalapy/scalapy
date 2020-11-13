@@ -70,11 +70,10 @@ function Home() {
 
   return (
     <Layout
-      title={`Hello from ${siteConfig.title}`}
-      description="Description will go into a meta tag in <head />">
+      title={`${siteConfig.title} - ${siteConfig.tagline}`}
+      description={"ScalaPy makes it easy to use your favorite Python libraries from the comfort of Scala. With opt-in static typing and support for compilation to native binaries, ScalaPy scales from experimentation in notebooks to production environments."}>
       <header className={clsx('hero hero--primary', styles.heroBanner)}>
         <div className="container">
-          {/* <h1 className="hero__title">{siteConfig.title}</h1> */}
           <img style={{ width: "80%" }} src={wideLogoUrl}/>
           <p className="hero__subtitle" style={{ color: "white" }}>{siteConfig.tagline}</p>
           <div className={styles.buttons}>
