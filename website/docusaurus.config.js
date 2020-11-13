@@ -23,7 +23,7 @@ module.exports = {
         },
         {
           href: 'https://github.com/shadaj/scalapy/blob/master/CHANGELOG.md',
-          label: 'Releases',
+          label: 'v0.4.0',
           position: 'right',
         },
         {
@@ -41,11 +41,11 @@ module.exports = {
           items: [
             {
               label: 'Core Concepts',
-              to: 'docs/getting-started',
+              to: 'docs/',
             },
             {
               label: 'Advanced Topics',
-              to: 'docs/jupyter-notebooks',
+              to: 'docs/jupyter-notebooks/',
             },
           ],
         },
