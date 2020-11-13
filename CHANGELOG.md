@@ -1,5 +1,8 @@
 # Changelog
 ## vNEXT
+### Bug Fixes :bug:
++ Add `python3.7m` to the default list of Python native libraries to search for, since Conda does not expose `python3.7` (without the `m`) ([PR #119](https://github.com/shadaj/scalapy/pull/119))
++ Add a writer for `Unit` that generates a `None` value, which is useful for callbacks that don't return anything ([PR #120](https://github.com/shadaj/scalapy/pull/120))
 
 ## v0.4.0
 ### Highlights :tada:
