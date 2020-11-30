@@ -19,7 +19,7 @@ You'll then need to add the Python native libraries to your project and configur
 fork := true
 
 import scala.sys.process._
-javaOptions += s"-Djava.library.path=${"python3-config --prefix".!!.trim}/lib"
+javaOptions += s"-Djava.library.path=${"python3-config --configdir".!!.trim}/lib"
 ```
 
 If you'd like to use [Scala Native](https://scala-native.readthedocs.io/), follow the instructions there to create a project with Scala Native `0.4.0-M2`. Then, add the following additional configuration to your SBT build to link the Python interpreter.
