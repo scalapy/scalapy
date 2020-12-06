@@ -151,9 +151,9 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
       else sharedSourceDir / "scala-2.11_2.12"
     }
   ).jvmSettings(
-    crossScalaVersions := supportedScalaVersions,    
-    libraryDependencies += "net.java.dev.jna" % "jna" % "5.5.0",
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.3" % Test,
+    crossScalaVersions := supportedScalaVersions,
+    libraryDependencies += "net.java.dev.jna" % "jna" % "5.6.0",
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.2" % Test,
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.3" % Test,
     fork in Test := true,
     javaOptions in Test += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib"
@@ -178,7 +178,14 @@ lazy val docs = project
   .settings(
     fork := true,
     connectInput := true,
-    javaOptions += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib"
+    javaOptions += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib",
+    docusaurusCreateSite := {
+      mdoc.in(Compile).toTask(" ").value
+      Process(List("yarn", "install"), cwd = DocusaurusPlugin.website.value).!
+      Process(List("yarn", "run", "build"), cwd = DocusaurusPlugin.website.value).!
+      val out = DocusaurusPlugin.website.value / "build"
+      out
+    }
   )
 
 lazy val bench = crossProject(JVMPlatform, NativePlatform)

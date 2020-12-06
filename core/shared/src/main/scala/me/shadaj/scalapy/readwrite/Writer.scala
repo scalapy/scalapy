@@ -26,6 +26,10 @@ object Writer extends TupleWriters with FunctionWriters {
     }
   }
 
+  implicit val unitWriter: Writer[Unit] = new Writer[Unit] {
+    override def write(v: Unit): PyValue = CPythonInterpreter.noneValue
+  }
+
   implicit val byteWriter: Writer[Byte] = new Writer[Byte] {
     override def write(v: Byte): PyValue = CPythonInterpreter.valueFromLong(v)
   }

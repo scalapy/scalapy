@@ -8,7 +8,7 @@ import com.sun.jna.{Native, NativeLong, Memory}
 class CPythonAPIInterface {
   val pythonLibrariesToTry =
     sys.env.get("SCALAPY_PYTHON_LIBRARY").toSeq ++
-      Seq("python3", "python3.7")
+      Seq("python3", "python3.7", "python3.7m")
 
   pythonLibrariesToTry.find(n => Try(Native.register(n)).isSuccess)
 

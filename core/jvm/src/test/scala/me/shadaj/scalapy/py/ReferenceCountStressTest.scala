@@ -20,11 +20,11 @@ class ReferenceCountStressTest extends AnyFunSuite {
   }
 
   test("Repeated global function calls maintain constant reference counts") {
-    val slice = global.slice(0)
+    val slice = Dynamic.global.slice(0)
     assertReferenceCountSettles(slice, 1)
 
     (1 to 500).foreach { i =>
-      val myNewSlice = global.slice(0)
+      val myNewSlice = Dynamic.global.slice(0)
       assertReferenceCountSettles(slice, 1)
     }
   }

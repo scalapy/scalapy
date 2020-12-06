@@ -213,6 +213,7 @@ object CPythonInterpreter {
       withGil {
         val newModule = CPythonAPI.PyImport_ImportModule(
           Platform.toCString(moduleName))
+        throwErrorIfOccured()
         PyValue.fromNew(newModule)
       }
     }
