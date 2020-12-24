@@ -13,10 +13,18 @@ object Dynamic {
     }
 
     def applyDynamicNamed(method: String)(params: (String, Any)*): Dynamic = {
+      val otherParams: List[(String, Any)] = params.toList
+        .filterNot(_._1 == "kwargs")
+        .map{ case (name, value) => name -> value}
+      val mapParams: List[(String, Any)] = params.toList
+        .filter(_._1 == "kwargs")
+        .flatMap { case (_ , value) => value.as[Map[String, Any]].toList }
+      val allParams: List[(String, Any)] = otherParams ++ mapParams
+
       Any.populateWith(CPythonInterpreter.callGlobal(
         method,
-        params.filter(_._1.isEmpty).map(_._2.value),
-        params.filter(_._1.nonEmpty).map(t => (t._1, t._2.value))
+        allParams.filter(_._1.isEmpty).map(_._2.value),
+        allParams.filter(_._1.nonEmpty).map(t => (t._1, t._2.value))
       )).as[Dynamic]
     }
 
@@ -32,10 +40,18 @@ trait AnyDynamics extends scala.Any with Any with scala.Dynamic {
   }
 
   def applyDynamicNamed(method: String)(params: (String, Any)*): Dynamic = {
+    val otherParams: List[(String, Any)] = params.toList
+      .filterNot(_._1 == "kwargs")
+      .map{ case (name, value) => name -> value}
+    val mapParams: List[(String, Any)] = params.toList
+      .filter(_._1 == "kwargs")
+      .flatMap { case (_ , value) => value.as[Map[String, Any]].toList }
+    val allParams: List[(String, Any)] = otherParams ++ mapParams
+
     Any.populateWith(CPythonInterpreter.call(
       value, method,
-      params.filter(_._1.isEmpty).map(_._2.value),
-      params.filter(_._1.nonEmpty).map(t => (t._1, t._2.value))
+      allParams.filter(_._1.isEmpty).map(_._2.value),
+      allParams.filter(_._1.nonEmpty).map(t => (t._1, t._2.value))
     )).as[Dynamic]
   }
 
