@@ -10,7 +10,14 @@ class CPythonAPIInterface {
     sys.env.get("SCALAPY_PYTHON_LIBRARY").toSeq ++
       Seq("python3", "python3.7", "python3.7m")
 
-  pythonLibrariesToTry.find(n => Try(Native.register(n)).isSuccess)
+  pythonLibrariesToTry.find(n => try {
+    Native.register(n)
+    true
+  } catch {
+    case _: Throwable => false
+  }).getOrElse(
+    throw new Exception(s"Unable to locate Python library, tried ${pythonLibrariesToTry.mkString(", ")}")
+  )
 
   @scala.native def Py_Initialize(): Unit
 
