@@ -29,7 +29,7 @@ javaOptions += s"-Djava.library.path=${"python3-config --configdir".!!.trim}/lib
 If you'd like to use [Scala Native](https://scala-native.readthedocs.io/), follow the instructions there to create a project with Scala Native `0.4.0-M2`. Then, add the following additional configuration to your SBT build to link the Python interpreter.
 
 ```scala
-import scala.sys.proces._
+import scala.sys.process._
 nativeLinkingOptions ++= "python3-config --ldflags".!!.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
 ```
 
