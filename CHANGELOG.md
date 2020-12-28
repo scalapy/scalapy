@@ -1,5 +1,7 @@
 # Changelog
 ## vNEXT
+
+## v0.4.1
 ### Bug Fixes :bug:
 + Fix Python library loading on the JVM to correctly fall back to other library names ([PR #132](https://github.com/shadaj/scalapy/pull/132))
 + Add `python3.7m` to the default list of Python native libraries to search for, since Conda does not expose `python3.7` (without the `m`) ([PR #119](https://github.com/shadaj/scalapy/pull/119))
