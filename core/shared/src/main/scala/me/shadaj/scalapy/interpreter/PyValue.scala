@@ -7,7 +7,7 @@ final class PyValue private[PyValue](val underlying: Platform.Pointer, safeGloba
     println(s"Warning: the value ${this.getStringified} was allocated into a global space, which means it will not be garbage collected in Scala Native")
   }
 
-  if (PyValue.allocatedValues.nonEmpty) {
+  if (!safeGlobal && PyValue.allocatedValues.nonEmpty) {
     PyValue.allocatedValues = (this :: PyValue.allocatedValues.head) :: PyValue.allocatedValues.tail
   }
 
