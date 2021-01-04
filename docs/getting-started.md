@@ -50,3 +50,11 @@ To convert Python values back into Scala, we use the `.as` method and pass in th
 ```scala mdoc
 val listLength = listLengthPython.as[Int]
 ```
+## Execution
+ScalaPy uses by default python3, python3.7, python3.7m. If you use an other version of python, you should define the variable `SCALAPY_PYTHON_LIBRARY`
+```shell
+python --version
+# Python 3.8.6
+export SCALAPY_PYTHON_LIBRARY=python3.8
+sbt run
+```
