@@ -2,7 +2,7 @@ package me.shadaj.scalapy.py
 
 import scala.language.implicitConversions
 
-sealed class |[A, B](val value: scala.Any, isLeft: Boolean) {
+sealed class |[A, B](val value: scala.Any, val isLeft: Boolean) {
   def map[U](leftMap: A => U, rightMap: B => U): U = if (isLeft) leftMap(value.asInstanceOf[A]) else rightMap(value.asInstanceOf[B])
 }
 
