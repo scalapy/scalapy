@@ -26,3 +26,4 @@ pomExtra in ThisBuild :=
         <url>http://shadaj.me</url>
       </developer>
     </developers>
+
