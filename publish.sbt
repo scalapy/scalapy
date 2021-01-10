@@ -1,12 +1,12 @@
-publishMavenStyle in ThisBuild := true
+ThisBuild / publishMavenStyle := true
 
-pomIncludeRepository in ThisBuild := { _ => false }
+ThisBuild / pomIncludeRepository := { _ => false }
 
-publishArtifact in Test in ThisBuild := false
+ThisBuild / Test / publishArtifact := false
 
-publishTo in ThisBuild := sonatypePublishToBundle.value
+ThisBuild / publishTo := sonatypePublishToBundle.value
 
-pomExtra in ThisBuild :=
+ThisBuild / pomExtra :=
   <url>https://github.com/shadaj/scalapy</url>
     <licenses>
       <license>
@@ -27,3 +27,4 @@ pomExtra in ThisBuild :=
       </developer>
     </developers>
 
+Global / useGpgPinentry := true
