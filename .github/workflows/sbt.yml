@@ -26,7 +26,6 @@ jobs:
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python-version }}
-        shell: bash
       - name: Test JVM and native
         run: sbt coreJVM/test coreNative/test
         shell: bash
