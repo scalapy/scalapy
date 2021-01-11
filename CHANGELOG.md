@@ -1,5 +1,7 @@
 # Changelog
 ## vNEXT
+### Highlights :tada:
++ Add support for Python 3.8 and 3.9 ([PR #139](https://github.com/shadaj/scalapy/pull/139))
 
 ## v0.4.1
 ### Bug Fixes :bug:

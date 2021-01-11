@@ -23,14 +23,29 @@ You'll then need to add the Python native libraries to your project and configur
 fork := true
 
 import scala.sys.process._
-javaOptions += s"-Djava.library.path=${"python3-config --configdir".!!.trim}/lib"
+lazy val pythonLdFlags = {
+  val withoutEmbed = "python3-config --ldflags".!!
+  if (withoutEmbed.contains("-lpython")) {
+    withoutEmbed.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
+  } else {
+    val withEmbed = "python3-config --ldflags --embed".!!
+    withEmbed.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
+  }
+}
+
+lazy val pythonLibsDir = {
+  pythonLdFlags.find(_.startsWith("-L")).get.drop("-L".length)
+}
+
+javaOptions += s"-Djna.library.path=$pythonLibsDir"
 ```
 
 If you'd like to use [Scala Native](https://scala-native.readthedocs.io/), follow the instructions there to create a project with Scala Native `0.4.0-M2`. Then, add the following additional configuration to your SBT build to link the Python interpreter.
 
 ```scala
-import scala.sys.process._
-nativeLinkingOptions ++= "python3-config --ldflags".!!.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
+lazy val pythonLdFlags = ... // same as above
+
+nativeLinkingOptions ++= pythonLdFlags
 ```
 
 ## Hello World!
@@ -51,7 +66,8 @@ To convert Python values back into Scala, we use the `.as` method and pass in th
 val listLength = listLengthPython.as[Int]
 ```
 ## Execution
-ScalaPy uses by default python3, python3.7, python3.7m. If you use an other version of python, you should define the variable `SCALAPY_PYTHON_LIBRARY`
+ScalaPy officially supports Python 3.{7, 8, 9}. If you want to use another version of Python, you should define the environment variable `SCALAPY_PYTHON_LIBRARY`
+
 ```shell
 python --version
 # Python 3.8.6
