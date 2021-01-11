@@ -4,6 +4,7 @@ import scala.sys
 import scala.util.Try
 
 import com.sun.jna.{Native, NativeLong, Memory}
+import scala.util.{Success, Failure}
 
 class CPythonAPIInterface {
   val pythonLibrariesToTry =
@@ -15,14 +16,17 @@ class CPythonAPIInterface {
         "python3.9", "python3.9m"
       )
 
-  pythonLibrariesToTry.find(n => try {
+  val loadAttempts = pythonLibrariesToTry.toStream.map(n => try {
     Native.register(n)
-    true
+    Success(true)
   } catch {
-    case _: Throwable => false
-  }).getOrElse(
+    case t: Throwable => Failure(t)
+  })
+  
+  loadAttempts.find(_.isSuccess).getOrElse {
+    loadAttempts.foreach(_.failed.get.printStackTrace())
     throw new Exception(s"Unable to locate Python library, tried ${pythonLibrariesToTry.mkString(", ")}")
-  )
+  }
 
   @scala.native def Py_Initialize(): Unit
 
