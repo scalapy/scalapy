@@ -42,7 +42,7 @@ object CPythonInterpreter {
   Platform.setPtrLong(cleanupLambdaMethodDef, Platform.ptrSize, Platform.pointerToLong(cleanupFunctionPointer)) // ml_meth
   Platform.setPtrInt(cleanupLambdaMethodDef, Platform.ptrSize + Platform.ptrSize, 0x0001) // ml_flags (https://github.com/python/cpython/blob/master/Include/methodobject.h)
   Platform.setPtrLong(cleanupLambdaMethodDef, Platform.ptrSize + Platform.ptrSize + 4, Platform.pointerToLong(emptyStrPtr)) // ml_doc
-  val pyCleanupLambda = PyValue.fromNew(CPythonAPI.PyCFunction_New(cleanupLambdaMethodDef, noneValue.underlying), safeGlobal = true)
+  val pyCleanupLambda = PyValue.fromNew(CPythonAPI.PyCFunction_NewEx(cleanupLambdaMethodDef, noneValue.underlying, null), safeGlobal = true)
   throwErrorIfOccured()
 
   val weakRefModule = PyValue.fromNew(Platform.Zone { implicit zone =>
@@ -284,7 +284,7 @@ object CPythonInterpreter {
     val handlerFnPtr = (args: PyValue) => fn.apply(args.getTuple)
 
     withGil {
-      PyValue.fromNew(CPythonAPI.PyCFunction_New(lambdaMethodDef, wrapIntoPyObject(handlerFnPtr).underlying))
+      PyValue.fromNew(CPythonAPI.PyCFunction_NewEx(lambdaMethodDef, wrapIntoPyObject(handlerFnPtr).underlying, null))
     }
   }
 

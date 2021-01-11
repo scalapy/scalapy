@@ -76,7 +76,7 @@ object CPythonAPI {
   def Py_BuildValue(str: CString): Platform.Pointer = extern
 
   def PyLong_FromVoidPtr(ptr: Platform.Pointer): Unit = extern
-  def PyCFunction_New(ptr: Platform.Pointer, self: Platform.Pointer): Platform.Pointer = extern
+  def PyCFunction_NewEx(ptr: Platform.Pointer, self: Platform.Pointer, module: Platform.Pointer): Platform.Pointer = extern
   def PyImport_ImportModule(str: CString): Platform.Pointer = extern
 
   def PyErr_SetString(tpe: Platform.Pointer, message: CString): Unit = extern
