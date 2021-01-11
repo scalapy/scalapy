@@ -30,7 +30,7 @@ Make sure to replace `/usr/lib/x86_64-linux-gnu/libpython3.6m.so` with the path 
 ScalaPy on the JVM contains with all the logic to load native libraries built-in, so you can import ScalaPy and start using it as usual!
 
 ```scala
-import $ivy.`me.shadaj::scalapy:0.4.0`
+import $ivy.`me.shadaj::scalapy:0.4.1`
 
 import me.shadaj.scalapy.py
 ```

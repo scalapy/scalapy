@@ -42,7 +42,7 @@ object CPythonInterpreter {
   Platform.setPtrLong(cleanupLambdaMethodDef, Platform.ptrSize, Platform.pointerToLong(cleanupFunctionPointer)) // ml_meth
   Platform.setPtrInt(cleanupLambdaMethodDef, Platform.ptrSize + Platform.ptrSize, 0x0001) // ml_flags (https://github.com/python/cpython/blob/master/Include/methodobject.h)
   Platform.setPtrLong(cleanupLambdaMethodDef, Platform.ptrSize + Platform.ptrSize + 4, Platform.pointerToLong(emptyStrPtr)) // ml_doc
-  val pyCleanupLambda = PyValue.fromNew(CPythonAPI.PyCFunction_New(cleanupLambdaMethodDef, noneValue.underlying), safeGlobal = true)
+  val pyCleanupLambda = PyValue.fromNew(CPythonAPI.PyCFunction_NewEx(cleanupLambdaMethodDef, noneValue.underlying, null), safeGlobal = true)
   throwErrorIfOccured()
 
   val weakRefModule = PyValue.fromNew(Platform.Zone { implicit zone =>
@@ -53,8 +53,13 @@ object CPythonInterpreter {
     CPythonAPI.PyImport_ImportModule(Platform.toCString("types"))
   }, safeGlobal = true)
 
-  val trackerClass = call(typesModule, "new_class", Seq(valueFromString("tracker")), Seq())
-  throwErrorIfOccured()
+  val trackerClassName = valueFromString("tracker", safeGlobal = true)
+  val trackerClass = call(typesModule, "new_class", Seq(trackerClassName), Seq(), safeGlobal = true)
+  try {
+    throwErrorIfOccured()
+  } finally {
+    trackerClassName.cleanup()
+  }
 
   // must be decrefed after being sent to Python
   def wrapIntoPyObject(value: AnyRef): PyValue = withGil {
@@ -222,7 +227,7 @@ object CPythonInterpreter {
   def valueFromBoolean(b: Boolean): PyValue = if (b) trueValue else falseValue
   def valueFromLong(long: Long): PyValue = withGil(PyValue.fromNew(CPythonAPI.PyLong_FromLongLong(long)))
   def valueFromDouble(v: Double): PyValue = withGil(PyValue.fromNew(CPythonAPI.PyFloat_FromDouble(v)))
-  def valueFromString(v: String): PyValue = PyValue.fromNew(toNewString(v))
+  def valueFromString(v: String, safeGlobal: Boolean = false): PyValue = PyValue.fromNew(toNewString(v), safeGlobal)
 
   // Hack to patch around Scala Native not letting us auto-box pointers
   private class PointerBox(val ptr: Platform.Pointer)
@@ -248,7 +253,7 @@ object CPythonInterpreter {
     }
   }
 
-  val seqProxyClass = selectGlobal("SequenceProxy")
+  val seqProxyClass = selectGlobal("SequenceProxy", safeGlobal = true)
   def createListProxy[T](seq: Seq[T], elemConv: T => PyValue): PyValue = {
     call(seqProxyClass, Seq(
       createLambda(_ => valueFromLong(seq.size)),
@@ -263,7 +268,7 @@ object CPythonInterpreter {
     ), Seq())
   }
 
-  def createTuple(seq: Seq[PyValue]): PyValue = {
+  def createTuple(seq: Seq[PyValue], safeGlobal: Boolean = false): PyValue = {
     withGil {
       val retPtr = CPythonAPI.PyTuple_New(seq.size)
       seq.zipWithIndex.foreach { case (v, i) =>
@@ -271,7 +276,7 @@ object CPythonInterpreter {
         CPythonAPI.PyTuple_SetItem(retPtr, Platform.intToCLong(i), v.underlying)
       }
 
-      PyValue.fromNew(retPtr)
+      PyValue.fromNew(retPtr, safeGlobal)
     }
   }
 
@@ -279,7 +284,7 @@ object CPythonInterpreter {
     val handlerFnPtr = (args: PyValue) => fn.apply(args.getTuple)
 
     withGil {
-      PyValue.fromNew(CPythonAPI.PyCFunction_New(lambdaMethodDef, wrapIntoPyObject(handlerFnPtr).underlying))
+      PyValue.fromNew(CPythonAPI.PyCFunction_NewEx(lambdaMethodDef, wrapIntoPyObject(handlerFnPtr).underlying, null))
     }
   }
 
@@ -399,7 +404,7 @@ object CPythonInterpreter {
     PyValue.fromNew(ret)
   }
 
-  private def runCallableAndDecref(callable: Platform.Pointer, args: Seq[PyValue], kwArgs: Seq[(String, PyValue)]): PyValue = withGil {
+  private def runCallableAndDecref(callable: Platform.Pointer, args: Seq[PyValue], kwArgs: Seq[(String, PyValue)], safeGlobal: Boolean = false): PyValue = withGil {
     val kwArgsDictionary = if (kwArgs.nonEmpty) newDictionary() else null
     Platform.Zone { implicit zone =>
       kwArgs.foreach { case (key, value) =>
@@ -407,17 +412,21 @@ object CPythonInterpreter {
       }
     }
 
+    val tupleArgs = createTuple(args, safeGlobal = true)
     val result = CPythonAPI.PyObject_Call(
       callable,
-      createTuple(args).underlying,
+      tupleArgs.underlying,
       if (kwArgs.nonEmpty) kwArgsDictionary.underlying else null
     )
 
-    CPythonAPI.Py_DecRef(callable)
+    try {
+      throwErrorIfOccured()
+    } finally {
+      CPythonAPI.Py_DecRef(callable)
+      tupleArgs.cleanup()
+    }
 
-    throwErrorIfOccured()
-
-    PyValue.fromNew(result)
+    PyValue.fromNew(result, safeGlobal)
   }
 
   def callGlobal(method: String, args: Seq[PyValue], kwArgs: Seq[(String, PyValue)]): PyValue = {
@@ -440,13 +449,13 @@ object CPythonInterpreter {
     }
   }
 
-  def call(on: PyValue, method: String, args: Seq[PyValue], kwArgs: Seq[(String, PyValue)]): PyValue = {
+  def call(on: PyValue, method: String, args: Seq[PyValue], kwArgs: Seq[(String, PyValue)], safeGlobal: Boolean = false): PyValue = {
     Platform.Zone { implicit zone =>
       withGil {
         val callable = CPythonAPI.PyObject_GetAttrString(on.underlying, Platform.toCString(method))
         throwErrorIfOccured()
 
-        runCallableAndDecref(callable, args, kwArgs)
+        runCallableAndDecref(callable, args, kwArgs, safeGlobal)
       }
     }
   }
@@ -458,7 +467,7 @@ object CPythonInterpreter {
     }
   }
 
-  def selectGlobal(name: String): PyValue = {
+  def selectGlobal(name: String, safeGlobal: Boolean = false): PyValue = {
     Platform.Zone { implicit zone =>
       val nameString = toNewString(name)
 
@@ -473,7 +482,7 @@ object CPythonInterpreter {
 
         throwErrorIfOccured()
 
-        PyValue.fromNew(gottenValue)
+        PyValue.fromNew(gottenValue, safeGlobal)
       }
     }
   }

@@ -41,6 +41,20 @@ lazy val macros = crossProject(JVMPlatform, NativePlatform)
 lazy val macrosJVM = macros.jvm
 lazy val macrosNative = macros.native
 
+lazy val pythonLdFlags = {
+  val withoutEmbed = "python3-config --ldflags".!!
+  if (withoutEmbed.contains("-lpython")) {
+    withoutEmbed.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
+  } else {
+    val withEmbed = "python3-config --ldflags --embed".!!
+    withEmbed.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
+  }
+}
+
+lazy val pythonLibsDir = {
+  pythonLdFlags.find(_.startsWith("-L")).get.drop("-L".length)
+}
+
 lazy val core = crossProject(JVMPlatform, NativePlatform)
   .in(file("core"))
   .dependsOn(macros)
@@ -153,16 +167,16 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
   ).jvmSettings(
     crossScalaVersions := supportedScalaVersions,
     libraryDependencies += "net.java.dev.jna" % "jna" % "5.6.0",
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.3" % Test,
-    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.14.3" % Test,
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.2" % Test,
+    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.15.2" % Test,
     fork in Test := true,
-    javaOptions in Test += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib"
+    javaOptions in Test += s"-Djna.library.path=$pythonLibsDir"
   ).nativeSettings(
     scalaVersion := scala211Version,
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.0-RC3" % Test,
     libraryDependencies += "com.github.lolgab" %%% "scalacheck" % "1.14.1" % Test,
     nativeLinkStubs := true,
-    nativeLinkingOptions ++= "python3-config --ldflags".!!.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
+    nativeLinkingOptions ++= pythonLdFlags
   )
 
 lazy val coreJVM = core.jvm

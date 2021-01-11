@@ -4,13 +4,29 @@ import scala.sys
 import scala.util.Try
 
 import com.sun.jna.{Native, NativeLong, Memory}
+import scala.util.{Success, Failure}
 
 class CPythonAPIInterface {
   val pythonLibrariesToTry =
     sys.env.get("SCALAPY_PYTHON_LIBRARY").toSeq ++
-      Seq("python3", "python3.7", "python3.7m")
+      Seq(
+        "python3",
+        "python3.7", "python3.7m",
+        "python3.8", "python3.8m",
+        "python3.9", "python3.9m"
+      )
 
-  pythonLibrariesToTry.find(n => Try(Native.register(n)).isSuccess)
+  val loadAttempts = pythonLibrariesToTry.toStream.map(n => try {
+    Native.register(n)
+    Success(true)
+  } catch {
+    case t: Throwable => Failure(t)
+  })
+  
+  loadAttempts.find(_.isSuccess).getOrElse {
+    loadAttempts.foreach(_.failed.get.printStackTrace())
+    throw new Exception(s"Unable to locate Python library, tried ${pythonLibrariesToTry.mkString(", ")}")
+  }
 
   @scala.native def Py_Initialize(): Unit
 
@@ -83,7 +99,7 @@ class CPythonAPIInterface {
   @scala.native def Py_BuildValue(str: String): Platform.Pointer
 
   @scala.native def PyLong_FromVoidPtr(ptr: Platform.Pointer): Unit
-  @scala.native def PyCFunction_New(ptr: Platform.Pointer, self: Platform.Pointer): Platform.Pointer
+  @scala.native def PyCFunction_NewEx(ptr: Platform.Pointer, self: Platform.Pointer, module: Platform.Pointer): Platform.Pointer
   @scala.native def PyImport_ImportModule(str: String): Platform.Pointer
 
   @scala.native def PyErr_SetString(tpe: Platform.Pointer, message: String): Unit

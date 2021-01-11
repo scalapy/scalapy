@@ -1,6 +1,11 @@
 # Changelog
 ## vNEXT
+### Highlights :tada:
++ Add support for Python 3.8 and 3.9 ([PR #139](https://github.com/shadaj/scalapy/pull/139))
+
+## v0.4.1
 ### Bug Fixes :bug:
++ Fix Python library loading on the JVM to correctly fall back to other library names ([PR #132](https://github.com/shadaj/scalapy/pull/132))
 + Add `python3.7m` to the default list of Python native libraries to search for, since Conda does not expose `python3.7` (without the `m`) ([PR #119](https://github.com/shadaj/scalapy/pull/119))
 + Add a writer for `Unit` that generates a `None` value, which is useful for callbacks that don't return anything ([PR #120](https://github.com/shadaj/scalapy/pull/120))
 
