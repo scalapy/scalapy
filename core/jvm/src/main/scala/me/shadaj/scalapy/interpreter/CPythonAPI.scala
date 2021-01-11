@@ -99,7 +99,7 @@ class CPythonAPIInterface {
   @scala.native def Py_BuildValue(str: String): Platform.Pointer
 
   @scala.native def PyLong_FromVoidPtr(ptr: Platform.Pointer): Unit
-  @scala.native def PyCFunction_New(ptr: Platform.Pointer, self: Platform.Pointer): Platform.Pointer
+  @scala.native def PyCFunction_NewEx(ptr: Platform.Pointer, self: Platform.Pointer, module: Platform.Pointer): Platform.Pointer
   @scala.native def PyImport_ImportModule(str: String): Platform.Pointer
 
   @scala.native def PyErr_SetString(tpe: Platform.Pointer, message: String): Unit
