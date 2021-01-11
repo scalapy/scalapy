@@ -167,7 +167,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
   ).jvmSettings(
     crossScalaVersions := supportedScalaVersions,
     libraryDependencies += "net.java.dev.jna" % "jna" % "5.6.0",
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.2" % Test,
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.3" % Test,
     libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.15.2" % Test,
     fork in Test := true,
     javaOptions in Test += s"-Djna.library.path=$pythonLibsDir"
