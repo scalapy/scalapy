@@ -1,7 +1,11 @@
 # Changelog
 ## vNEXT
 ### Highlights :tada:
++ Upgrade Scala Native to 0.4.0, which brings support for Scala 2.12 and 2.13 ([PR #147](https://github.com/shadaj/scalapy/pull/147))
 + Add support for Python 3.8 and 3.9 ([PR #139](https://github.com/shadaj/scalapy/pull/139))
+
+### Breaking Changes :warning:
++ Support for Scala 2.11 has been dropped in order to focus efforts on 2.12/2.13 ([PR #147](https://github.com/shadaj/scalapy/pull/147))
 
 ## v0.4.1
 ### Bug Fixes :bug:
