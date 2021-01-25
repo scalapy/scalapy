@@ -31,8 +31,10 @@ object Platform {
   }
 
   def cLongToLong(cLong: jna.NativeLong): Long = cLong.longValue()
+  def cSizeToLong(cSize: jna.NativeLong): Long = cSize.longValue()
 
   def intToCLong(int: Int): jna.NativeLong = new jna.NativeLong(int)
+  def intToCSize(int: Int): jna.NativeLong = new jna.NativeLong(int)
 
   def dereferencePointerToPointer(pointer: PointerToPointer): Pointer = pointer.getPointer(0)
 

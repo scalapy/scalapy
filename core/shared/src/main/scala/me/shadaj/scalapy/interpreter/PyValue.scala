@@ -53,13 +53,13 @@ final class PyValue private[PyValue](val underlying: Platform.Pointer, safeGloba
 
   def getTuple: Seq[PyValue] = new Seq[PyValue] {
     def length: Int = CPythonInterpreter.withGil {
-      val ret = Platform.cLongToLong(CPythonAPI.PyTuple_Size(underlying)).toInt
+      val ret = Platform.cSizeToLong(CPythonAPI.PyTuple_Size(underlying)).toInt
       CPythonInterpreter.throwErrorIfOccured()
       ret
     }
 
     def apply(idx: Int): PyValue = CPythonInterpreter.withGil {
-      val ret = CPythonAPI.PyTuple_GetItem(underlying, Platform.intToCLong(idx))
+      val ret = CPythonAPI.PyTuple_GetItem(underlying, Platform.intToCSize(idx))
       CPythonInterpreter.throwErrorIfOccured()
       PyValue.fromBorrowed(ret)
     }
@@ -69,7 +69,7 @@ final class PyValue private[PyValue](val underlying: Platform.Pointer, safeGloba
 
   def getSeq: Seq[PyValue] = new Seq[PyValue] {
     def length: Int = CPythonInterpreter.withGil {
-      val ret = Platform.cLongToLong(CPythonAPI.PySequence_Length(underlying)).toInt
+      val ret = Platform.cSizeToLong(CPythonAPI.PySequence_Length(underlying)).toInt
       CPythonInterpreter.throwErrorIfOccured()
       ret
     }
