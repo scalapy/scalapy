@@ -26,7 +26,7 @@ object CPythonInterpreter {
   private val reverseLiveWrappedValues = new ju.HashMap[Long, AnyRef]
 
   val (doNotFreeMeOtherwiseJNAFuncPtrBreaks, cleanupFunctionPointer) = Platform.getFnPtr2 { (self, args) =>
-    val id = CPythonAPI.PyLong_AsLongLong(CPythonAPI.PyTuple_GetItem(args, Platform.intToCLong(0)))
+    val id = CPythonAPI.PyLong_AsLongLong(CPythonAPI.PyTuple_GetItem(args, Platform.intToCSize(0)))
     val pointedTo = reverseLiveWrappedValues.remove(id)
     liveWrappedValues.remove(pointedTo)
 
@@ -246,7 +246,7 @@ object CPythonInterpreter {
       seq.zipWithIndex.foreach { case (v, i) =>
         val converted = elemConv(v)
         CPythonAPI.Py_IncRef(converted.underlying) // SetItem steals reference
-        CPythonAPI.PyList_SetItem(retPtr, Platform.intToCLong(i), converted.underlying)
+        CPythonAPI.PyList_SetItem(retPtr, Platform.intToCSize(i), converted.underlying)
       }
 
       PyValue.fromNew(retPtr)
@@ -273,7 +273,7 @@ object CPythonInterpreter {
       val retPtr = CPythonAPI.PyTuple_New(seq.size)
       seq.zipWithIndex.foreach { case (v, i) =>
         CPythonAPI.Py_IncRef(v.underlying) // SetItem steals reference
-        CPythonAPI.PyTuple_SetItem(retPtr, Platform.intToCLong(i), v.underlying)
+        CPythonAPI.PyTuple_SetItem(retPtr, Platform.intToCSize(i), v.underlying)
       }
 
       PyValue.fromNew(retPtr, safeGlobal)

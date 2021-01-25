@@ -3,10 +3,9 @@ import scala.sys.process._
 
 organization in ThisBuild := "me.shadaj"
 
-lazy val scala211Version = "2.11.12"
-lazy val scala212Version = "2.12.9"
-lazy val scala213Version = "2.13.1"
-lazy val supportedScalaVersions = List(scala211Version, scala212Version, scala213Version)
+lazy val scala212Version = "2.12.13"
+lazy val scala213Version = "2.13.4"
+lazy val supportedScalaVersions = List(scala212Version, scala213Version)
 
 scalaVersion in ThisBuild := scala213Version
 
@@ -31,11 +30,8 @@ lazy val macros = crossProject(JVMPlatform, NativePlatform)
   .in(file("coreMacros"))
   .settings(
     name := "scalapy-macros",
-    libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
-  ).jvmSettings(
     crossScalaVersions := supportedScalaVersions,
-  ).nativeSettings(
-    scalaVersion := scala211Version
+    libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value
   )
 
 lazy val macrosJVM = macros.jvm
@@ -60,6 +56,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
   .dependsOn(macros)
   .settings(
     name := "scalapy-core",
+    crossScalaVersions := supportedScalaVersions,
     sourceGenerators in Compile += Def.task {
       val fileToWrite = (sourceManaged in Compile).value / "TupleReaders.scala"
       val methods = (2 to 22).map { n =>
@@ -156,25 +153,19 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
     
       IO.write(fileToWrite, toWrite)
       Seq(fileToWrite)
-    }
-  ).settings(
+    },
     libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value,
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.4-M1" % Test,
     unmanagedSourceDirectories in Compile += {
       val sharedSourceDir = (baseDirectory in ThisBuild).value / "core/shared/src/main"
       if (scalaVersion.value.startsWith("2.13.")) sharedSourceDir / "scala-2.13"
       else sharedSourceDir / "scala-2.11_2.12"
     }
   ).jvmSettings(
-    crossScalaVersions := supportedScalaVersions,
     libraryDependencies += "net.java.dev.jna" % "jna" % "5.6.0",
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.2" % Test,
-    libraryDependencies += "org.scalacheck" %% "scalacheck" % "1.15.2" % Test,
     fork in Test := true,
     javaOptions in Test += s"-Djna.library.path=$pythonLibsDir"
   ).nativeSettings(
-    scalaVersion := scala211Version,
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.1.0-RC3" % Test,
-    libraryDependencies += "com.github.lolgab" %%% "scalacheck" % "1.14.1" % Test,
     nativeLinkStubs := true,
     nativeLinkingOptions ++= pythonLdFlags
   )
@@ -212,7 +203,6 @@ lazy val bench = crossProject(JVMPlatform, NativePlatform)
     crossScalaVersions := supportedScalaVersions,
     javaOptions += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib"
   ).nativeSettings(
-    scalaVersion := scala211Version,
     nativeLinkingOptions ++= "python3-config --ldflags".!!.split(' ').map(_.trim).filter(_.nonEmpty).toSeq,
     nativeMode := "release-fast"
   ).dependsOn(core)

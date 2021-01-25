@@ -61,10 +61,10 @@ object CPythonAPI {
   def PyObject_SetAttrString(obj: Platform.Pointer, name: CString, newValue: Platform.Pointer): Platform.Pointer = extern
   def PyObject_CallMethodObjArgs(obj: Platform.Pointer, name: Platform.Pointer, args: CVarArg*): Platform.Pointer = extern
   def PyObject_Call(obj: Platform.Pointer, args: Platform.Pointer, kwArgs: Platform.Pointer): Platform.Pointer = extern
-  def PyObject_Length(obj: Platform.Pointer): CLong = extern
+  def PyObject_Length(obj: Platform.Pointer): CSize = extern
 
   def PySequence_GetItem(obj: Platform.Pointer, idx: Int): Platform.Pointer = extern
-  def PySequence_Length(obj: Platform.Pointer): CLong = extern
+  def PySequence_Length(obj: Platform.Pointer): CSize = extern
 
   def PyErr_Occurred(): Platform.Pointer = extern
   def PyErr_Fetch(pType: Platform.PointerToPointer, pValue: Platform.PointerToPointer, pTraceback: Platform.PointerToPointer): Unit = extern

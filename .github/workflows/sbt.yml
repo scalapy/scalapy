@@ -30,7 +30,7 @@ jobs:
         run: python3-config --ldflags && ls $(python3-config --prefix)/lib
         shell: bash
       - name: Test JVM and native
-        run: sbt coreJVM/test coreNative/test
+        run: sbt +coreJVM/test +coreNative/test
         shell: bash
   publish:
     needs: [test]
