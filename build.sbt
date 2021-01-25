@@ -3,10 +3,9 @@ import scala.sys.process._
 
 organization in ThisBuild := "me.shadaj"
 
-lazy val scala211Version = "2.11.12"
 lazy val scala212Version = "2.12.13"
 lazy val scala213Version = "2.13.4"
-lazy val supportedScalaVersions = List(scala211Version, scala212Version, scala213Version)
+lazy val supportedScalaVersions = List(scala212Version, scala213Version)
 
 scalaVersion in ThisBuild := scala213Version
 
@@ -204,7 +203,6 @@ lazy val bench = crossProject(JVMPlatform, NativePlatform)
     crossScalaVersions := supportedScalaVersions,
     javaOptions += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib"
   ).nativeSettings(
-    scalaVersion := scala211Version,
     nativeLinkingOptions ++= "python3-config --ldflags".!!.split(' ').map(_.trim).filter(_.nonEmpty).toSeq,
     nativeMode := "release-fast"
   ).dependsOn(core)
