@@ -96,8 +96,8 @@ function Home() {
           <section className={styles.features}>
             <div className="container">
               {features.map((props, idx) => (
-                <div className="row" style={{ paddingTop: 20 }}>
-                  <Feature key={idx} {...props} />
+                <div className="row" style={{ paddingTop: 20 }} key={idx}>
+                  <Feature {...props} />
                 </div>
               ))}
             </div>
