@@ -183,7 +183,7 @@ lazy val docs = project
   .settings(
     fork := true,
     connectInput := true,
-    javaOptions += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib",
+    javaOptions += s"-Djna.library.path=$pythonLibsDir",
     docusaurusCreateSite := {
       mdoc.in(Compile).toTask(" ").value
       Process(List("yarn", "install"), cwd = DocusaurusPlugin.website.value).!
@@ -201,9 +201,9 @@ lazy val bench = crossProject(JVMPlatform, NativePlatform)
   ).jvmSettings(
     fork := true,
     crossScalaVersions := supportedScalaVersions,
-    javaOptions += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib"
+    javaOptions += s"-Djna.library.path=$pythonLibsDir"
   ).nativeSettings(
-    nativeLinkingOptions ++= "python3-config --ldflags".!!.split(' ').map(_.trim).filter(_.nonEmpty).toSeq,
+    nativeLinkingOptions ++= pythonLdFlags,
     nativeMode := "release-fast"
   ).dependsOn(core)
 
