@@ -58,3 +58,26 @@ If you need to run arbitrary strings of Python that are dynamically generated, y
 ```scala mdoc
 val myPythonList = py.eval("1 + 2")
 ```
+
+## Special Python Syntax
+ScalaPy includes APIs to make it possible to use Python features that require special syntax from Scala.
+
+### `py.with`
+Python includes a "try-with-resources" feature in the form of the `with` keyword. In ScalaPy, you can use this feature by calling `py.with` with the value you want to open and a curried function using that value. For example, we can open a file with the following code:
+
+```scala mdoc
+val myFile = py.Dynamic.global.open("../README.md")
+py.`with`(myFile) { file =>
+  println(file.encoding.as[String])
+}
+```
+
+### `bracketAccess` and `bracketUpdate`
+To index into a sequence-like Python value, `py.Dynamic` offers the `bracketAccess` and `bracketUpdate` APIs to load a value through an indexing operation and set a value through one. For example, we could update values of a Python list:
+
+```scala mdoc
+val pythonList = py.Dynamic.global.list(Seq(1, 2, 3).toPythonProxy)
+pythonList.bracketAccess(0)
+pythonList.bracketUpdate(1, 100)
+pythonList
+```
