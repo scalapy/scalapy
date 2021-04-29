@@ -1,4 +1,4 @@
-<p align="center"><img width="800" src="https://github.com/shadaj/scalapy/raw/master/logo.png"/></p>
+<p align="center"><img width="800" src="https://github.com/shadaj/scalapy/raw/main/logo.png"/></p>
 <p align="center"><i>Use the world of Python from the comfort of Scala!</i></p>
 <p align="center">
   <a href="https://travis-ci.com/shadaj/scalapy">
