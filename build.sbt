@@ -193,14 +193,27 @@ lazy val docs = project
     }
   )
 
+// lazy val bench = crossProject(JVMPlatform, NativePlatform)
+//   .crossType(CrossType.Pure)
+//   .in(file("bench"))
+//   .settings(
+//     name := "scalapy-bench"
+//   ).jvmSettings(
+//     fork := true,
+//     crossScalaVersions := supportedScalaVersions,
+//     javaOptions += s"-Djna.library.path=$pythonLibsDir"
+//   ).nativeSettings(
+//     nativeLinkingOptions ++= pythonLdFlags,
+//     nativeMode := "release-fast"
+//   ).dependsOn(core)
+
 lazy val bench = crossProject(JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .in(file("bench"))
   .settings(
-    name := "scalapy-bench"
+    name := "scalapy-bench",
+    version := "0.1.0-SNAPSHOT"
   ).jvmSettings(
-    fork := true,
-    crossScalaVersions := supportedScalaVersions,
     javaOptions += s"-Djna.library.path=$pythonLibsDir"
   ).nativeSettings(
     nativeLinkingOptions ++= pythonLdFlags,
