@@ -12,7 +12,7 @@ def config_data(bench, conf):
     for run in range(runs):
         try:
             points = []
-            with open('results/{}/{}/{}'.format(conf, bench, run)) as data:
+            with open('bench/results/{}/{}/{}'.format(conf, bench, run)) as data:
                 for line in data.readlines():
                     points.append(float(line))
             # take only last 2000 to account for startup
@@ -31,7 +31,7 @@ def config_data(bench, conf):
 
 def peak_performance():
     out = []
-    for (bench, _, _) in bench_and_size:
+    for bench in bench_and_size:
         res = []
         for conf in configurations:
             try:

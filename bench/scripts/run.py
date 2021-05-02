@@ -59,7 +59,7 @@ benchmarks = [
 ]
 
 configurations = [
-    # 'jvm',
+    'jvm',
     'scala-native',
 ]
 
