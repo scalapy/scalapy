@@ -520,6 +520,20 @@ object CPythonInterpreter {
     }
   }
 
+  def deleteAttribute(on: PyValue, attr: String): Unit = {
+    Platform.Zone { implicit zone =>
+      withGil {
+        CPythonAPI.PyObject_SetAttrString(
+          on.underlying,
+          Platform.toCString(attr),
+          null
+        )
+
+        throwErrorIfOccured()
+      }
+    }
+  }
+
   def newDictionary(): PyValue = withGil {
     val newDictReference = CPythonAPI.PyDict_New()
     throwErrorIfOccured()
@@ -543,6 +557,17 @@ object CPythonInterpreter {
         on.underlying,
         key.underlying,
         newValue.underlying
+      )
+
+      throwErrorIfOccured()
+    }
+  }
+
+  def deleteBracket(on: PyValue, key: PyValue): Unit = {
+    withGil {
+      CPythonAPI.PyObject_DelItem(
+        on.underlying,
+        key.underlying
       )
 
       throwErrorIfOccured()

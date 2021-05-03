@@ -55,6 +55,14 @@ trait AnyDynamics extends scala.Any with Any with scala.Dynamic {
     CPythonInterpreter.updateBracket(value, key.value, newValue.value)
   }
 
+  def bracketDelete(key: Any): Unit = {
+    CPythonInterpreter.deleteBracket(value, key.value)
+  }
+
+  def attrDelete(name: String): Unit = {
+    CPythonInterpreter.deleteAttribute(value, name)
+  }
+
   def unary_+(): Dynamic = {
     Any.populateWith(CPythonInterpreter.unaryPos(value)).as[Dynamic]
   }

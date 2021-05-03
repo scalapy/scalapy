@@ -79,6 +79,7 @@ class CPythonAPIInterface {
   @scala.native def PyObject_Str(obj: Platform.Pointer): Platform.Pointer
   @scala.native def PyObject_GetItem(obj: Platform.Pointer, idx: Platform.Pointer): Platform.Pointer
   @scala.native def PyObject_SetItem(obj: Platform.Pointer, key: Platform.Pointer, newValue: Platform.Pointer): Int
+  @scala.native def PyObject_DelItem(obj: Platform.Pointer, idx: Platform.Pointer): Int
   @scala.native def PyObject_GetAttr(obj: Platform.Pointer, name: Platform.Pointer): Platform.Pointer
   @scala.native def PyObject_GetAttrString(obj: Platform.Pointer, name: String): Platform.Pointer
   @scala.native def PyObject_SetAttr(obj: Platform.Pointer, name: Platform.Pointer, newValue: Platform.Pointer): Platform.Pointer
