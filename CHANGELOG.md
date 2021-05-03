@@ -1,5 +1,7 @@
 # Changelog
 ## vNEXT
+### Highlights :tada:
++ Add API equivalents for the Python `del` keyword (`del foo.bar` and `del foo["key"]`) ([PR #175](https://github.com/shadaj/scalapy/pull/175))
 
 ## v0.4.2
 ### Highlights :tada:
