@@ -72,12 +72,33 @@ py.`with`(myFile) { file =>
 }
 ```
 
-### `bracketAccess` and `bracketUpdate`
-To index into a sequence-like Python value, `py.Dynamic` offers the `bracketAccess` and `bracketUpdate` APIs to load a value through an indexing operation and set a value through one. For example, we could update values of a Python list:
+### `bracketAccess`, `bracketUpdate`, and `bracketDelete`
+To index into a sequence-like Python value, `py.Dynamic` offers the `bracketAccess`, `bracketUpdate`, and `bracketDelete` APIs to load, set, or delete a value through an indexing operation. For example, we could update values of a Python list:
 
 ```scala mdoc
 val pythonList = py.Dynamic.global.list(Seq(1, 2, 3).toPythonProxy)
+println(pythonList)
 pythonList.bracketAccess(0)
 pythonList.bracketUpdate(1, 100)
-pythonList
+println(pythonList)
+```
+
+We can also delete elements of a Python dictionary:
+```scala mdoc
+val myDict = py.Dynamic.global.dict()
+myDict.bracketUpdate("hello", "world")
+println(myDict)
+myDict.bracketDelete("hello")
+println(myDict)
+```
+
+### `attrDelete`
+On supported objects, you can also delete an attribute with the `attrDelete` APIs:
+```scala mdoc
+import me.shadaj.scalapy.interpreter.CPythonInterpreter
+CPythonInterpreter.execManyLines(
+  """class MyClass:
+    |  myAttribute = 0""".stripMargin
+)
+py.Dynamic.global.MyClass.attrDelete("myAttribute")
 ```

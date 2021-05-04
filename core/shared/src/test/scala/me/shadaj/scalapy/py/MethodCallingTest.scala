@@ -58,15 +58,4 @@ class MethodCallingTest extends AnyFunSuite {
       assert(py"'abcdef'".as[StringObjectFacade].replace("bc", "12") == "a12def")
     }
   }
-
-  test("Can use with statement with file object") {
-    local {
-      val opened = if (interpreter.Platform.isNative) {
-        Dynamic.global.open("./README.md", "r")
-      } else Dynamic.global.open("../../README.md", "r")
-      `with`(opened) { file =>
-        assert(file.as[Dynamic].encoding.as[String] == "UTF-8")
-      }
-    }
-  }
 }
