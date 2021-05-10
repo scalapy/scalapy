@@ -32,4 +32,22 @@ class SpecialSyntaxTest extends AnyFunSuite {
       assert(Dynamic.global.len(myDict).as[Int] == 0)
     }
   }
+
+  test("Can imperatively delete a reference to a value") {
+    local {
+      val types = module("types")
+      val myClass = types.new_class("MyClass")
+      
+      val weakref = module("weakref")
+      val value =  myClass()
+      var cleaned = false
+      val reference = weakref.ref(value, (_: Any) => {
+        cleaned = true
+      })
+
+      assert(!cleaned)
+      value.del()
+      assert(cleaned)
+    }
+  }
 }
