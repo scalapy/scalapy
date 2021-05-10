@@ -106,9 +106,11 @@ py.Dynamic.global.MyClass.attrDelete("myAttribute")
 ### `.del()`
 Some Python APIs require you to explicitly delete a reference to a value with the `del` keyword. In ScalaPy, you can perform the equivalent operation by calling `del` on a Python value.
 
-```scala mdoc:crash
+```scala mdoc:silent
 val myValue = py.Dynamic.global.MyClass()
 myValue.del()
+```
+```scala mdoc:crash
 println(myValue)
 ```
 
