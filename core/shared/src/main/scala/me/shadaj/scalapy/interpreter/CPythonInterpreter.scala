@@ -240,7 +240,7 @@ object CPythonInterpreter {
     }).ptr
   }
 
-  def createListCopy[T](seq: Seq[T], elemConv: T => PyValue): PyValue = {
+  def createListCopy[T](seq: scala.collection.Seq[T], elemConv: T => PyValue): PyValue = {
     withGil {
       val retPtr = CPythonAPI.PyList_New(seq.size)
       seq.zipWithIndex.foreach { case (v, i) =>
@@ -254,7 +254,7 @@ object CPythonInterpreter {
   }
 
   val seqProxyClass = selectGlobal("SequenceProxy", safeGlobal = true)
-  def createListProxy[T](seq: Seq[T], elemConv: T => PyValue): PyValue = {
+  def createListProxy[T](seq: scala.collection.Seq[T], elemConv: T => PyValue): PyValue = {
     call(seqProxyClass, Seq(
       createLambda(_ => valueFromLong(seq.size)),
       createLambda(args => {

@@ -31,15 +31,40 @@ For example we can import NumPy, a popular package for scientific computing with
 val np = py.module("numpy")
 
 val a = np.array(Seq(
-  Seq(1, 0).toPythonProxy,
-  Seq(0, 12).toPythonProxy
+  Seq(1, 0),
+  Seq(0, 12)
 ).toPythonProxy)
 
 val aSquared = np.matmul(a, a)
 ```
 
-In this example, you'll notice that we passed in a Scala `Seq` into `np.array`, which usually takes a Python list. When using Python APIs, ScalaPy will automatically convert Scala values into their Python equivalents, in this case converting the sequences into Python lists.
+## Scala-Python Conversions
+In the previous example, you'll notice that we passed in a Scala `Seq[Seq[Int]]` into `np.array`, which usually takes a Python list. When using Python APIs, ScalaPy will automatically convert scalar Scala values into their Python equivalents (through the `Writer` type). This handles the integer values, but not sequences, which have multiple options for conversion in ScalaPy.
 
+If you'd like to create a copy of the sequence, which can be accessed by Python code with high performance but miss any mutations you later make in Scala code, you can use `toPythonCopy`:
+
+```scala mdoc
+val mySeqToCopy = Seq(Seq(1, 2), Seq(3))
+mySeqToCopy.toPythonCopy
+```
+
+If you'd like to create a proxy of the sequence instead, which uses less memory and can observe mutations but comes with a larger overhead for repeated access from Python, you can use `toPythonCopy`:
+
+```scala mdoc
+val mySeqToProxy = Array(1, 2, 3)
+val myProxy = mySeqToProxy.toPythonProxy
+println(py.Dynamic.global.list(myProxy))
+mySeqToProxy(2) = 100
+println(py.Dynamic.global.list(myProxy))
+```
+
+To convert Python values back into their Scala equivalents, ScalaPy comes with the `.as` API to automatically perform conversions for supported types (those that have a `Reader` implementation). Unlike writing, where there were multiple options for converting sequence types, there is a single `.as[Seq[...]]` API for converting back that always loads the data as a proxy. If you want a full copy that can be read from many times by Scala code, you can convert the sequence into a local value with `.toVector`, `.toList`, and similar collection APIs.
+
+```scala mdoc
+val myPythonList = py.Dynamic.global.list(py.Dynamic.global.range(10))
+val backToScala = myPythonList.as[Seq[Int]]
+val scalaCopy = backToScala.toVector
+```
 
 ## Custom Python Snippets
 Sometimes, you might run into a situation where you need to express a Python construct that can't be done through an existing ScalaPy API. For this situation and to make converting Python code easier, ScalaPy provides an escape hatch via the `py""` string interpolator. This lets you run arbitrary strings as Python code with the additional power of being able to interpolate in Scala values.
@@ -56,7 +81,7 @@ val mappedList = py.Dynamic.global.list(
 
 If you need to run arbitrary strings of Python that are dynamically generated, you can use `py.eval`:
 ```scala mdoc
-val myPythonList = py.eval("1 + 2")
+py.eval("1 + 2")
 ```
 
 ## Special Python Syntax
