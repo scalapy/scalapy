@@ -4,10 +4,10 @@ import scala.language.experimental.macros
 
 import me.shadaj.scalapy.interpreter.PyValue
 
-class FacadeValueProvider(private[scalapy] val value: PyValue) extends Any
+class FacadeValueProvider(private[scalapy] val rawValue: PyValue) extends Any
 
 class StaticModule(name: String) extends Module {
-  private[scalapy] val value = module(name).value
+  private[scalapy] val rawValue = module(name).value
 }
 
 abstract class FacadeCreator[F <: Any] {

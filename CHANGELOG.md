@@ -1,7 +1,12 @@
 # Changelog
 ## vNEXT
 ### Highlights :tada:
-+ Add API equivalents for the Python `del` keyword (`del foo.bar` and `del foo["key"]`) ([PR #175](https://github.com/shadaj/scalapy/pull/175))
++ Add API equivalents for the Python `del` keyword (`del foo.bar`, `del foo["key"]`, and `del foo`) ([PR #175](https://github.com/shadaj/scalapy/pull/175), [PR #177](https://github.com/shadaj/scalapy/pull/177))
+
+### Breaking Changes :warning:
++ Calling the `apply` method on a `py.Dynamic` value will now directly call the original value as-is instead of the `apply` method of the value in Python ([PR #177](https://github.com/shadaj/scalapy/pull/177))
+  + To call the original value with keyword arguments, you can use the new `applyNamed` API, passing in tuples of keyword arguments and values
+  + To call the original `apply` method in Python, use `applyDynamic` explicitly (`myValue.applyDynamic("apply")(arg1, arg2, ...)`)
 
 ## v0.4.2
 ### Highlights :tada:

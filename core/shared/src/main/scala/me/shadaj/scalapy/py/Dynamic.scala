@@ -26,9 +26,21 @@ object Dynamic {
   }
 }
 
-trait AnyDynamics extends scala.Any with Any with scala.Dynamic {
+trait AnyDynamics extends Any with scala.Dynamic {
+  def apply(params: Any*): Dynamic = {
+    Any.populateWith(CPythonInterpreter.call(value, params.map(_.value), Seq())).as[Dynamic]
+  }
+
   def applyDynamic(method: String)(params: Any*): Dynamic = {
     Any.populateWith(CPythonInterpreter.call(value, method, params.map(_.value), Seq())).as[Dynamic]
+  }
+
+  def applyNamed(params: (String, Any)*): Dynamic = {
+    Any.populateWith(CPythonInterpreter.call(
+      value,
+      params.filter(_._1.isEmpty).map(_._2.value),
+      params.filter(_._1.nonEmpty).map(t => (t._1, t._2.value))
+    )).as[Dynamic]
   }
 
   def applyDynamicNamed(method: String)(params: (String, Any)*): Dynamic = {
