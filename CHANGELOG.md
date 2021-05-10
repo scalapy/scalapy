@@ -1,7 +1,7 @@
 # Changelog
 ## vNEXT
 ### Highlights :tada:
-+ Allow converting nested sequences to Python using a single call to `toPythonCopy` or `toPythonProxy` [PR #178](https://github.com/shadaj/scalapy/pull/178)
++ Allow converting nested sequences to Python using a single call to `toPythonCopy` or `toPythonProxy` ([PR #178](https://github.com/shadaj/scalapy/pull/178))
 + Add API equivalents for the Python `del` keyword (`del foo.bar`, `del foo["key"]`, and `del foo`) ([PR #175](https://github.com/shadaj/scalapy/pull/175), [PR #177](https://github.com/shadaj/scalapy/pull/177))
 
 ### Breaking Changes :warning:
