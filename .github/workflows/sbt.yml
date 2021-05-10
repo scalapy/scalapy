@@ -3,7 +3,7 @@ name: ScalaPy CI
 on:
   push:
     branches:
-      - master
+      - main
   pull_request:
   release:
     types: [published]
@@ -47,7 +47,7 @@ jobs:
     - run: git fetch --unshallow
     - name: Publish with SBT
       run: export JAVA_OPTS="-Xmx4g" && bash ./publish.sh
-      if: github.ref == 'refs/heads/master' || github.event_name == 'release'
+      if: github.ref == 'refs/heads/main' || github.event_name == 'release'
       env:
         encrypted_key: ${{ secrets.key }}
         encrypted_iv: ${{ secrets.iv }}
