@@ -39,13 +39,33 @@ package object py {
     }
   }
 
-  implicit class SeqConverters[T, C <% Seq[T]](seq: C) {
-    def toPythonCopy(implicit elemWriter: Writer[T]): Any = {
-      Any.populateWith(CPythonInterpreter.createListCopy(seq, elemWriter.write))
+  trait ConvertableToSeqElem[T] {
+    def convertCopy(v: T): PyValue
+    def convertProxy(v: T): PyValue
+  }
+
+  implicit def seqConvertableSeqElem[T, C <% scala.collection.Seq[T]](implicit elemConvertable: ConvertableToSeqElem[T]): ConvertableToSeqElem[C] = new ConvertableToSeqElem[C] {
+    def convertCopy(v: C): PyValue = {
+      CPythonInterpreter.createListCopy(v, elemConvertable.convertCopy)
     }
 
-    def toPythonProxy(implicit elemWriter: Writer[T]): Any = {
-      Any.populateWith(CPythonInterpreter.createListProxy(seq, elemWriter.write))
+    def convertProxy(v: C): PyValue = {
+      CPythonInterpreter.createListProxy(v, elemConvertable.convertCopy)
+    }
+  }
+
+  implicit def writableSeqElem[T](implicit writer: Writer[T]): ConvertableToSeqElem[T] = new ConvertableToSeqElem[T] {
+    def convertCopy(v: T): PyValue = writer.write(v)
+    def convertProxy(v: T): PyValue = writer.write(v)
+  }
+
+  implicit class SeqConverters[T, C <% scala.collection.Seq[T]](seq: C) {
+    def toPythonCopy(implicit elemWriter: ConvertableToSeqElem[T]): Any = {
+      Any.populateWith(implicitly[ConvertableToSeqElem[C]].convertCopy(seq))
+    }
+
+    def toPythonProxy(implicit elemWriter: ConvertableToSeqElem[T]): Any = {
+      Any.populateWith(implicitly[ConvertableToSeqElem[C]].convertProxy(seq))
     }
   }
 
