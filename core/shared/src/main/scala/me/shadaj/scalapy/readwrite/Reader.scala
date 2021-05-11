@@ -67,7 +67,7 @@ object Reader extends TupleReaders with FunctionReaders {
   }
 
   implicit def mutableSeqReader[T](implicit reader: Reader[T], writer: Writer[T]): Reader[mutable.Seq[T]] = new Reader[mutable.Seq[T]] {
-    def read(r: PyValue) = r.dup().getSeq(reader.read, writer.write)
+    def read(r: PyValue) = r.dup().getSeq(reader.read, writer.writeNative)
   }
 
   implicit def seqReader[T, C[A] <: Iterable[A]](implicit reader: Reader[T], bf: Factory[T, C[T]]): Reader[C[T]] = new Reader[C[T]] {

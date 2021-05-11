@@ -72,7 +72,7 @@ final class PyValue private[PyValue](var underlying: Platform.Pointer, safeGloba
     def iterator: Iterator[PyValue] = (0 until length).toIterator.map(apply)
   }
 
-  def getSeq[T](read: PyValue => T, write: T => PyValue): mutable.Seq[T] = new mutable.Seq[T] {
+  def getSeq[T](read: PyValue => T, write: T => Platform.Pointer): mutable.Seq[T] = new mutable.Seq[T] {
     def length: Int = CPythonInterpreter.withGil {
       val ret = Platform.cSizeToLong(CPythonAPI.PySequence_Length(underlying)).toInt
       CPythonInterpreter.throwErrorIfOccured()
@@ -89,10 +89,12 @@ final class PyValue private[PyValue](var underlying: Platform.Pointer, safeGloba
     }
 
     def update(idx: Int, elem: T): Unit = CPythonInterpreter.withGil {
-      PyValue.withManualCleanup {
-        val written = write(elem)
-        CPythonAPI.PySequence_SetItem(underlying, idx, written.underlying)
-        written.cleanup()
+      val written = write(elem)
+      try {
+        CPythonAPI.PySequence_SetItem(underlying, idx, written)
+        CPythonInterpreter.throwErrorIfOccured()
+      } finally {
+        CPythonAPI.Py_DecRef(written)
       }
     }
 

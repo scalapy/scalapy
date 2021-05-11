@@ -94,13 +94,15 @@ class ReaderTest extends AnyFunSuite {
     }
   }
 
-  test("Reading as a mutable sequence lets us observe mutations") {
+  test("Reading as a mutable sequence lets us observe mutations and edit the sequence") {
     local {
       val list = py"[1, 2, 3]"
       val readSeq = list.as[mutable.Seq[Int]]
       assert(readSeq.toSeq == Seq(1, 2, 3))
       list.bracketUpdate(2, 100)
       assert(readSeq.toSeq == Seq(1, 2, 100))
+      readSeq(1) = 100
+      assert(list.bracketAccess(1).as[Int] == 100)
     }
   }
 
