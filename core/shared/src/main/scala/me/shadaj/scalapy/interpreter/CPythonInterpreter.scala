@@ -232,14 +232,14 @@ object CPythonInterpreter {
   // Hack to patch around Scala Native not letting us auto-box pointers
   private class PointerBox(val ptr: Platform.Pointer)
 
-  private[scalapy] def toNewString(v: String) = {
-    (Platform.Zone { implicit zone =>
-      val res = withGil(new PointerBox(CPythonAPI.PyUnicode_FromString(
+  private[scalapy] def toNewString(v: String) = withGil {
+    val res = Platform.Zone { implicit zone =>
+      new PointerBox(CPythonAPI.PyUnicode_FromString(
         Platform.toCString(v, java.nio.charset.Charset.forName("UTF-8"))
-      )))
-      throwErrorIfOccured()
-      res
-    }).ptr
+      ))
+    }
+    throwErrorIfOccured()
+    res.ptr
   }
 
   // elemConv must produce a pointer that is owned by the converion process
@@ -297,14 +297,14 @@ object CPythonInterpreter {
     ), java.nio.charset.Charset.forName("UTF-8"))
   }
 
-  def throwErrorIfOccured() = {
+  def throwErrorIfOccured() = withGil {
     if (Platform.pointerToLong(CPythonAPI.PyErr_Occurred()) != 0) {
       Platform.Zone { implicit zone =>
         val pType = Platform.allocPointerToPointer
         val pValue = Platform.allocPointerToPointer
         val pTraceback = Platform.allocPointerToPointer
 
-        withGil(CPythonAPI.PyErr_Fetch(pType, pValue, pTraceback))
+        CPythonAPI.PyErr_Fetch(pType, pValue, pTraceback)
 
         val pTypeStringified = pointerPointerToString(pType)
 
@@ -474,7 +474,7 @@ object CPythonInterpreter {
 
       withGil {
         var gottenValue = CPythonAPI.PyDict_GetItemWithError(globals, nameString)
-        if (gottenValue == null) {
+        if (Platform.pointerToLong(gottenValue) == 0) {
           CPythonAPI.PyErr_Clear()
           gottenValue = CPythonAPI.PyDict_GetItemWithError(builtins, nameString)
         }

@@ -24,14 +24,8 @@ abstract class Writer[T] {
 }
 
 object Writer extends TupleWriters with FunctionWriters {
-  def withErrorCheck[T](t: => T): T = {
-    val res = t
-    CPythonInterpreter.throwErrorIfOccured()
-    res
-  }
-
   implicit def anyWriter[T <: py.Any]: Writer[T] = new Writer[T] {
-    override def writeNative(v: T): Platform.Pointer = withErrorCheck {
+    override def writeNative(v: T): Platform.Pointer = {
       CPythonAPI.Py_IncRef(v.value.underlying)
       v.value.underlying
     }
@@ -47,7 +41,7 @@ object Writer extends TupleWriters with FunctionWriters {
   }
 
   implicit val unitWriter: Writer[Unit] = new Writer[Unit] {
-    override def writeNative(v: Unit): Platform.Pointer = withErrorCheck {
+    override def writeNative(v: Unit): Platform.Pointer = {
       CPythonAPI.Py_IncRef(CPythonInterpreter.noneValue.underlying)
       CPythonInterpreter.noneValue.underlying
     }
