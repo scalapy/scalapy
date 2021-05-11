@@ -71,14 +71,14 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
            |  }
            |}"""
       }
-    
+
       val toWrite =
         s"""package me.shadaj.scalapy.readwrite
            |import me.shadaj.scalapy.interpreter.PyValue
            |trait TupleReaders {
            |${methods.mkString("\n")}
            |}""".stripMargin
-    
+
       IO.write(fileToWrite, toWrite)
       Seq(fileToWrite)
     },
@@ -94,14 +94,14 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
            |  }
            |}"""
       }
-    
+
       val toWrite =
         s"""package me.shadaj.scalapy.readwrite
            |import me.shadaj.scalapy.interpreter.{CPythonInterpreter, PyValue}
            |trait TupleWriters {
            |${methods.mkString("\n")}
            |}""".stripMargin
-    
+
       IO.write(fileToWrite, toWrite)
       Seq(fileToWrite)
     },
@@ -120,14 +120,14 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
            |  }
            |}"""
       }
-    
+
       val toWrite =
         s"""package me.shadaj.scalapy.readwrite
            |import me.shadaj.scalapy.interpreter.{CPythonInterpreter, PyValue}
            |trait FunctionReaders {
            |${methods.mkString("\n")}
            |}""".stripMargin
-    
+
       IO.write(fileToWrite, toWrite)
       Seq(fileToWrite)
     },
@@ -143,14 +143,14 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
            |  }
            |}"""
       }
-    
+
       val toWrite =
         s"""package me.shadaj.scalapy.readwrite
            |import me.shadaj.scalapy.interpreter.{CPythonInterpreter, PyValue}
            |trait FunctionWriters {
            |${methods.mkString("\n")}
            |}""".stripMargin
-    
+
       IO.write(fileToWrite, toWrite)
       Seq(fileToWrite)
     },

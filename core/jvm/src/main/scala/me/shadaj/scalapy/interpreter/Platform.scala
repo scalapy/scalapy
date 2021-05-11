@@ -21,6 +21,9 @@ object Platform {
   type Pointer = jna.Pointer
   type PointerToPointer = jna.Pointer
   type FunctionPointer = jna.Callback
+  type ThreadLocal[T] = java.lang.ThreadLocal[T]
+
+  def threadLocalWithInitial[T](initial: () => T) = java.lang.ThreadLocal.withInitial(() => initial())
 
   def allocPointerToPointer: PointerToPointer = {
     new jna.Memory(Native.POINTER_SIZE)

@@ -65,6 +65,7 @@ object CPythonAPI {
   def PyObject_Length(obj: Platform.Pointer): CSize = extern
 
   def PySequence_GetItem(obj: Platform.Pointer, idx: Int): Platform.Pointer = extern
+  def PySequence_SetItem(obj: Platform.Pointer, idx: Int, v: Platform.Pointer): Platform.Pointer = extern
   def PySequence_Length(obj: Platform.Pointer): CSize = extern
 
   def PyErr_Occurred(): Platform.Pointer = extern

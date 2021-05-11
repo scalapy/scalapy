@@ -232,25 +232,26 @@ object CPythonInterpreter {
   // Hack to patch around Scala Native not letting us auto-box pointers
   private class PointerBox(val ptr: Platform.Pointer)
 
-  private def toNewString(v: String) = {
+  private[scalapy] def toNewString(v: String) = {
     (Platform.Zone { implicit zone =>
-      withGil(new PointerBox(CPythonAPI.PyUnicode_FromString(
+      val res = withGil(new PointerBox(CPythonAPI.PyUnicode_FromString(
         Platform.toCString(v, java.nio.charset.Charset.forName("UTF-8"))
       )))
+      throwErrorIfOccured()
+      res
     }).ptr
   }
 
-  def createListCopy[T](seq: scala.collection.Seq[T], elemConv: T => PyValue): PyValue = {
-    withGil {
-      val retPtr = CPythonAPI.PyList_New(seq.size)
-      seq.zipWithIndex.foreach { case (v, i) =>
-        val converted = elemConv(v)
-        CPythonAPI.Py_IncRef(converted.underlying) // SetItem steals reference
-        CPythonAPI.PyList_SetItem(retPtr, Platform.intToCSize(i), converted.underlying)
-      }
-
-      PyValue.fromNew(retPtr)
+  // elemConv must produce a pointer that is owned by the converion process
+  // and has no other references
+  def createListCopy[T](seq: scala.collection.Seq[T], elemConv: T => Platform.Pointer): Platform.Pointer = withGil {
+    val retPtr = CPythonAPI.PyList_New(seq.size)
+    seq.iterator.zipWithIndex.foreach { case (v, i) =>
+      val converted = elemConv(v)
+      CPythonAPI.PyList_SetItem(retPtr, Platform.intToCSize(i), converted)
     }
+
+    retPtr
   }
 
   val seqProxyClass = selectGlobal("SequenceProxy", safeGlobal = true)
@@ -482,7 +483,7 @@ object CPythonInterpreter {
 
         throwErrorIfOccured()
 
-        PyValue.fromNew(gottenValue, safeGlobal)
+        PyValue.fromBorrowed(gottenValue, safeGlobal)
       }
     }
   }

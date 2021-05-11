@@ -22,7 +22,6 @@ trait Any { self =>
 
   final def as[T: Reader]: T = implicitly[Reader[T]].read(value)
 
-
   final def del(): Unit = {
     value.cleanup()
     cleaned = true

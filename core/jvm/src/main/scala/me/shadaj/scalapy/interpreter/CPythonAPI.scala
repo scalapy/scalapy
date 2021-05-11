@@ -88,6 +88,7 @@ class CPythonAPIInterface {
   @scala.native def PyObject_Length(obj: Platform.Pointer): NativeLong
 
   @scala.native def PySequence_GetItem(obj: Platform.Pointer, idx: Int): Platform.Pointer
+  @scala.native def PySequence_SetItem(obj: Platform.Pointer, idx: Int, v: Platform.Pointer): Platform.Pointer
   @scala.native def PySequence_Length(obj: Platform.Pointer): NativeLong
 
   @scala.native def PyErr_Occurred(): Platform.Pointer
