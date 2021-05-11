@@ -13,7 +13,7 @@ final class PyValue private[PyValue](var underlying: Platform.Pointer, safeGloba
   }
 
   if (!safeGlobal && myAllocatedValues.nonEmpty && myAllocatedValues.head != null) {
-    myAllocatedValues.head.addOne(this)
+    myAllocatedValues.head.enqueue(this)
   }
 
   def getStringified: String = CPythonInterpreter.withGil {
@@ -155,7 +155,9 @@ final class PyValue private[PyValue](var underlying: Platform.Pointer, safeGloba
 
 object PyValue {
   import scala.collection.mutable
-  private[scalapy] val allocatedValues: Platform.ThreadLocal[Stack[Queue[PyValue]]] = Platform.threadLocalWithInitial(() => Stack.empty)
+  private[scalapy] val allocatedValues: Platform.ThreadLocal[Stack[Queue[PyValue]]] = Platform.threadLocalWithInitial(
+    () => Stack.empty[Queue[PyValue]]
+  )
   private[scalapy] var disabledAllocationWarning = false
 
   def fromNew(underlying: Platform.Pointer, safeGlobal: Boolean = false): PyValue = {

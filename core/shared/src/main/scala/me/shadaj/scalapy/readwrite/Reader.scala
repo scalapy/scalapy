@@ -7,6 +7,7 @@ import me.shadaj.scalapy.py
 import me.shadaj.scalapy.py.FacadeCreator
 
 import scala.collection.mutable
+import scala.collection.compat._
 
 trait Reader[T] {
   // the value is borrowed, the reader must never leak references to the PyValue
@@ -69,8 +70,8 @@ object Reader extends TupleReaders with FunctionReaders {
     def read(r: PyValue) = r.dup().getSeq(reader.read, writer.write)
   }
 
-  implicit def seqReader[T](implicit reader: Reader[T]): Reader[Seq[T]] = new Reader[Seq[T]] {
-    def read(r: PyValue) = r.dup().getSeq(reader.read, null).toSeq
+  implicit def seqReader[T, C[A] <: Iterable[A]](implicit reader: Reader[T], bf: Factory[T, C[T]]): Reader[C[T]] = new Reader[C[T]] {
+    def read(r: PyValue) = bf.fromSpecific(r.dup().getSeq(reader.read, null))
   }
 
   implicit def mapReader[I, O](implicit readerI: Reader[I], readerO: Reader[O]): Reader[Map[I, O]] = new Reader[Map[I, O]] {

@@ -154,6 +154,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
       IO.write(fileToWrite, toWrite)
       Seq(fileToWrite)
     },
+    libraryDependencies += "org.scala-lang.modules" %%% "scala-collection-compat" % "2.4.3",
     libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value,
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.8" % Test,
     unmanagedSourceDirectories in Compile += {

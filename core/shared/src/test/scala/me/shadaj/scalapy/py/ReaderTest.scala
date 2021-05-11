@@ -1,6 +1,5 @@
 package me.shadaj.scalapy.py
 
-import scala.collection.immutable
 import scala.collection.mutable
 
 import org.scalatest.funsuite.AnyFunSuite
@@ -108,7 +107,7 @@ class ReaderTest extends AnyFunSuite {
   test("Reading as an immutable sequence doesn't let us observe mutations") {
     local {
       val list = py"[1, 2, 3]"
-      val readSeq = list.as[immutable.Seq[Int]]
+      val readSeq = list.as[Seq[Int]]
       assert(readSeq.toSeq == Seq(1, 2, 3))
       list.bracketUpdate(2, 100)
       assert(readSeq.toSeq == Seq(1, 2, 3))
