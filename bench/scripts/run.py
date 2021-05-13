@@ -50,12 +50,12 @@ sizes = [2 ** x for x in range(1, 15)]
 
 benchmarks = [
     ('CreatePythonCopyBenchmark', sizes, None),
-    # ('CreatePythonProxyBenchmark', sizes, None),
-    # ('SumPythonCopyBenchmark', sizes, None),
-    # ('SumPythonProxyBenchmark', sizes, None),
-    # ('SumScalaBenchmark', sizes, None),
-    # ('TensorFlowAppScalaPyBenchmark', [0], 50),
-    # ('TensorFlowAppPythonBenchmark', [0], 50),
+    ('CreatePythonProxyBenchmark', sizes, None),
+    ('SumPythonCopyBenchmark', sizes, None),
+    ('SumPythonProxyBenchmark', sizes, None),
+    ('SumScalaBenchmark', sizes, None),
+    ('TensorFlowAppScalaPyBenchmark', [0], 50),
+    ('TensorFlowAppPythonBenchmark', [0], 50),
 ]
 
 configurations = [

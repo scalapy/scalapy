@@ -58,12 +58,25 @@ mySeqToProxy(2) = 100
 println(py.Dynamic.global.list(myProxy))
 ```
 
-To convert Python values back into their Scala equivalents, ScalaPy comes with the `.as` API to automatically perform conversions for supported types (those that have a `Reader` implementation). Unlike writing, where there were multiple options for converting sequence types, there is a single `.as[Seq[...]]` API for converting back that always loads the data as a proxy. If you want a full copy that can be read from many times by Scala code, you can convert the sequence into a local value with `.toVector`, `.toList`, and similar collection APIs.
+To convert Python values back into their Scala equivalents, ScalaPy comes with the `.as` API to automatically perform conversions for supported types (those that have a `Reader` implementation). Unlike writing, where there were multiple options for converting sequence types, there is a single `.as[]` API for converting back. If you load a collection into an immutable Scala sequence type, it will be loaded as a copy. If you load it as a `mutable.Seq`, however, it will be loaded as a proxy and can observe underlying changes
 
 ```scala mdoc
+import scala.collection.mutable
 val myPythonList = py.Dynamic.global.list(py.Dynamic.global.range(10))
-val backToScala = myPythonList.as[Seq[Int]]
-val scalaCopy = backToScala.toVector
+val copyLoad = myPythonList.as[Vector[Int]]
+val proxyLoad = myPythonList.as[mutable.Seq[Int]]
+
+println(copyLoad)
+println(proxyLoad)
+
+myPythonList.bracketUpdate(0, 100)
+
+println(copyLoad)
+println(proxyLoad)
+
+proxyLoad(0) = 200
+
+println(myPythonList)
 ```
 
 ## Custom Python Snippets

@@ -12,7 +12,7 @@ final class PyValue private[PyValue](var underlying: Platform.Pointer, safeGloba
     println(s"Warning: the value ${this.getStringified} was allocated into a global space, which means it will not be garbage collected in Scala Native")
   }
 
-  if (!safeGlobal && myAllocatedValues.nonEmpty && myAllocatedValues.head != null) {
+  if (!safeGlobal && myAllocatedValues.nonEmpty) {
     myAllocatedValues.head.enqueue(this)
   }
 
@@ -173,14 +173,5 @@ object PyValue {
 
   def disableAllocationWarning(): Unit = {
     disabledAllocationWarning = true
-  }
-
-  private[scalapy] def withManualCleanup[T](thunk: => T): T = {
-    try {
-      PyValue.allocatedValues.get().push(null)
-      thunk
-    } finally {
-      assert(PyValue.allocatedValues.get().pop() == null)
-    }
   }
 }
