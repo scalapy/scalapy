@@ -28,31 +28,37 @@ object Dynamic {
 
 trait AnyDynamics extends Any with scala.Dynamic {
   def apply(params: Any*): Dynamic = {
-    Any.populateWith(CPythonInterpreter.call(value, params.map(_.value), Seq())).as[Dynamic]
+    implicitly[FacadeCreator[Dynamic]].create(
+      CPythonInterpreter.call(value, params.map(_.value), Seq())
+    )
   }
 
   def applyDynamic(method: String)(params: Any*): Dynamic = {
-    Any.populateWith(CPythonInterpreter.call(value, method, params.map(_.value), Seq())).as[Dynamic]
+    implicitly[FacadeCreator[Dynamic]].create(
+      CPythonInterpreter.call(value, method, params.map(_.value), Seq())
+    )
   }
 
   def applyNamed(params: (String, Any)*): Dynamic = {
-    Any.populateWith(CPythonInterpreter.call(
+    implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.call(
       value,
       params.filter(_._1.isEmpty).map(_._2.value),
       params.filter(_._1.nonEmpty).map(t => (t._1, t._2.value))
-    )).as[Dynamic]
+    ))
   }
 
   def applyDynamicNamed(method: String)(params: (String, Any)*): Dynamic = {
-    Any.populateWith(CPythonInterpreter.call(
+    implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.call(
       value, method,
       params.filter(_._1.isEmpty).map(_._2.value),
       params.filter(_._1.nonEmpty).map(t => (t._1, t._2.value))
-    )).as[Dynamic]
+    ))
   }
 
   def selectDynamic(term: String): Dynamic = {
-    Any.populateWith(CPythonInterpreter.select(value, term)).as[Dynamic]
+    implicitly[FacadeCreator[Dynamic]].create(
+      CPythonInterpreter.select(value, term)
+    )
   }
 
   def updateDynamic(name: String)(newValue: Any): Unit = {
@@ -60,7 +66,9 @@ trait AnyDynamics extends Any with scala.Dynamic {
   }
 
   def bracketAccess(key: Any): Dynamic = {
-    Any.populateWith(CPythonInterpreter.selectBracket(value, key.value)).as[Dynamic]
+    implicitly[FacadeCreator[Dynamic]].create(
+      CPythonInterpreter.selectBracket(value, key.value)
+    )
   }
 
   def bracketUpdate(key: Any, newValue: Any): Unit = {
@@ -76,30 +84,30 @@ trait AnyDynamics extends Any with scala.Dynamic {
   }
 
   def unary_+(): Dynamic = {
-    Any.populateWith(CPythonInterpreter.unaryPos(value)).as[Dynamic]
+    implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.unaryPos(value))
   }
 
   def unary_-(): Dynamic = {
-    Any.populateWith(CPythonInterpreter.unaryNeg(value)).as[Dynamic]
+    implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.unaryNeg(value))
   }
 
   def +(that: Any): Dynamic = {
-    Any.populateWith(CPythonInterpreter.binaryAdd(value, that.value)).as[Dynamic]
+    implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.binaryAdd(value, that.value))
   }
 
   def -(that: Any): Dynamic = {
-    Any.populateWith(CPythonInterpreter.binarySub(value, that.value)).as[Dynamic]
+    implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.binarySub(value, that.value))
   }
 
   def *(that: Any): Dynamic = {
-    Any.populateWith(CPythonInterpreter.binaryMul(value, that.value)).as[Dynamic]
+    implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.binaryMul(value, that.value))
   }
 
   def /(that: Any): Dynamic = {
-    Any.populateWith(CPythonInterpreter.binaryDiv(value, that.value)).as[Dynamic]
+    implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.binaryDiv(value, that.value))
   }
 
   def %(that: Any): Dynamic = {
-    Any.populateWith(CPythonInterpreter.binaryMod(value, that.value)).as[Dynamic]
+    implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.binaryMod(value, that.value))
   }
 }

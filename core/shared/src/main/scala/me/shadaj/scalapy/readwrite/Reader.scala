@@ -6,17 +6,21 @@ import me.shadaj.scalapy.interpreter.PyValue
 import me.shadaj.scalapy.py
 import me.shadaj.scalapy.py.FacadeCreator
 
+import scala.collection.mutable
+import scala.collection.compat._
+
 trait Reader[T] {
+  // the value is borrowed, the reader must never leak references to the PyValue
   def read(r: PyValue): T
 }
 
 object Reader extends TupleReaders with FunctionReaders {
   implicit val anyReader = new Reader[py.Any] {
-    def read(r: PyValue): py.Any = py.Any.populateWith(r)
+    def read(r: PyValue): py.Any = py.Any.populateWith(r.dup())
   }
 
   implicit def facadeReader[F <: py.Any](implicit creator: FacadeCreator[F]): Reader[F] = new Reader[F] {
-    override def read(r: PyValue): F = creator.create(r)
+    override def read(r: PyValue): F = creator.create(r.dup())
   }
 
   implicit val unitReader = new Reader[Unit] {
@@ -62,13 +66,17 @@ object Reader extends TupleReaders with FunctionReaders {
     }
   }
 
-  implicit def seqReader[T](implicit reader: Reader[T]): Reader[Seq[T]] = new Reader[Seq[T]] {
-    def read(r: PyValue) = r.getSeq.map(reader.read)
+  implicit def mutableSeqReader[T](implicit reader: Reader[T], writer: Writer[T]): Reader[mutable.Seq[T]] = new Reader[mutable.Seq[T]] {
+    def read(r: PyValue) = r.dup().getSeq(reader.read, writer.writeNative)
+  }
+
+  implicit def seqReader[T, C[A] <: Iterable[A]](implicit reader: Reader[T], bf: Factory[T, C[T]]): Reader[C[T]] = new Reader[C[T]] {
+    def read(r: PyValue) = bf.fromSpecific(r.dup().getSeq(reader.read, null))
   }
 
   implicit def mapReader[I, O](implicit readerI: Reader[I], readerO: Reader[O]): Reader[Map[I, O]] = new Reader[Map[I, O]] {
     override def read(r: PyValue): Map[I, O] = {
-      r.getMap.map { case (k, v) =>
+      r.dup().getMap.map { case (k, v) =>
         readerI.read(k) -> readerO.read(v)
       }.toMap
     }

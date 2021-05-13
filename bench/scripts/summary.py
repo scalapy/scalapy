@@ -31,24 +31,25 @@ def config_data(bench, conf):
 
 def peak_performance():
     out = []
-    for bench in bench_and_size:
-        res = []
-        for conf in configurations:
-            try:
-                processed = config_data(bench, conf)
-                print("{} - {}: mean {} ns, stddev {} ns".format(bench, conf, np.percentile(processed, 50), np.std(processed)))
-                res.append(np.percentile(processed, 50))
-            except IndexError:
-                res.append(0)
-        out.append(res)
+    for bench, sizes, _ in benchmarks:
+        for size in sizes:
+            res = []
+            for conf in configurations:
+                try:
+                    processed = config_data(bench + "-" + str(size), conf)
+                    print("{} ({}) - {}: mean {} ns, stddev {} ns".format(bench, size, conf, np.percentile(processed, 50), np.std(processed)))
+                    res.append(np.percentile(processed, 50))
+                except IndexError:
+                    res.append(0)
+            out.append([bench, str(size)] + [str(x) for x in res])
     return out
 
 if __name__ == '__main__':
-    leading = ['name']
+    leading = ['name', "size"]
     for conf in configurations:
         leading.append(conf)
-    zipped_means = list(zip(bench_and_size, peak_performance()))
+    zipped_means = peak_performance()
     print(','.join(leading))
-    for bench, res in zipped_means:
-        print(','.join([bench] + list(map(str, res))))
+    for res in zipped_means:
+        print(','.join(res))
 

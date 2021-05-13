@@ -25,6 +25,9 @@ object Platform {
   type CString = sn.CString
   type Pointer = Ptr[Byte]
   type PointerToPointer = Ptr[Ptr[Byte]]
+  type ThreadLocal[T] = SingleThreadLocal[T]
+
+  def threadLocalWithInitial[T](initial: () => T) = SingleThreadLocal.withInitial(initial)
 
   def allocPointerToPointer(implicit zone: sn.Zone): PointerToPointer = {
     sn.alloc[Ptr[Byte]]

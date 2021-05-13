@@ -46,7 +46,7 @@ def compile(bench, compilecmd):
 
 sbt = where('sbt')
 
-sizes = [1, 5, 10, 50, 100]
+sizes = [2 ** x for x in range(1, 15)]
 
 benchmarks = [
     ('CreatePythonCopyBenchmark', sizes, None),

@@ -2,13 +2,18 @@ package me.shadaj.scalapy.interpreter
 
 import me.shadaj.scalapy.util.Compat
 
-final class PyValue private[PyValue](val underlying: Platform.Pointer, safeGlobal: Boolean = false) {
-  if (Platform.isNative && PyValue.allocatedValues.isEmpty && !safeGlobal && !PyValue.disabledAllocationWarning) {
+import scala.collection.mutable
+import scala.collection.mutable.Stack
+import scala.collection.mutable.Queue
+
+final class PyValue private[PyValue](var underlying: Platform.Pointer, safeGlobal: Boolean = false) {
+  val myAllocatedValues = PyValue.allocatedValues.get
+  if (Platform.isNative && myAllocatedValues.isEmpty && !safeGlobal && !PyValue.disabledAllocationWarning) {
     println(s"Warning: the value ${this.getStringified} was allocated into a global space, which means it will not be garbage collected in Scala Native")
   }
 
-  if (!safeGlobal && PyValue.allocatedValues.nonEmpty) {
-    PyValue.allocatedValues = (this :: PyValue.allocatedValues.head) :: PyValue.allocatedValues.tail
+  if (!safeGlobal && myAllocatedValues.nonEmpty) {
+    myAllocatedValues.head.enqueue(this)
   }
 
   def getStringified: String = CPythonInterpreter.withGil {
@@ -67,20 +72,33 @@ final class PyValue private[PyValue](val underlying: Platform.Pointer, safeGloba
     def iterator: Iterator[PyValue] = (0 until length).toIterator.map(apply)
   }
 
-  def getSeq: Seq[PyValue] = new Seq[PyValue] {
+  def getSeq[T](read: PyValue => T, write: T => Platform.Pointer): mutable.Seq[T] = new mutable.Seq[T] {
     def length: Int = CPythonInterpreter.withGil {
       val ret = Platform.cSizeToLong(CPythonAPI.PySequence_Length(underlying)).toInt
       CPythonInterpreter.throwErrorIfOccured()
       ret
     }
 
-    def apply(idx: Int): PyValue = CPythonInterpreter.withGil {
+    def apply(idx: Int): T = CPythonInterpreter.withGil {
       val ret = CPythonAPI.PySequence_GetItem(underlying, idx)
       CPythonInterpreter.throwErrorIfOccured()
-      PyValue.fromNew(ret)
+      val wrappedValue = PyValue.fromNew(ret, safeGlobal = true)
+      val res = read(wrappedValue)
+      wrappedValue.cleanup()
+      res
     }
 
-    def iterator: Iterator[PyValue] = (0 until length).toIterator.map(apply)
+    def update(idx: Int, elem: T): Unit = CPythonInterpreter.withGil {
+      val written = write(elem)
+      try {
+        CPythonAPI.PySequence_SetItem(underlying, idx, written)
+        CPythonInterpreter.throwErrorIfOccured()
+      } finally {
+        CPythonAPI.Py_DecRef(written)
+      }
+    }
+
+    def iterator: Iterator[T] = (0 until length).toIterator.map(apply)
   }
 
   import scala.collection.mutable
@@ -101,9 +119,9 @@ final class PyValue private[PyValue](val underlying: Platform.Pointer, safeGloba
     }
 
     def iterator: Iterator[(PyValue, PyValue)] = CPythonInterpreter.withGil {
-      val keysList = new PyValue(CPythonAPI.PyDict_Keys(underlying))
+      val keysList = PyValue.fromNew(CPythonAPI.PyDict_Keys(underlying))
       CPythonInterpreter.throwErrorIfOccured()
-      keysList.getSeq.toIterator.map { k =>
+      keysList.getSeq(_.dup(), null).toIterator.map { k =>
         (k, get(k).get)
       }
     }
@@ -112,30 +130,45 @@ final class PyValue private[PyValue](val underlying: Platform.Pointer, safeGloba
     override def subtractOne(k: PyValue): this.type = ???
   }
 
-  private[scalapy] var cleaned = false
-
   def cleanup(): Unit = CPythonInterpreter.withGil {
-    if (!cleaned) {
-      cleaned = true
+    if (underlying != null) {
       CPythonAPI.Py_DecRef(underlying)
+      underlying = null
+    } else {
+      throw new IllegalStateException("This PyValue has already been cleaned up")
     }
   }
 
-  override def finalize(): Unit = cleanup()
+  private[scalapy] def dup(): PyValue = {
+    if (underlying != null) {
+      PyValue.fromBorrowed(underlying)
+    } else {
+      throw new IllegalStateException("Cannot dup a PyValue that has been cleaned")
+    }
+  }
+
+  override def finalize(): Unit = CPythonInterpreter.withGil {
+    if (underlying != null) {
+      CPythonAPI.Py_DecRef(underlying)
+      underlying = null
+    }
+  }
 }
 
 object PyValue {
   import scala.collection.mutable
-  private[scalapy] var allocatedValues: List[List[PyValue]] = List.empty
+  private[scalapy] val allocatedValues: Platform.ThreadLocal[Stack[Queue[PyValue]]] = Platform.threadLocalWithInitial(
+    () => Stack.empty[Queue[PyValue]]
+  )
   private[scalapy] var disabledAllocationWarning = false
 
   def fromNew(underlying: Platform.Pointer, safeGlobal: Boolean = false): PyValue = {
     new PyValue(underlying, safeGlobal)
   }
 
-  def fromBorrowed(underlying: Platform.Pointer): PyValue = {
+  def fromBorrowed(underlying: Platform.Pointer, safeGlobal: Boolean = false): PyValue = {
     CPythonInterpreter.withGil(CPythonAPI.Py_IncRef(underlying))
-    new PyValue(underlying)
+    new PyValue(underlying, safeGlobal)
   }
 
   def disableAllocationWarning(): Unit = {
