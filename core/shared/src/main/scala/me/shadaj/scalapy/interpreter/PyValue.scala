@@ -30,28 +30,8 @@ final class PyValue private[PyValue](var underlying: Platform.Pointer, safeGloba
     intoScala
   }
 
-  def getString: String = CPythonInterpreter.withGil {
-    val cStr = CPythonAPI.PyUnicode_AsUTF8(underlying)
-    CPythonInterpreter.throwErrorIfOccured()
-    Platform.fromCString(cStr, java.nio.charset.Charset.forName("UTF-8"))
-  }
-
-  def getBoolean: Boolean = {
-    if (underlying == CPythonInterpreter.falseValue.underlying) false
-    else if (underlying == CPythonInterpreter.trueValue.underlying) true
-    else {
-      throw new IllegalAccessException("Cannot convert a non-boolean value to a boolean")
-    }
-  }
-
   def getLong: Long = CPythonInterpreter.withGil {
     val ret = CPythonAPI.PyLong_AsLongLong(underlying)
-    CPythonInterpreter.throwErrorIfOccured()
-    ret
-  }
-
-  def getDouble: Double = CPythonInterpreter.withGil {
-    val ret = CPythonAPI.PyFloat_AsDouble(underlying)
     CPythonInterpreter.throwErrorIfOccured()
     ret
   }
@@ -72,23 +52,24 @@ final class PyValue private[PyValue](var underlying: Platform.Pointer, safeGloba
     def iterator: Iterator[PyValue] = (0 until length).toIterator.map(apply)
   }
 
-  def getSeq[T](read: PyValue => T, write: T => Platform.Pointer): mutable.Seq[T] = new mutable.Seq[T] {
-    def length: Int = CPythonInterpreter.withGil {
+  def getSeq[T](read: Platform.Pointer => T, write: T => Platform.Pointer): mutable.Seq[T] = new mutable.Seq[T] {
+    override def length: Int = CPythonInterpreter.withGil {
       val ret = Platform.cSizeToLong(CPythonAPI.PySequence_Length(underlying)).toInt
       CPythonInterpreter.throwErrorIfOccured()
       ret
     }
 
-    def apply(idx: Int): T = CPythonInterpreter.withGil {
+    override def apply(idx: Int): T = CPythonInterpreter.withGil {
       val ret = CPythonAPI.PySequence_GetItem(underlying, idx)
       CPythonInterpreter.throwErrorIfOccured()
-      val wrappedValue = PyValue.fromNew(ret, safeGlobal = true)
-      val res = read(wrappedValue)
-      wrappedValue.cleanup()
-      res
+      try {
+        read(ret)
+      } finally {
+        CPythonAPI.Py_DecRef(ret)
+      }
     }
 
-    def update(idx: Int, elem: T): Unit = CPythonInterpreter.withGil {
+    override def update(idx: Int, elem: T): Unit = CPythonInterpreter.withGil {
       val written = write(elem)
       try {
         CPythonAPI.PySequence_SetItem(underlying, idx, written)
@@ -121,7 +102,7 @@ final class PyValue private[PyValue](var underlying: Platform.Pointer, safeGloba
     def iterator: Iterator[(PyValue, PyValue)] = CPythonInterpreter.withGil {
       val keysList = PyValue.fromNew(CPythonAPI.PyDict_Keys(underlying))
       CPythonInterpreter.throwErrorIfOccured()
-      keysList.getSeq(_.dup(), null).toIterator.map { k =>
+      keysList.getSeq(PyValue.fromBorrowed(_), null).toIterator.map { k =>
         (k, get(k).get)
       }
     }

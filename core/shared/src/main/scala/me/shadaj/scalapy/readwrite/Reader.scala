@@ -8,56 +8,112 @@ import me.shadaj.scalapy.py.FacadeCreator
 
 import scala.collection.mutable
 import scala.collection.compat._
+import me.shadaj.scalapy.interpreter.Platform
+import me.shadaj.scalapy.interpreter.CPythonInterpreter
+import me.shadaj.scalapy.interpreter.CPythonAPI
 
 trait Reader[T] {
-  // the value is borrowed, the reader must never leak references to the PyValue
-  def read(r: PyValue): T
+  // no guarantees
+  def read(r: PyValue): T = {
+    CPythonInterpreter.withGil(readNative(r.underlying))
+  }
+
+  // borrowed, no references should be leaded without a ref count bump
+  // assumes that GIL is held
+  def readNative(r: Platform.Pointer): T = {
+    read(PyValue.fromBorrowed(r))
+  }
 }
 
 object Reader extends TupleReaders with FunctionReaders {
   implicit val anyReader = new Reader[py.Any] {
-    def read(r: PyValue): py.Any = py.Any.populateWith(r.dup())
+    override def readNative(r: Platform.Pointer): py.Any = py.Any.populateWith(PyValue.fromBorrowed(r))
   }
 
   implicit def facadeReader[F <: py.Any](implicit creator: FacadeCreator[F]): Reader[F] = new Reader[F] {
-    override def read(r: PyValue): F = creator.create(r.dup())
+    override def readNative(r: Platform.Pointer): F = creator.create(PyValue.fromBorrowed(r))
   }
 
   implicit val unitReader = new Reader[Unit] {
-    def read(r: PyValue): Unit = ()
+    override def readNative(r: Platform.Pointer): Unit = ()
   }
 
   implicit val byteReader = new Reader[Byte] {
-    def read(r: PyValue): Byte = r.getLong.toByte
+    override def readNative(r: Platform.Pointer): Byte = {
+      val res = CPythonAPI.PyLong_AsLongLong(r)
+      if (res == -1) {
+        CPythonInterpreter.throwErrorIfOccured()
+      }
+
+      res.toByte
+    }
   }
 
   implicit val intReader = new Reader[Int] {
-    def read(r: PyValue): Int = r.getLong.toInt
+    override def readNative(r: Platform.Pointer): Int = {
+      val res = CPythonAPI.PyLong_AsLongLong(r)
+      if (res == -1) {
+        CPythonInterpreter.throwErrorIfOccured()
+      }
+
+      res.toInt
+    }
   }
 
   implicit val longReader = new Reader[Long] {
-    def read(r: PyValue): Long = r.getLong
+    override def readNative(r: Platform.Pointer): Long = {
+      val res = CPythonAPI.PyLong_AsLongLong(r)
+      if (res == -1) {
+        CPythonInterpreter.throwErrorIfOccured()
+      }
+
+      res
+    }
   }
 
   implicit val doubleReader = new Reader[Double] {
-    def read(r: PyValue): Double = r.getDouble
+    override def readNative(r: Platform.Pointer): Double = {
+      val res = CPythonAPI.PyFloat_AsDouble(r)
+      if (res == -1.0) {
+        CPythonInterpreter.throwErrorIfOccured()
+      }
+
+      res
+    }
   }
 
   implicit val floatReader = new Reader[Float] {
-    def read(r: PyValue): Float = r.getDouble.toFloat
+    override def readNative(r: Platform.Pointer): Float = {
+      val res = CPythonAPI.PyFloat_AsDouble(r)
+      if (res == -1.0) {
+        CPythonInterpreter.throwErrorIfOccured()
+      }
+
+      res.toFloat
+    }
   }
 
   implicit val booleanReader = new Reader[Boolean] {
-    def read(r: PyValue): Boolean = r.getBoolean
+    override def readNative(r: Platform.Pointer): Boolean = {
+      if (r == CPythonInterpreter.falseValue.underlying) false
+      else if (r == CPythonInterpreter.trueValue.underlying) true
+      else {
+        throw new IllegalAccessException("Cannot convert a non-boolean value to a boolean")
+      }
+    }
   }
 
   implicit val stringReader = new Reader[String] {
-    def read(r: PyValue): String = r.getString
+    override def readNative(r: Platform.Pointer): String = {
+      val cStr = CPythonAPI.PyUnicode_AsUTF8(r)
+      CPythonInterpreter.throwErrorIfOccured()
+      Platform.fromCString(cStr, java.nio.charset.Charset.forName("UTF-8"))
+    }
   }
 
   implicit val charReader = new Reader[Char] {
-    def read(r: PyValue): Char = {
-      val rStr = r.getString
+    override def readNative(r: Platform.Pointer): Char = {
+      val rStr = stringReader.readNative(r)
       if (rStr.length != 1) {
         throw new IllegalArgumentException("Cannot extract a char from a string with length != 1")
       } else {
@@ -67,11 +123,29 @@ object Reader extends TupleReaders with FunctionReaders {
   }
 
   implicit def mutableSeqReader[T](implicit reader: Reader[T], writer: Writer[T]): Reader[mutable.Seq[T]] = new Reader[mutable.Seq[T]] {
-    def read(r: PyValue) = r.dup().getSeq(reader.read, writer.writeNative)
+    override def read(r: PyValue) = r.dup().getSeq(reader.readNative, writer.writeNative)
   }
 
   implicit def seqReader[T, C[A] <: Iterable[A]](implicit reader: Reader[T], bf: Factory[T, C[T]]): Reader[C[T]] = new Reader[C[T]] {
-    def read(r: PyValue) = bf.fromSpecific(r.dup().getSeq(reader.read, null))
+    override def readNative(r: Platform.Pointer) = {
+      val length = Platform.cSizeToLong(CPythonAPI.PySequence_Length(r)).toInt
+      CPythonInterpreter.throwErrorIfOccured()
+
+      val builder = bf.newBuilder
+      builder.sizeHint(length)
+
+      (0 until length).foreach { i =>
+        val ret = CPythonAPI.PySequence_GetItem(r, i)
+        CPythonInterpreter.throwErrorIfOccured()
+        try {
+          builder += reader.readNative(ret)
+        } finally {
+          CPythonAPI.Py_DecRef(ret)
+        }
+      }
+
+      builder.result()
+    }
   }
 
   implicit def mapReader[I, O](implicit readerI: Reader[I], readerO: Reader[O]): Reader[Map[I, O]] = new Reader[Map[I, O]] {
