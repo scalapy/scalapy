@@ -13,7 +13,7 @@ object SumPythonProxyBenchmark extends communitybench.Benchmark {
   }
 
   override def main(args: Array[String]): Unit = {
-    val values = Vector.fill(args.last.toInt)(math.random)
+    val values = Array.fill(args.last.toInt)(math.random)
     pythonSeq = values.toPythonProxy
     super.main(args.init)
   }
