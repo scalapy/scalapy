@@ -156,7 +156,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
     },
     libraryDependencies += "org.scala-lang.modules" %%% "scala-collection-compat" % "2.4.3",
     libraryDependencies += "org.scala-lang" % "scala-reflect" % scalaVersion.value,
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.8" % Test,
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.9" % Test,
     unmanagedSourceDirectories in Compile += {
       val sharedSourceDir = (baseDirectory in ThisBuild).value / "core/shared/src/main"
       if (scalaVersion.value.startsWith("2.13.")) sharedSourceDir / "scala-2.13"
