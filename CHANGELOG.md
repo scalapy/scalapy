@@ -2,12 +2,13 @@
 ## vNEXT
 ### Highlights :tada:
 + Significantly optimize transfers from Scala to Python, which are now up to 5x faster on the JVM and 4x faster on Scala Native ([PR #179](https://github.com/shadaj/scalapy/pull/179))
++ Optimize transfers from Python to Scala, which are now up to 4x faster on the JVM and 3x faster on Scala Native ([PR #183](https://github.com/shadaj/scalapy/pull/183))
 + Python values can now be loaded into any immutable Scala collection type as a copy, not just `Seq` ([PR #179](https://github.com/shadaj/scalapy/pull/179))
 + Allow converting nested sequences to Python using a single call to `toPythonCopy` or `toPythonProxy` ([PR #178](https://github.com/shadaj/scalapy/pull/178))
 + Add API equivalents for the Python `del` keyword (`del foo.bar`, `del foo["key"]`, and `del foo`) ([PR #175](https://github.com/shadaj/scalapy/pull/175), [PR #177](https://github.com/shadaj/scalapy/pull/177))
 
 ### Breaking Changes :warning:
-+ Reading a Python collection as an immutable sequence will now load a copy. To load a proxy that can observe changes, load sequences with `.as[mutable.Seq[...]]``` ([PR #179](https://github.com/shadaj/scalapy/pull/179))
++ Reading a Python collection as an immutable sequence will now load a copy. To load a proxy that can observe changes, load sequences with `.as[mutable.Seq[...]]` ([PR #179](https://github.com/shadaj/scalapy/pull/179))
 + Calling the `apply` method on a `py.Dynamic` value will now directly call the original value as-is instead of the `apply` method of the value in Python ([PR #177](https://github.com/shadaj/scalapy/pull/177))
   + To call the original value with keyword arguments, you can use the new `applyNamed` API, passing in tuples of keyword arguments and values
   + To call the original `apply` method in Python, use `applyDynamic` explicitly (`myValue.applyDynamic("apply")(arg1, arg2, ...)`)
