@@ -1,6 +1,34 @@
 # Changelog
 ## vNEXT
 ### Highlights :tada:
++ Significantly optimize transfers from Scala to Python, which are now up to 5x faster on the JVM and 4x faster on Scala Native ([PR #179](https://github.com/shadaj/scalapy/pull/179))
++ Optimize transfers from Python to Scala, which are now up to 4x faster on the JVM and 3x faster on Scala Native ([PR #183](https://github.com/shadaj/scalapy/pull/183))
++ Python values can now be loaded into any immutable Scala collection type as a copy, not just `Seq` ([PR #179](https://github.com/shadaj/scalapy/pull/179))
++ Allow converting nested sequences to Python using a single call to `toPythonCopy` or `toPythonProxy` ([PR #178](https://github.com/shadaj/scalapy/pull/178))
++ Add API equivalents for the Python `del` keyword (`del foo.bar`, `del foo["key"]`, and `del foo`) ([PR #175](https://github.com/shadaj/scalapy/pull/175), [PR #177](https://github.com/shadaj/scalapy/pull/177))
+
+### Breaking Changes :warning:
++ Reading a Python collection as an immutable sequence will now load a copy. To load a proxy that can observe changes, load sequences with `.as[mutable.Seq[...]]` ([PR #179](https://github.com/shadaj/scalapy/pull/179))
++ Calling the `apply` method on a `py.Dynamic` value will now directly call the original value as-is instead of the `apply` method of the value in Python ([PR #177](https://github.com/shadaj/scalapy/pull/177))
+  + To call the original value with keyword arguments, you can use the new `applyNamed` API, passing in tuples of keyword arguments and values
+  + To call the original `apply` method in Python, use `applyDynamic` explicitly (`myValue.applyDynamic("apply")(arg1, arg2, ...)`)
+
+## v0.4.2
+### Highlights :tada:
++ Upgrade Scala Native to 0.4.0, which brings support for Scala 2.12 and 2.13 ([PR #147](https://github.com/shadaj/scalapy/pull/147))
++ Add support for Python 3.8 and 3.9 ([PR #139](https://github.com/shadaj/scalapy/pull/139))
+
+### Breaking Changes :warning:
++ Support for Scala 2.11 has been dropped in order to focus efforts on 2.12/2.13 ([PR #147](https://github.com/shadaj/scalapy/pull/147))
+
+## v0.4.1
+### Bug Fixes :bug:
++ Fix Python library loading on the JVM to correctly fall back to other library names ([PR #132](https://github.com/shadaj/scalapy/pull/132))
++ Add `python3.7m` to the default list of Python native libraries to search for, since Conda does not expose `python3.7` (without the `m`) ([PR #119](https://github.com/shadaj/scalapy/pull/119))
++ Add a writer for `Unit` that generates a `None` value, which is useful for callbacks that don't return anything ([PR #120](https://github.com/shadaj/scalapy/pull/120))
+
+## v0.4.0
+### Highlights :tada:
 + The JVM interface to Python has been completely rewritten from scratch to share all of its logic with the Scala Native backend by binding directly to CPython with JNA. This means that moving forward, ScalaPy JVM and Native will always have the same features and use near-identical logic for talking to Python libraries
 + Readers and Writers have been simplified to always work in terms of Python interpreter values, simplifying the implementation and reducing intermediate allocations
 + Adds support for sending Scala functions into Python as lambdas, and reading Python lambdas into Scala functions

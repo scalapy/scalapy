@@ -88,9 +88,25 @@ class WriterTest extends AnyFunSuite {
       assert(Dynamic.global.list(
         Dynamic.global.map(
           Dynamic.global.list,
-          Seq[Array[Int]](Array(1), Array(2)).map(_.toPythonCopy).toPythonCopy
+          Seq[Array[Int]](Array(1), Array(2)).toPythonCopy
         )
       ).toString == "[[1], [2]]")
+    }
+  }
+
+  test("Writing a sequence of arrays as a proxy") {
+    local {
+      val seq = Seq[Array[Int]](Array(1), Array(2))
+      val proxy = seq.toPythonProxy
+      assert(Dynamic.global.list(
+        Dynamic.global.map(Dynamic.global.list, proxy)
+      ).toString == "[[1], [2]]")
+
+      seq(0)(0) = 100
+
+      assert(Dynamic.global.list(
+        Dynamic.global.map(Dynamic.global.list, proxy)
+      ).toString == "[[100], [2]]")
     }
   }
 
@@ -99,7 +115,7 @@ class WriterTest extends AnyFunSuite {
       assert(Dynamic.global.list(
         Dynamic.global.map(
           Dynamic.global.list,
-          Seq[Seq[Int]](Seq(1), Seq(2)).map(_.toPythonCopy).toPythonCopy
+          Seq[Seq[Int]](Seq(1), Seq(2)).toPythonCopy
         )
       ).toString == "[[1], [2]]")
     }

@@ -6,6 +6,8 @@ import scala.concurrent.Future
 
 import me.shadaj.scalapy.interpreter.{CPythonInterpreter, PyValue}
 import me.shadaj.scalapy.readwrite.{Reader, Writer}
+import scala.collection.mutable.Queue
+import me.shadaj.scalapy.interpreter.Platform
 
 package object py {
   def module(name: String) = Module(name)
@@ -26,26 +28,44 @@ package object py {
   }
 
   def local[T](f: => T): T = {
-    PyValue.allocatedValues = List.empty[PyValue] :: PyValue.allocatedValues
+    val myQueue = Queue.empty[PyValue]
+    PyValue.allocatedValues.get.push(myQueue)
 
     try {
       f
     } finally {
-      PyValue.allocatedValues.head.foreach { c =>
-        c.cleanup()
-      }
-
-      PyValue.allocatedValues = PyValue.allocatedValues.tail
+      myQueue.foreach(_.finalize())
+      assert(PyValue.allocatedValues.get.pop.eq(myQueue))
     }
   }
 
-  implicit class SeqConverters[T, C <% Seq[T]](seq: C) {
-    def toPythonCopy(implicit elemWriter: Writer[T]): Any = {
-      Any.populateWith(CPythonInterpreter.createListCopy(seq, elemWriter.write))
+  trait ConvertableToSeqElem[T] {
+    def convertCopy(v: T): Platform.Pointer
+    def convertProxy(v: T): PyValue
+  }
+
+  implicit def seqConvertableSeqElem[T, C <% scala.collection.Seq[T]](implicit elemConvertable: ConvertableToSeqElem[T]): ConvertableToSeqElem[C] = new ConvertableToSeqElem[C] {
+    def convertCopy(v: C): Platform.Pointer = {
+      CPythonInterpreter.createListCopy(v, elemConvertable.convertCopy)
     }
 
-    def toPythonProxy(implicit elemWriter: Writer[T]): Any = {
-      Any.populateWith(CPythonInterpreter.createListProxy(seq, elemWriter.write))
+    def convertProxy(v: C): PyValue = {
+      CPythonInterpreter.createListProxy(v, elemConvertable.convertProxy)
+    }
+  }
+
+  implicit def writableSeqElem[T](implicit writer: Writer[T]): ConvertableToSeqElem[T] = new ConvertableToSeqElem[T] {
+    def convertCopy(v: T): Platform.Pointer = writer.writeNative(v)
+    def convertProxy(v: T): PyValue = writer.write(v)
+  }
+
+  implicit class SeqConverters[T, C <% scala.collection.Seq[T]](seq: C) {
+    def toPythonCopy(implicit elemWriter: ConvertableToSeqElem[T]): Any = {
+      Any.populateWith(PyValue.fromNew(implicitly[ConvertableToSeqElem[C]].convertCopy(seq)))
+    }
+
+    def toPythonProxy(implicit elemWriter: ConvertableToSeqElem[T]): Any = {
+      Any.populateWith(implicitly[ConvertableToSeqElem[C]].convertProxy(seq))
     }
   }
 

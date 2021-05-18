@@ -4,13 +4,29 @@ import scala.sys
 import scala.util.Try
 
 import com.sun.jna.{Native, NativeLong, Memory}
+import scala.util.{Success, Failure}
 
 class CPythonAPIInterface {
   val pythonLibrariesToTry =
     sys.env.get("SCALAPY_PYTHON_LIBRARY").toSeq ++
-      Seq("python3", "python3.7")
+      Seq(
+        "python3",
+        "python3.7", "python3.7m",
+        "python3.8", "python3.8m",
+        "python3.9", "python3.9m"
+      )
 
-  pythonLibrariesToTry.find(n => Try(Native.register(n)).isSuccess)
+  val loadAttempts = pythonLibrariesToTry.toStream.map(n => try {
+    Native.register(n)
+    Success(true)
+  } catch {
+    case t: Throwable => Failure(t)
+  })
+  
+  loadAttempts.find(_.isSuccess).getOrElse {
+    loadAttempts.foreach(_.failed.get.printStackTrace())
+    throw new Exception(s"Unable to locate Python library, tried ${pythonLibrariesToTry.mkString(", ")}")
+  }
 
   @scala.native def Py_Initialize(): Unit
 
@@ -63,6 +79,7 @@ class CPythonAPIInterface {
   @scala.native def PyObject_Str(obj: Platform.Pointer): Platform.Pointer
   @scala.native def PyObject_GetItem(obj: Platform.Pointer, idx: Platform.Pointer): Platform.Pointer
   @scala.native def PyObject_SetItem(obj: Platform.Pointer, key: Platform.Pointer, newValue: Platform.Pointer): Int
+  @scala.native def PyObject_DelItem(obj: Platform.Pointer, idx: Platform.Pointer): Int
   @scala.native def PyObject_GetAttr(obj: Platform.Pointer, name: Platform.Pointer): Platform.Pointer
   @scala.native def PyObject_GetAttrString(obj: Platform.Pointer, name: String): Platform.Pointer
   @scala.native def PyObject_SetAttr(obj: Platform.Pointer, name: Platform.Pointer, newValue: Platform.Pointer): Platform.Pointer
@@ -71,6 +88,7 @@ class CPythonAPIInterface {
   @scala.native def PyObject_Length(obj: Platform.Pointer): NativeLong
 
   @scala.native def PySequence_GetItem(obj: Platform.Pointer, idx: Int): Platform.Pointer
+  @scala.native def PySequence_SetItem(obj: Platform.Pointer, idx: Int, v: Platform.Pointer): Platform.Pointer
   @scala.native def PySequence_Length(obj: Platform.Pointer): NativeLong
 
   @scala.native def PyErr_Occurred(): Platform.Pointer
@@ -83,7 +101,7 @@ class CPythonAPIInterface {
   @scala.native def Py_BuildValue(str: String): Platform.Pointer
 
   @scala.native def PyLong_FromVoidPtr(ptr: Platform.Pointer): Unit
-  @scala.native def PyCFunction_New(ptr: Platform.Pointer, self: Platform.Pointer): Platform.Pointer
+  @scala.native def PyCFunction_NewEx(ptr: Platform.Pointer, self: Platform.Pointer, module: Platform.Pointer): Platform.Pointer
   @scala.native def PyImport_ImportModule(str: String): Platform.Pointer
 
   @scala.native def PyErr_SetString(tpe: Platform.Pointer, message: String): Unit

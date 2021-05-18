@@ -7,6 +7,7 @@ import scala.scalanative.unsafe.CQuote
 
 import scala.scalanative.runtime
 import scala.scalanative.runtime.Intrinsics
+import scala.scalanative.unsigned._
 
 object Platform {
   final val isNative = true
@@ -24,6 +25,9 @@ object Platform {
   type CString = sn.CString
   type Pointer = Ptr[Byte]
   type PointerToPointer = Ptr[Ptr[Byte]]
+  type ThreadLocal[T] = SingleThreadLocal[T]
+
+  def threadLocalWithInitial[T](initial: () => T) = SingleThreadLocal.withInitial(initial)
 
   def allocPointerToPointer(implicit zone: sn.Zone): PointerToPointer = {
     sn.alloc[Ptr[Byte]]
@@ -34,8 +38,10 @@ object Platform {
   }
 
   def cLongToLong(cLong: sn.CLong): Long = cLong
+  def cSizeToLong(cSize: sn.CSize): Long = cSize.toLong
 
   def intToCLong(int: Int): sn.CLong = int
+  def intToCSize(int: Int): sn.CSize = int.toULong
 
   def dereferencePointerToPointer(pointer: PointerToPointer): Pointer = !pointer
 
@@ -43,7 +49,7 @@ object Platform {
   def getFnPtr2(fn: (Pointer, Pointer) => Pointer): (scala.Any, Pointer) = macro ScalaNativeHelpers.inlineFnPtr2
 
   def alloc(size: Int): Pointer = {
-    lc.stdlib.malloc(size)
+    lc.stdlib.malloc(size.toULong)
   }
 
   def ptrSize: Int = sn.sizeof[Ptr[Byte]].toInt

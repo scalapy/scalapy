@@ -21,6 +21,9 @@ object Platform {
   type Pointer = jna.Pointer
   type PointerToPointer = jna.Pointer
   type FunctionPointer = jna.Callback
+  type ThreadLocal[T] = java.lang.ThreadLocal[T]
+
+  def threadLocalWithInitial[T](initial: () => T) = java.lang.ThreadLocal.withInitial(() => initial())
 
   def allocPointerToPointer: PointerToPointer = {
     new jna.Memory(Native.POINTER_SIZE)
@@ -31,8 +34,10 @@ object Platform {
   }
 
   def cLongToLong(cLong: jna.NativeLong): Long = cLong.longValue()
+  def cSizeToLong(cSize: jna.NativeLong): Long = cSize.longValue()
 
   def intToCLong(int: Int): jna.NativeLong = new jna.NativeLong(int)
+  def intToCSize(int: Int): jna.NativeLong = new jna.NativeLong(int)
 
   def dereferencePointerToPointer(pointer: PointerToPointer): Pointer = pointer.getPointer(0)
 
