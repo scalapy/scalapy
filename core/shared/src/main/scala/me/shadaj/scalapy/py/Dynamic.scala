@@ -42,16 +42,16 @@ trait AnyDynamics extends Any with scala.Dynamic {
   def applyNamed(params: (String, Any)*): Dynamic = {
     implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.call(
       value,
-      params.filter(_._1.isEmpty).map(_._2.value),
-      params.filter(_._1.nonEmpty).map(t => (t._1, t._2.value))
+      params.filter(t => t._1.isEmpty && t._2 != null).map(_._2.value),
+      params.filter(t => t._1.nonEmpty && t._2 != null).map(t => (t._1, t._2.value))
     ))
   }
 
   def applyDynamicNamed(method: String)(params: (String, Any)*): Dynamic = {
     implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.call(
       value, method,
-      params.filter(_._1.isEmpty).map(_._2.value),
-      params.filter(_._1.nonEmpty).map(t => (t._1, t._2.value))
+      params.filter(t => t._1.isEmpty && t._2 != null).map(_._2.value),
+      params.filter(t => t._1.nonEmpty && t._2 != null).map(t => (t._1, t._2.value))
     ))
   }
 

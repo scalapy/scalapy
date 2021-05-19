@@ -10,6 +10,10 @@ class StaticModule(name: String) extends Module {
   private[scalapy] val rawValue = module(name).value
 }
 
+class StaticValue(value: Any) extends Any {
+  private[scalapy] val rawValue = value.value
+}
+
 abstract class FacadeCreator[F <: Any] {
   def create(value: PyValue): F
 }

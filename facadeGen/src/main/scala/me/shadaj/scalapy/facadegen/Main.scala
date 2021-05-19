@@ -15,7 +15,7 @@ object Main extends App {
   val mypyModulefinder = py.module("mypy.modulefinder")
   val mypyNodes = py.module("mypy.nodes")
 
-  val modules = Seq("builtins", "typing", "torch", "torch.tensor", "torch._C")
+  val modules = Seq("builtins", "typing", "numbers", "enum", "mip", "mip.entities", "mip.constants", "mip.model", "torch", "torch.tensor", "torch._C", "torch.cuda", "torch.storage")
 
   val temporaryFile = File.createTempFile("mypy-input.py", null)
   val fileWriter = new PrintWriter(temporaryFile)
@@ -119,37 +119,67 @@ object Main extends App {
 
     val members = info.names.as[Map[String, py.Dynamic]]
     val membersCode = members.map(kv => genClassMember(info, kv._1, kv._2.node)).mkString("\n")
+    val staticMembersCode = members.map(kv => genClassMember(info, kv._1, kv._2.node, true)).mkString("\n")
 
     val typeVariables = info.type_vars.as[Seq[String]]
     val typeVariablesCode = if (typeVariables.isEmpty) "" else s"[${typeVariables.map(_ + " <: me.shadaj.scalapy.py.Any").mkString(", ")}]"
 
     s"""@py.native trait ${makeNameSafe(info.name.as[String])}$typeVariablesCode $extendsCode {
        |$membersCode
+       |}
+       |
+       |object ${makeNameSafe(info.name.as[String])} extends me.shadaj.scalapy.py.StaticValue(as[me.shadaj.scalapy.py.Dynamic].selectDynamic("${info.name.as[String]}")) with py.Object {
+       |$staticMembersCode
        |}""".stripMargin
   }
 
-  def genClassMember(classInfo: py.Dynamic, name: String, member: py.Dynamic): String = {
+  def genClassMember(classInfo: py.Dynamic, name: String, member: py.Dynamic, static: Boolean = false): String = {
     if (py.Dynamic.global.isinstance(member, FuncBase).as[Boolean]) {
-      genClassFunction(classInfo, name, member)
+      genClassFunction(classInfo, name, member, static)
     } else if (py.Dynamic.global.isinstance(member, Var).as[Boolean] && !member.is_classvar.as[Boolean]) {
-      genClassAttribute(classInfo, name, member)
+      if (static) {
+        s"/* attribute: $name */"
+      } else {
+        genClassAttribute(classInfo, name, member)
+      }
     } else {
       s"/* member: $name */"
     }
   }
 
-  def genClassFunction(classInfo: py.Dynamic, name: String, function: py.Dynamic): String = {
-    if (!function.is_static.as[Boolean]) {
-      genClassMethod(classInfo, name, function)
-    } else {
-      s"/* function: $name */"
-    }
+  def genClassFunction(classInfo: py.Dynamic, name: String, function: py.Dynamic, static: Boolean): String = {
+    val funcStatic = function.is_static.as[Boolean] || name == "__init__"
+
+    if (funcStatic == static) {
+      if (!static || name == "__init__") {
+        genClassMethod(classInfo, name, function, name == "__init__")
+      } else if (py.Dynamic.global.isinstance(function, FuncDef).as[Boolean]) {
+        processFuncDef(function)
+      } else {
+        s"/* function: $name */"
+      }
+    } else ""
   }
 
-  val keyWords = Set("type", "super", "object", "match", "new", "val", "var", "throw", "final", "implicit")
+  val keyWords = Set("type", "super", "object", "match", "new", "val", "var", "throw", "final", "implicit", "override", "apply")
+  val operatorMapping = Map(
+    "__add__" -> "+",
+    "__sub__" -> "-",
+    "__mul__" -> "*",
+    "__truediv__" -> "/",
+
+    "__lt__" -> "<",
+    "__le__" -> "<=",
+    "__ge__" -> ">=",
+    "__gt__" -> ">",
+
+    "__init__" -> "apply"
+  )
 
   def makeNameSafe(arg: String, varMode: Boolean = false): String = {
-    if (keyWords.contains(arg)) {
+    if (operatorMapping.contains(arg)) {
+      operatorMapping(arg)
+    } else if (keyWords.contains(arg) || arg.contains("-")) {
       s"`$arg`"
     } else if (varMode && arg.endsWith("_")) {
       s"`$arg`"
@@ -162,15 +192,18 @@ object Main extends App {
     argTypes.tail.map(t => scalaTypeForPython(t)._2)
   }
 
-  def genClassMethod(classInfo: py.Dynamic, name: String, method: py.Dynamic, existing: mutable.Set[String] = mutable.Set.empty): String = {
+  def genClassMethod(classInfo: py.Dynamic, name: String, method: py.Dynamic, static: Boolean = false, existing: mutable.Set[String] = mutable.Set.empty, setter: Boolean = false): String = {
     if (py.Dynamic.global.isinstance(method, FuncItem).as[Boolean]) {
       val argNames = method.arg_names.as[Seq[String]].tail
       val signature = method.selectDynamic("type")
-      val argTypesUntailed = (if (signature == py.None) {
+      val argTypesUntailed = if (signature == py.None) {
         method.arg_names.as[Seq[py.Any]].map(_ => AnyType)
-      } else signature.arg_types.as[Seq[py.Dynamic]])
+      } else signature.arg_types.as[Seq[py.Dynamic]]
       val argTypes = argTypesUntailed.tail
-      val returnType = if (signature == py.None) AnyType else signature.ret_type
+      val argKinds = (if (signature == py.None) {
+        method.arg_names.as[Seq[py.Any]].map(_ => 0)
+      } else signature.arg_kinds.as[Seq[Int]]).tail
+      val returnType = if (signature == py.None) AnyType else if (name == "__init__") classInfo else signature.ret_type
 
       val selfArgsTypesDedup = getMethodArgTypesDedup(argTypesUntailed)
 
@@ -184,17 +217,29 @@ object Main extends App {
         }
       }
 
-      if (isOverride) s"/* skip override: $name */"
+      if (isOverride && !static) s"/* skip override: $name */"
       else if (name == "clone") s"/* skip illegal name: $name */" else {
         val typeVariables = mutable.Set[String]()
 
-        val argsCode = argNames.zip(argTypes).map { case (name, tpe) =>
-          s"${makeNameSafe(name)} : ${scalaTypeForPython(tpe, Some(typeVariables))._1}"
+        val argsCode = argNames.zip(argTypes).zip(argKinds).map { case ((name, tpe), kind) =>
+          if (kind == 1 || kind == 5) {
+            val (fullType, shortType, _) = scalaTypeForPython(tpe, Some(typeVariables))
+            s"${makeNameSafe(name)} : ${fullType} = null.asInstanceOf[$shortType]"
+          } else {
+            s"${makeNameSafe(name)} : ${scalaTypeForPython(tpe, Some(typeVariables))._1}"
+          }
         }.mkString(", ")
 
-        val justArgNames = argNames.map(a => makeNameSafe(a)).mkString(", ")
+        val keywordArgs = argNames.map(a => s""""$a" -> ${makeNameSafe(a)}""").mkString(", ")
 
-        val (retTypeString, cleanRetType, needsImplicitReader) = scalaTypeForPython(returnType, Some(typeVariables))
+        val (retTypeStringPreArgs, cleanRetType, needsImplicitReader) = scalaTypeForPython(returnType, Some(typeVariables))
+
+        val retTypeString = if (name == "__init__") {
+          val classTypeVariables = classInfo.type_vars.as[Seq[String]]
+          typeVariables.addAll(classTypeVariables)
+
+          retTypeStringPreArgs + (if (classTypeVariables.isEmpty) "" else s"[${classTypeVariables.mkString(", ")}]")
+        } else retTypeStringPreArgs
 
         val typeVariablesCode = if (typeVariables.isEmpty) "" else s"[${typeVariables.map(_ + " <: me.shadaj.scalapy.py.Any").mkString(", ")}]"
 
@@ -202,8 +247,20 @@ object Main extends App {
           s"(implicit retReader: me.shadaj.scalapy.readwrite.Reader[$retTypeString])"
         } else ""
 
-        val out = s"""def ${makeNameSafe(name)}$typeVariablesCode($argsCode)$maybeImplicitReader: $retTypeString = as[me.shadaj.scalapy.py.Dynamic].applyDynamic("$name")($justArgNames).as[$retTypeString]""".stripMargin
-        val cleanOut = s"""def ${makeNameSafe(name)}(${argNames.size}): $cleanRetType""".stripMargin
+        val out = if (setter) {
+          assert(argNames.size == 1)
+          s"""def ${makeNameSafe(name)}_=$typeVariablesCode($argsCode)$maybeImplicitReader: Unit = as[me.shadaj.scalapy.py.Dynamic].updateDynamic("$name")(${makeNameSafe(argNames.head)})"""
+        } else if (name == "__init__") {
+          s"""def ${makeNameSafe(name)}$typeVariablesCode($argsCode)$maybeImplicitReader: $retTypeString = as[me.shadaj.scalapy.py.Dynamic].applyNamed($keywordArgs).as[$retTypeString]"""
+        } else {
+          s"""def ${makeNameSafe(name)}$typeVariablesCode($argsCode)$maybeImplicitReader: $retTypeString = as[me.shadaj.scalapy.py.Dynamic].applyDynamicNamed("$name")($keywordArgs).as[$retTypeString]"""
+        }
+
+        val cleanOut = if (setter) {
+          s"""def ${makeNameSafe(name)}_=(${argNames.size}): Unit"""
+        } else {
+          s"""def ${makeNameSafe(name)}(${argNames.size}): $cleanRetType"""
+        }
 
         if (existing.contains(cleanOut)) {
           s"/* skip conflict: $name */"
@@ -213,15 +270,12 @@ object Main extends App {
         }
       }
     } else if (py.Dynamic.global.isinstance(method, Decorator).as[Boolean]) {
-      genClassMethod(classInfo, name, method.func, existing)
+      val decorators = method.decorators.as[Seq[py.Dynamic]]
+      genClassMethod(classInfo, name, method.func, static, existing, setter = decorators.exists(_.name.as[String] == "setter"))
     } else if (py.Dynamic.global.isinstance(method, OverloadedFuncDef).as[Boolean]) {
       val parts = method.items.as[Seq[py.Dynamic]]
       val dupCatcher = mutable.Set.empty[String]
-      val out = parts.map(p => genClassMethod(classInfo, name, p, dupCatcher)).mkString("\n")
-      if (name == "subn") {
-        println(dupCatcher)
-      }
-      out
+      parts.map(p => genClassMethod(classInfo, name, p, static, dupCatcher, setter)).mkString("\n")
     } else {
       s"/* method: $name */"
     }
@@ -295,7 +349,9 @@ object Main extends App {
   }
 
   modules.foreach { m =>
-    val localDefinitions = buildResult.manager.modules.bracketAccess(m).names.as[Map[String, py.Dynamic]]
+    val localDefinitions = buildResult.manager.modules.bracketAccess(m).names.as[Map[String, py.Dynamic]].filter { case (_, value) =>
+      value.node.fullname == py.None || value.node.fullname.as[String].split('.').init.mkString(".") == m
+    }
 
     val out = new File(s"$m.scala")
     val outWriter = new PrintWriter(out)
