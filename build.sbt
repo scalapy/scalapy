@@ -174,6 +174,13 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
 lazy val coreJVM = core.jvm
 lazy val coreNative = core.native
 
+lazy val facadeGen = project.in(file("facadeGen"))
+  .dependsOn(coreJVM)
+  .settings(
+    fork in run := true,
+    javaOptions in run += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib"
+  )
+
 lazy val docs = project
   .in(file("built-docs"))
   .settings(

@@ -26,6 +26,12 @@ trait Any { self =>
     value.cleanup()
     cleaned = true
   }
+
+  override def equals(obj: scala.Any): Boolean = {
+    obj.isInstanceOf[Any] && value == obj.asInstanceOf[Any].value
+  }
+
+  override def hashCode(): Int = value.hashCode()
 }
 
 object Any {
