@@ -1,5 +1,7 @@
 # Changelog
 ## vNEXT
+
+## v0.5.0
 ### Highlights :tada:
 + Significantly optimize transfers from Scala to Python, which are now up to 5x faster on the JVM and 4x faster on Scala Native ([PR #179](https://github.com/shadaj/scalapy/pull/179))
 + Optimize transfers from Python to Scala, which are now up to 4x faster on the JVM and 3x faster on Scala Native ([PR #183](https://github.com/shadaj/scalapy/pull/183))
