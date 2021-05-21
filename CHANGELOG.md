@@ -3,9 +3,14 @@
 ### Highlights :tada:
 + Significantly optimize transfers from Scala to Python, which are now up to 5x faster on the JVM and 4x faster on Scala Native ([PR #179](https://github.com/shadaj/scalapy/pull/179))
 + Optimize transfers from Python to Scala, which are now up to 4x faster on the JVM and 3x faster on Scala Native ([PR #183](https://github.com/shadaj/scalapy/pull/183))
++ Introduce a pre-alpha type facade generator that generates Scala types through mypy ([PR #110](https://github.com/shadaj/scalapy/pull/110))
+  + This is pre-alpha in the sense that types generated for any module, including Python builtins, are likely to require manual patching to compile
+  + **However**, with a bit of patching, the types for many libraries are good enough to use directly without having to fall back to dynamic interfaces
+  + The current type generator has been merged as a very experimental feature just so that others in the community can try it out. It will be rewritten in the near future with a cleaner architecture that will enable generation of more complex types correctly.
 + Python values can now be loaded into any immutable Scala collection type as a copy, not just `Seq` ([PR #179](https://github.com/shadaj/scalapy/pull/179))
 + Allow converting nested sequences to Python using a single call to `toPythonCopy` or `toPythonProxy` ([PR #178](https://github.com/shadaj/scalapy/pull/178))
 + Add API equivalents for the Python `del` keyword (`del foo.bar`, `del foo["key"]`, and `del foo`) ([PR #175](https://github.com/shadaj/scalapy/pull/175), [PR #177](https://github.com/shadaj/scalapy/pull/177))
++ Support referential equality of Python values with a corresponding hash-code implementation ([PR #110](https://github.com/shadaj/scalapy/pull/110))
 
 ### Breaking Changes :warning:
 + Reading a Python collection as an immutable sequence will now load a copy. To load a proxy that can observe changes, load sequences with `.as[mutable.Seq[...]]` ([PR #179](https://github.com/shadaj/scalapy/pull/179))
