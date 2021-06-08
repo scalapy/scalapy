@@ -5,7 +5,7 @@ import scala.language.experimental.macros
 
 import scala.annotation.StaticAnnotation
 class native extends StaticAnnotation
-
+class PyBracketsAccess extends StaticAnnotation
 object FacadeImpl {
   def creator[T <: Any](c: whitebox.Context)(implicit tag: c.WeakTypeTag[T]): c.Tree = {
     import c.universe._
@@ -25,18 +25,31 @@ object FacadeImpl {
     if (!c.enclosingClass.symbol.annotations.exists(_.tpe =:= typeOf[native])) {
       c.error(c.enclosingPosition, "py.native implemented functions can only be declared inside traits annotated as @py.native")
     }
-
     val method = c.internal.enclosingOwner.asMethod
     val methodName = method.name.toString
     val returnType = method.returnType
     val paramss = method.paramLists
+    
+    if (c.enclosingMethod.symbol.annotations.exists(_.tpe =:= typeOf[PyBracketsAccess])) {
 
-    paramss.headOption match {
-      case Some(params) =>
-        val paramExprs = params.map(_.name)
-        c.Expr[T](q"as[_root_.me.shadaj.scalapy.py.Dynamic].applyDynamic($methodName)(..$paramExprs).as[$returnType]")
-      case scala.None =>
-        c.Expr[T](q"as[_root_.me.shadaj.scalapy.py.Dynamic].selectDynamic($methodName).as[$returnType]")
+      paramss.headOption match {
+        case Some(params) =>
+          val paramExprs = params.map(_.asTerm).map(_.name)
+          paramExprs.length match {
+            case 1 => c.Expr[T](q"as[_root_.me.shadaj.scalapy.py.Dynamic].bracketAccess(${paramExprs(0)}).as[$returnType]")
+          
+          }
+      }
+    }
+    else {
+      paramss.headOption match {
+        case Some(params) =>
+          val paramExprs = params.map(_.name)
+          paramExprs
+          c.Expr[T](q"as[_root_.me.shadaj.scalapy.py.Dynamic].applyDynamic($methodName)(..$paramExprs).as[$returnType]")
+        case scala.None =>
+          c.Expr[T](q"as[_root_.me.shadaj.scalapy.py.Dynamic].selectDynamic($methodName).as[$returnType]")
+      }
     }
   }
 
@@ -47,11 +60,17 @@ object FacadeImpl {
       c.error(c.enclosingPosition, "py.native implemented functions can only be declared inside traits annotated as @py.native")
     }
 
+
+    c.enclosingMethod
+
+
     val method = c.internal.enclosingOwner.asMethod
     val methodName = method.name.toString
     val returnType = method.returnType
     val paramss = method.paramLists
 
+    println("Method " + methodName + "  Return type: "+ returnType.toString())
+    
     paramss.headOption match {
       case Some(params) =>
         val paramExprs = params.map { p =>
