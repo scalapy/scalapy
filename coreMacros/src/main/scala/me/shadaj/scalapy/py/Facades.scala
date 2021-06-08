@@ -37,7 +37,7 @@ object FacadeImpl {
           val paramExprs = params.map(_.asTerm).map(_.name)
           paramExprs.length match {
             case 1 => c.Expr[T](q"as[_root_.me.shadaj.scalapy.py.Dynamic].bracketAccess(${paramExprs(0)}).as[$returnType]")
-          
+            case 2 => c.Expr[T](q"as[_root_.me.shadaj.scalapy.py.Dynamic].bracketUpdate(${paramExprs(0)}, ${paramExprs(1)})")
           }
       }
     }

@@ -7,6 +7,9 @@ import org.scalatest.funsuite.AnyFunSuite
 @native trait List[T <: Any] extends Dynamic {
   @PyBracketsAccess
   def apply(index: Int): Any = native
+
+  @PyBracketsAccess
+  def apply(index: Any, newValue: Any): Unit = native
 }
 
 // special syntax test for defining pybrackets
@@ -21,6 +24,8 @@ class SpecialSyntaxTest extends AnyFunSuite {
     local{
       val  myList = py"[1, 2, 3]".as[List[Any]]
       assert(myList(1).as[Int] == 2)
+      myList(1, 3)
+      assert(myList(1).as[Int] == 3)
      // myList(1) = 0
     }
   }
