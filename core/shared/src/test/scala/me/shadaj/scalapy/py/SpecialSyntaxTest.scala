@@ -14,6 +14,18 @@ import org.scalatest.funsuite.AnyFunSuite
 
 // special syntax test for defining pybrackets
 class SpecialSyntaxTest extends AnyFunSuite {
+  test("Can use with statement with file object") {
+    local {
+      val opened = if (interpreter.Platform.isNative) {
+        Dynamic.global.open("./README.md", "r")
+      } else Dynamic.global.open("../../README.md", "r")
+      `with`(opened) { file =>
+        assert(file.as[Dynamic].encoding.as[String] == "UTF-8")
+      }
+    }
+  } 
+
+  
   test("Can select and update elements of a list dynamically") {
     local {
       val myList = py"[1, 2, 3]"
