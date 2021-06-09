@@ -1,13 +1,10 @@
 package me.shadaj.scalapy.py
 
 import scala.language.dynamics
-import scala.reflect.ClassTag
 
 import me.shadaj.scalapy.interpreter.CPythonInterpreter
 
-@native trait Module extends Dynamic
-
-object Module {
+trait ModuleApply {
   def apply(module: String): Module = {
     Any.populateWith(CPythonInterpreter.importModule(module)).as[Module]
   }
