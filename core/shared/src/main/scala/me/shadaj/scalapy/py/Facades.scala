@@ -19,5 +19,7 @@ abstract class FacadeCreator[F <: Any] {
 }
 
 object FacadeCreator {
-  implicit def getCreator[F <: Any]: FacadeCreator[F] = macro FacadeImpl.creator[F]
+  // implicit def getCreator[F <: Any]: FacadeCreator[F] = macro FacadeImpl.creator[F]
+  implicit def getCreator[F <: Any]: FacadeCreator[F] = ???
+  // inline implicit def getCreator[F <: Any]: FacadeCreator[F] = ${FacadeImpl.creator[F]}
 }

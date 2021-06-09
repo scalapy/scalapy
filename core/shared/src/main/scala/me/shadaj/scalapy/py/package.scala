@@ -44,13 +44,13 @@ package object py {
     def convertProxy(v: T): PyValue
   }
 
-  implicit def seqConvertableSeqElem[T, C <% scala.collection.Seq[T]](implicit elemConvertable: ConvertableToSeqElem[T]): ConvertableToSeqElem[C] = new ConvertableToSeqElem[C] {
+  implicit def seqConvertableSeqElem[T, C](implicit ev: C => scala.collection.Seq[T], elemConvertable: ConvertableToSeqElem[T]): ConvertableToSeqElem[C] = new ConvertableToSeqElem[C] {
     def convertCopy(v: C): Platform.Pointer = {
-      CPythonInterpreter.createListCopy(v, elemConvertable.convertCopy)
+      CPythonInterpreter.createListCopy(ev(v), elemConvertable.convertCopy)
     }
 
     def convertProxy(v: C): PyValue = {
-      CPythonInterpreter.createListProxy(v, elemConvertable.convertProxy)
+      CPythonInterpreter.createListProxy(ev(v), elemConvertable.convertProxy)
     }
   }
 
@@ -59,7 +59,7 @@ package object py {
     def convertProxy(v: T): PyValue = writer.write(v)
   }
 
-  implicit class SeqConverters[T, C <% scala.collection.Seq[T]](seq: C) {
+  implicit class SeqConverters[T, C](seq: C)(implicit ev: C => scala.collection.Seq[T]) {
     def toPythonCopy(implicit elemWriter: ConvertableToSeqElem[T]): Any = {
       Any.populateWith(PyValue.fromNew(implicitly[ConvertableToSeqElem[C]].convertCopy(seq)))
     }
@@ -107,6 +107,8 @@ package object py {
   }
 
   import scala.language.experimental.macros
-  def native[T]: T = macro FacadeImpl.native_impl[T]
-  def nativeNamed[T]: T = macro FacadeImpl.native_named_impl[T]
+  // def native[T]: T = macro FacadeImpl.native_impl[T]
+  def native[T]: T = ???
+  // def nativeNamed[T]: T = macro FacadeImpl.native_named_impl[T]
+  def nativeNamed[T]: T = ???
 }
