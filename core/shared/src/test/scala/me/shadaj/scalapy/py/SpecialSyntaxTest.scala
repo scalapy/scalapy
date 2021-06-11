@@ -4,12 +4,12 @@ import me.shadaj.scalapy.interpreter
 
 import org.scalatest.funsuite.AnyFunSuite
 
-@native trait List[T <: Any] extends Dynamic {
-  @PyBracketsAccess
-  def apply(index: Int): Any = native
+@native trait IntList extends Any {
+  @PyBracketAccess
+  def apply(index: Int): Int = native
 
-  @PyBracketsAccess
-  def apply(index: Any, newValue: Any): Unit = native
+  @PyBracketAccess
+  def update(index: Int, newValue: Int): Unit = native
 }
 
 // special syntax test for defining pybrackets
@@ -25,20 +25,19 @@ class SpecialSyntaxTest extends AnyFunSuite {
     }
   } 
 
-  
   test("Can select and update elements of a list dynamically") {
     local {
       val myList = py"[1, 2, 3]"
       assert(myList.bracketAccess(1).as[Int] == 2)
     }
   }
-  test("Can access elements of the list using brackets") {
+
+  test("Can access and update the list elements using brackets") {
     local{
-      val  myList = py"[1, 2, 3]".as[List[Any]]
-      assert(myList(1).as[Int] == 2)
-      myList(1, 3)
-      assert(myList(1).as[Int] == 3)
-     // myList(1) = 0
+      val  myList = py"[1, 2, 3]".as[IntList]
+      assert(myList(1) == 2)
+      myList(1) = 3
+      assert(myList(1) == 3)
     }
   }
 
