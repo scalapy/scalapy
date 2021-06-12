@@ -38,12 +38,20 @@ object FacadeImpl {
         case Some(params) =>
           val paramExprs = params.map(_.asTerm).map(_.name)
           paramExprs.length match {
-            case 0 => throw new ParseException(c.enclosingPosition, "PyBracketAccess functions require at least one parameter")
-            case 1 => c.Expr[T](q"as[_root_.me.shadaj.scalapy.py.Dynamic].bracketAccess(${paramExprs(0)}).as[$returnType]")
-            case 2 => c.Expr[T](q"as[_root_.me.shadaj.scalapy.py.Dynamic].bracketUpdate(${paramExprs(0)}, ${paramExprs(1)})")
-            case _ => throw new ParseException(c.enclosingPosition, "Too many parameters to PyBracketAccess function")
+            case 0 => 
+              c.error(c.enclosingPosition, "PyBracketAccess functions require at least one parameter") 
+              null
+            case 1 => 
+              c.Expr[T](q"as[_root_.me.shadaj.scalapy.py.Dynamic].bracketAccess(${paramExprs(0)}).as[$returnType]")
+            case 2 => 
+              c.Expr[T](q"as[_root_.me.shadaj.scalapy.py.Dynamic].bracketUpdate(${paramExprs(0)}, ${paramExprs(1)})")
+            case _ => 
+              c.error(c.enclosingPosition, "Too many parameters to PyBracketAccess function")
+              null
           }
-        case scala.None => throw new ParseException(c.enclosingPosition, "PyBracketAccess functions require at least one parameter")
+        case scala.None => 
+          c.error(c.enclosingPosition, "PyBracketAccess functions require at least one parameter")
+          null
       }
     }
     else {
