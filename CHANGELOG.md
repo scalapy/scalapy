@@ -1,6 +1,7 @@
 # Changelog
 ## vNEXT
-
+### Highlights :tada:
++ Add support for bracket syntax to facades. The annotation @PyBracketAccess can be used on methods to mark them as representing bracket access on an object. The target method must have one (to read the value) or two parameters (to update the value).
 ## v0.5.0
 ### Highlights :tada:
 + Significantly optimize transfers from Scala to Python, which are now up to 5x faster on the JVM and 4x faster on Scala Native ([PR #179](https://github.com/shadaj/scalapy/pull/179))
