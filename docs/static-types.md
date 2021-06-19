@@ -32,47 +32,33 @@ If we try to call this method with the wrong parameter type, we get the expected
 string.count(123)
 ```
 ### Scala methods representing bracket access
-The annotation @PyBracketAccess can be used on methods to mark them as representing bracket access on an object. The target method must have one (to read the value) or two parameters (to update the value). So for example we have a static facade for list of integers:
+The annotation @PyBracketAccess can be used on methods to mark them as representing bracket access on an object. The target method must have one (to read the value) or two parameters (to update the value). So, for example, we have a static facade for list of integers:
 ```scala mdoc
-@native trait IntList extends Any {
+import py.PyBracketAccess
+
+@py.native trait IntList extends py.Any {
   @PyBracketAccess
-  def apply(index: Int): Int = native
+  def apply(index: Int): Int = py.native
 
   @PyBracketAccess
-  def update(index: Int, newValue: Int): Unit = native
+  def update(index: Int, newValue: Int): Unit = py.native
 }
 ```
 Now let's create the python list:
 ```scala mdoc
+import py.PyQuote
+
 val  myList = py"[1, 2, 3]".as[IntList]
 ```
-And to get the element by index 1, now we can just use brackets: 
+And we can just use brackets to access the element by index 0: 
 ```scala mdoc
 myList(0) // in python it will call `myList[0]`
 ```
-You can update elements of the list in the following way:
+We can also update elements of the list in the following way:
 ```scala mdoc
-myList(0) = 4 // the updated list will be [4, 2, 3]
+myList(0) = 4 // the updated list will be: [4, 2, 3]
 ```
 The duo apply/update is often a sensible choice, because it gives array-like access on Scala’s side as well, but it is not required to use these names.
-So, let's see one more example. Define a method getValue in our facade:
-```scala mdoc
-@native trait IntList extends Any {
-  @PyBracketAccess
-  def apply(index: Int): Int = native
-
-  @PyBracketAccess
-  def update(index: Int, newValue: Int): Unit = native
-
-  @PyBracketAccess
-  def getValue(index: Int): Int = native
-}
-```
-And now we can also access the elements with method `getValue`:
-```scala mdoc
-val  myList = py"[1, 2, 3]".as[IntList]
-myList.getValue(0) // will return 1
-```
 
 ## Static Module Types
 When dealing with modules, ScalaPy offers an additional type `StaticModule` that makes it possible to map a top-level Scala object to a Python module. For example, to create a static facade to the `string` module we saw earlier, we can define a `StaticModule` facade.
