@@ -32,7 +32,7 @@ If we try to call this method with the wrong parameter type, we get the expected
 string.count(123)
 ```
 ### Scala methods representing bracket access
-The annotation @PyBracketAccess can be used on methods to mark them as representing bracket access on an object. The target method must have one (to read the value) or two parameters (to update the value). So, for example, we have a static facade for list of integers:
+The annotation @PyBracketAccess can be used on methods to mark them as representing bracket access on an object. The target method must have one (to read the value) or two parameters (to update the value). So, for example, we have a static facade for a list of integers:
 ```scala mdoc
 import py.PyBracketAccess
 
@@ -44,15 +44,15 @@ import py.PyBracketAccess
   def update(index: Int, newValue: Int): Unit = py.native
 }
 ```
-Now let's create the python list:
+Then let's create a python list:
 ```scala mdoc
 import py.PyQuote
 
 val  myList = py"[1, 2, 3]".as[IntList]
 ```
-And we can just use brackets to access the element by index 0: 
+And now we can just use brackets to access elements by indexes. For example, we want to get element by index 0: 
 ```scala mdoc
-myList(0) // in python it will call `myList[0]`
+myList(0) // in python it will call `myList[0]` and return 1
 ```
 We can also update elements of the list in the following way:
 ```scala mdoc
