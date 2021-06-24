@@ -9,7 +9,7 @@ import me.shadaj.scalapy.readwrite.{Reader, Writer}
 import scala.collection.mutable.Queue
 import me.shadaj.scalapy.interpreter.Platform
 
-package object py {
+package object py extends PyMacros {
   def module(name: String) = Module(name)
   def module(name: String, subname: String) = Module(name, subname)
 
@@ -105,10 +105,4 @@ package object py {
       }
     }
   }
-
-  import scala.language.experimental.macros
-  // def native[T]: T = macro FacadeImpl.native_impl[T]
-  def native[T]: T = ???
-  // def nativeNamed[T]: T = macro FacadeImpl.native_named_impl[T]
-  def nativeNamed[T]: T = ???
 }
