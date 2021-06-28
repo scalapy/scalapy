@@ -22,7 +22,7 @@ class SpecialSyntaxTest extends AnyFunSuite {
         assert(file.as[Dynamic].encoding.as[String] == "UTF-8")
       }
     }
-  } 
+  }
 
   test("Can select and update elements of a list dynamically") {
     local {

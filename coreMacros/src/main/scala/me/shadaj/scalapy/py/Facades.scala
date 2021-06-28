@@ -3,7 +3,6 @@ package me.shadaj.scalapy.py
 import scala.reflect.macros.whitebox
 import scala.language.experimental.macros
 
-import scala.reflect.macros.ParseException
 import scala.annotation.StaticAnnotation
 class native extends StaticAnnotation
 class PyBracketAccess extends StaticAnnotation
@@ -32,7 +31,7 @@ object FacadeImpl {
     val methodName = method.name.toString
     val returnType = method.returnType
     val paramss = method.paramLists
-    
+
     if (c.enclosingMethod.symbol.annotations.exists(_.tpe =:= typeOf[PyBracketAccess])) {
       paramss.headOption match {
         case Some(params) =>
@@ -53,8 +52,7 @@ object FacadeImpl {
           c.error(c.enclosingPosition, "PyBracketAccess functions require at least one parameter")
           null
       }
-    }
-    else {
+    } else {
       paramss.headOption match {
         case Some(params) =>
           val paramExprs = params.map(_.name)
@@ -76,7 +74,7 @@ object FacadeImpl {
     val methodName = method.name.toString
     val returnType = method.returnType
     val paramss = method.paramLists
-    
+
     paramss.headOption match {
       case Some(params) =>
         val paramExprs = params.map { p =>
