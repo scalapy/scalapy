@@ -12,7 +12,6 @@ import org.scalatest.funsuite.AnyFunSuite
   def update(index: Int, newValue: Int): Unit = native
 }
 
-// special syntax test for defining pybrackets
 class SpecialSyntaxTest extends AnyFunSuite {
   test("Can use with statement with file object") {
     local {
@@ -33,8 +32,8 @@ class SpecialSyntaxTest extends AnyFunSuite {
   }
 
   test("Can access and update the list elements using brackets") {
-    local{
-      val  myList = py"[1, 2, 3]".as[IntList]
+    local {
+      val myList = py"[1, 2, 3]".as[IntList]
       assert(myList(1) == 2)
       myList(1) = 3
       assert(myList(1) == 3)
