@@ -1,5 +1,7 @@
 # Changelog
 ## vNEXT
+### Highlights :tada:
++ The version of the Python native library can now be controlled with the `scalapy.python.library` system property
 
 ## v0.5.0
 ### Highlights :tada:
