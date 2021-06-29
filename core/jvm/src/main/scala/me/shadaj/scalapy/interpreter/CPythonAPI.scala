@@ -8,9 +8,8 @@ import scala.util.{Success, Failure, Properties}
 
 class CPythonAPIInterface {
   val pythonLibrariesToTry =
-    sys.env
-      .get("SCALAPY_PYTHON_LIBRARY")
-      .orElse(Properties.propOrNone("scalapy.python.library"))
+    Properties.propOrNone("scalapy.python.library")
+      .orElse(sys.env.get("SCALAPY_PYTHON_LIBRARY"))
       .toSeq ++
       Seq(
         "python3",

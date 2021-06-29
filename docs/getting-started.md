@@ -80,3 +80,5 @@ or set the system property `scalapy.python.library`
 ```shell
 sbt -Dscalapy.python.library=python3.8 run
 ```
+
+The system property takes precedence over the environment variable.
