@@ -1,6 +1,7 @@
 # Changelog
 ## vNEXT
 ### Highlights :tada:
++ Add support for bracket syntax to facades. The annotation `@PyBracketAccess` can be used on methods to mark them as representing bracket access on an object. The target method must have one (to read the value) or two parameters (to update the value) ([PR #194](https://github.com/shadaj/scalapy/pull/194)).
 + The version of the Python native library can now be controlled with the `scalapy.python.library` system property
 
 ## v0.5.0
