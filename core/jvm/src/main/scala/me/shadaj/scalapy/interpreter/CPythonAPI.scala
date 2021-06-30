@@ -4,11 +4,13 @@ import scala.sys
 import scala.util.Try
 
 import com.sun.jna.{Native, NativeLong, Memory}
-import scala.util.{Success, Failure}
+import scala.util.{Success, Failure, Properties}
 
 class CPythonAPIInterface {
   val pythonLibrariesToTry =
-    sys.env.get("SCALAPY_PYTHON_LIBRARY").toSeq ++
+    Properties.propOrNone("scalapy.python.library")
+      .orElse(sys.env.get("SCALAPY_PYTHON_LIBRARY"))
+      .toSeq ++
       Seq(
         "python3",
         "python3.7", "python3.7m",
@@ -22,7 +24,7 @@ class CPythonAPIInterface {
   } catch {
     case t: Throwable => Failure(t)
   })
-  
+
   loadAttempts.find(_.isSuccess).getOrElse {
     loadAttempts.foreach(_.failed.get.printStackTrace())
     throw new Exception(s"Unable to locate Python library, tried ${pythonLibrariesToTry.mkString(", ")}")

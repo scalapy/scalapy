@@ -66,7 +66,7 @@ To convert Python values back into Scala, we use the `.as` method and pass in th
 val listLength = listLengthPython.as[Int]
 ```
 ## Execution
-ScalaPy officially supports Python 3.{7, 8, 9}. If you want to use another version of Python, you should define the environment variable `SCALAPY_PYTHON_LIBRARY`
+ScalaPy officially supports Python 3.{7, 8, 9}. If you want to use another version of Python, you should either define the environment variable `SCALAPY_PYTHON_LIBRARY`
 
 ```shell
 python --version
@@ -74,3 +74,11 @@ python --version
 export SCALAPY_PYTHON_LIBRARY=python3.8
 sbt run
 ```
+
+or set the system property `scalapy.python.library`
+
+```shell
+sbt -Dscalapy.python.library=python3.8 run
+```
+
+The system property takes precedence over the environment variable.
