@@ -3,7 +3,7 @@ package me.shadaj.scalapy.interpreter
 import scala.sys
 import scala.util.Try
 
-import com.sun.jna.{Native, NativeLong, Memory}
+import com.sun.jna.{Native, NativeLong, Memory, WString}
 import scala.util.{Success, Failure, Properties}
 
 class CPythonAPIInterface {
@@ -30,6 +30,7 @@ class CPythonAPIInterface {
     throw new Exception(s"Unable to locate Python library, tried ${pythonLibrariesToTry.mkString(", ")}")
   }
 
+  @scala.native def Py_SetProgramName(str: WString): Unit
   @scala.native def Py_Initialize(): Unit
 
   @scala.native def PyEval_SaveThread(): Platform.Pointer

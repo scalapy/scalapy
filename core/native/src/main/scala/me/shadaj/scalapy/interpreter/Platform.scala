@@ -22,6 +22,8 @@ object Platform {
 
   val emptyCString: CString = c""
 
+  // FIXME: use sn.CWideString in the next Scala Native release
+  type CWideString = Ptr[sn.CWideChar]
   type CString = sn.CString
   type Pointer = Ptr[Byte]
   type PointerToPointer = Ptr[Ptr[Byte]]
@@ -57,4 +59,6 @@ object Platform {
   def setPtrLong(ptr: Pointer, offset: Int, value: Long): Unit = !((ptr + offset)).asInstanceOf[Ptr[Long]] = value
   def setPtrInt(ptr: Pointer, offset: Int, value: Int): Unit = !((ptr + offset)).asInstanceOf[Ptr[Int]] = value
   def setPtrByte(ptr: Pointer, offset: Int, value: Byte): Unit = !((ptr + offset)).asInstanceOf[Ptr[Byte]] = value
+
+  def programName: Option[CWideString] = None
 }

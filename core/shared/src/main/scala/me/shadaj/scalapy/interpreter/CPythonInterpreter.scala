@@ -6,6 +6,7 @@ import me.shadaj.scalapy.py.PythonException
 import me.shadaj.scalapy.py.IndexError
 
 object CPythonInterpreter {
+  Platform.programName.foreach(CPythonAPI.Py_SetProgramName(_))
   CPythonAPI.Py_Initialize()
 
   private[scalapy] val globals: Platform.Pointer = CPythonAPI.PyDict_New()

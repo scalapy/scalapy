@@ -3,6 +3,8 @@ package me.shadaj.scalapy.interpreter
 import com.sun.jna
 import com.sun.jna.Native
 import java.nio.charset.Charset
+import scala.sys
+import scala.util.Properties
 
 object Platform {
   final val isNative = false
@@ -17,6 +19,7 @@ object Platform {
 
   val emptyCString: CString = ""
 
+  type CWideString = jna.WString
   type CString = String
   type Pointer = jna.Pointer
   type PointerToPointer = jna.Pointer
@@ -79,4 +82,8 @@ object Platform {
   def setPtrLong(ptr: Pointer, offset: Int, value: Long): Unit = ptr.setLong(offset, value)
   def setPtrInt(ptr: Pointer, offset: Int, value: Int): Unit = ptr.setInt(offset, value)
   def setPtrByte(ptr: Pointer, offset: Int, value: Byte): Unit = ptr.setByte(offset, value)
+
+  def programName: Option[CWideString] =
+    Properties.propOrNone("scalapy.python.programname").map(new CWideString(_))
+
 }
