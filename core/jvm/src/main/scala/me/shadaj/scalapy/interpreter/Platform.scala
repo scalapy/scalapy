@@ -19,7 +19,6 @@ object Platform {
 
   val emptyCString: CString = ""
 
-  type CWideString = jna.WString
   type CString = String
   type Pointer = jna.Pointer
   type PointerToPointer = jna.Pointer
@@ -83,7 +82,8 @@ object Platform {
   def setPtrInt(ptr: Pointer, offset: Int, value: Int): Unit = ptr.setInt(offset, value)
   def setPtrByte(ptr: Pointer, offset: Int, value: Byte): Unit = ptr.setByte(offset, value)
 
-  def programName: Option[CWideString] =
-    Properties.propOrNone("scalapy.python.programname").map(new CWideString(_))
-
+  def programName: Option[jna.WString] =
+    Properties.propOrNone("scalapy.python.programname")
+      .orElse(sys.env.get("SCALAPY_PYTHON_PROGRAMNAME"))
+      .map(new jna.WString(_))
 }

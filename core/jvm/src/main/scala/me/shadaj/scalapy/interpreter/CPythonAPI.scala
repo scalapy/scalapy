@@ -33,6 +33,8 @@ class CPythonAPIInterface {
   @scala.native def Py_SetProgramName(str: WString): Unit
   @scala.native def Py_Initialize(): Unit
 
+  @scala.native def Py_DecodeLocale(str: String, size: Platform.Pointer): WString
+
   @scala.native def PyEval_SaveThread(): Platform.Pointer
   @scala.native def PyGILState_Ensure(): Int
   @scala.native def PyGILState_Release(state: Int): Unit

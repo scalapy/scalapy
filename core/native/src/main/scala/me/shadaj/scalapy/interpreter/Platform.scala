@@ -1,13 +1,15 @@
 package me.shadaj.scalapy.interpreter
 
 import scala.scalanative.{unsafe => sn, libc => lc}
-import scala.scalanative.unsafe.Ptr
+import scala.scalanative.unsafe.{CWideChar, Ptr}
 import java.nio.charset.Charset
 import scala.scalanative.unsafe.CQuote
 
 import scala.scalanative.runtime
 import scala.scalanative.runtime.Intrinsics
 import scala.scalanative.unsigned._
+
+import scala.sys
 
 object Platform {
   final val isNative = true
@@ -22,8 +24,6 @@ object Platform {
 
   val emptyCString: CString = c""
 
-  // FIXME: use sn.CWideString in the next Scala Native release
-  type CWideString = Ptr[sn.CWideChar]
   type CString = sn.CString
   type Pointer = Ptr[Byte]
   type PointerToPointer = Ptr[Ptr[Byte]]
@@ -60,5 +60,9 @@ object Platform {
   def setPtrInt(ptr: Pointer, offset: Int, value: Int): Unit = !((ptr + offset)).asInstanceOf[Ptr[Int]] = value
   def setPtrByte(ptr: Pointer, offset: Int, value: Byte): Unit = !((ptr + offset)).asInstanceOf[Ptr[Byte]] = value
 
-  def programName: Option[CWideString] = None
+  def programName: Option[Ptr[CWideChar]] =
+    sys.env.get("SCALAPY_PYTHON_PROGRAMNAME").map(toCWideString(_))
+
+  private def toCWideString(str: String): Ptr[CWideChar] =
+    CPythonAPI.Py_DecodeLocale(Zone(implicit zone => toCString(str)), null)
 }

@@ -4,8 +4,10 @@ import scala.scalanative.unsafe._
 
 @extern
 object CPythonAPI {
-  def Py_SetProgramName(str: Platform.CWideString): Unit = extern
+  def Py_SetProgramName(str: Ptr[CWideChar]): Unit = extern
   def Py_Initialize(): Unit = extern
+
+  def Py_DecodeLocale(str: CString, size: Ptr[CSize]): Ptr[CWideChar] = extern
 
   def PyEval_SaveThread(): Platform.Pointer = extern
   def PyGILState_Ensure(): Int = extern
