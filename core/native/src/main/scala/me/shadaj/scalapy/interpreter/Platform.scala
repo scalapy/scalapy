@@ -10,6 +10,7 @@ import scala.scalanative.runtime.Intrinsics
 import scala.scalanative.unsigned._
 
 import scala.sys
+import scala.util.Properties
 
 object Platform {
   final val isNative = true
@@ -61,7 +62,9 @@ object Platform {
   def setPtrByte(ptr: Pointer, offset: Int, value: Byte): Unit = !((ptr + offset)).asInstanceOf[Ptr[Byte]] = value
 
   def programName: Option[Ptr[CWideChar]] =
-    sys.env.get("SCALAPY_PYTHON_PROGRAMNAME").map(toCWideString(_))
+    Properties.propOrNone("scalapy.python.programname")
+      .orElse(sys.env.get("SCALAPY_PYTHON_PROGRAMNAME"))
+      .map(toCWideString(_))
 
   private def toCWideString(str: String): Ptr[CWideChar] =
     CPythonAPI.Py_DecodeLocale(Zone(implicit zone => toCString(str)), null)

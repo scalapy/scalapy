@@ -85,13 +85,13 @@ The system property takes precedence over the environment variable.
 
 ## Virtualenv
 
-To use ScalaPy with a Python installation inside a virtualenv, set the path to the Python interpreter executable using either the `scalapy.python.programname` system property (JVM only)
+To use ScalaPy with a Python installation inside a virtualenv, set the path to the Python interpreter executable using either the `scalapy.python.programname` system property
 
 ```shell
 sbt -Dscalapy.python.programname=/Users/example/example-env/bin/python run
 ```
 
-or the `SCALAPY_PYTHON_PROGRAMNAME` environment variable (JVM and Scala Native)
+or the `SCALAPY_PYTHON_PROGRAMNAME` environment variable
 
 ```shell
 export SCALAPY_PYTHON_PROGRAMNAME=/Users/example/example-env/bin/python
