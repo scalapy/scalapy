@@ -9,6 +9,8 @@ object CPythonAPI {
 
   def Py_DecodeLocale(str: CString, size: Ptr[CSize]): Ptr[CWideChar] = extern
 
+  def PyMem_RawFree(p: Platform.Pointer): Unit = extern
+
   def PyEval_SaveThread(): Platform.Pointer = extern
   def PyGILState_Ensure(): Int = extern
   def PyGILState_Release(state: Int): Unit = extern

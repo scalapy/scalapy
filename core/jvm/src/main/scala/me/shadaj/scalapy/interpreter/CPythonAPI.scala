@@ -35,6 +35,8 @@ class CPythonAPIInterface {
 
   @scala.native def Py_DecodeLocale(str: String, size: Platform.Pointer): WString
 
+  @scala.native def PyMem_RawFree(p: Platform.Pointer): Unit
+
   @scala.native def PyEval_SaveThread(): Platform.Pointer
   @scala.native def PyGILState_Ensure(): Int
   @scala.native def PyGILState_Release(state: Int): Unit

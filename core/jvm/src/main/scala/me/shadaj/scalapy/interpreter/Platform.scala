@@ -3,8 +3,6 @@ package me.shadaj.scalapy.interpreter
 import com.sun.jna
 import com.sun.jna.Native
 import java.nio.charset.Charset
-import scala.sys
-import scala.util.Properties
 
 object Platform {
   final val isNative = false
@@ -82,8 +80,5 @@ object Platform {
   def setPtrInt(ptr: Pointer, offset: Int, value: Int): Unit = ptr.setInt(offset, value)
   def setPtrByte(ptr: Pointer, offset: Int, value: Byte): Unit = ptr.setByte(offset, value)
 
-  def programName: Option[jna.WString] =
-    Properties.propOrNone("scalapy.python.programname")
-      .orElse(sys.env.get("SCALAPY_PYTHON_PROGRAMNAME"))
-      .map(new jna.WString(_))
+  def toCWideString[T](str: String)(fn: jna.WString => T): T = fn(new jna.WString(str))
 }
