@@ -10,8 +10,8 @@ import me.shadaj.scalapy.py.IndexError
 object CPythonInterpreter {
   private def initialize: Unit = {
     val programName =
-      Properties.propOrNone("scalapy.python.programname")
-        .orElse(sys.env.get("SCALAPY_PYTHON_PROGRAMNAME"))
+      Option(System.getenv("SCALAPY_PYTHON_PROGRAMNAME"))
+        .orElse(Properties.propOrNone("scalapy.python.programname"))
 
     programName.fold(CPythonAPI.Py_Initialize())(Platform.toCWideString(_) { programName =>
       CPythonAPI.Py_SetProgramName(programName)

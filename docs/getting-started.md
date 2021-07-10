@@ -81,7 +81,7 @@ or set the system property `scalapy.python.library`
 sbt -Dscalapy.python.library=python3.8 run
 ```
 
-The system property takes precedence over the environment variable.
+The environment variable takes precedence over the system property.
 
 ## Virtualenv
 
@@ -98,6 +98,6 @@ export SCALAPY_PYTHON_PROGRAMNAME=/Users/example/example-env/bin/python
 sbt run
 ```
 
-The system property takes precedence over the environment variable.
+The environment variable takes precedence over the system property.
 
 This variable is used as the input to the Python/C API function `Py_SetProgramName`. `Py_SetProgramName` is run prior to `Py_Initialize` to set the correct paths to Python run-time libraries (`prefix`, `exec_prefix`, ...).
