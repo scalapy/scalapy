@@ -8,3 +8,6 @@ website/node_modules
 lowered.hnir
 .vscode/
 facadeGen/.mypy_cache
+.metals/
+.bsp/
+.bloop/

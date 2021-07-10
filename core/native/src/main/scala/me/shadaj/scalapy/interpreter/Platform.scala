@@ -1,7 +1,7 @@
 package me.shadaj.scalapy.interpreter
 
 import scala.scalanative.{unsafe => sn, libc => lc}
-import scala.scalanative.unsafe.Ptr
+import scala.scalanative.unsafe.{CWideChar, Ptr}
 import java.nio.charset.Charset
 import scala.scalanative.unsafe.CQuote
 
@@ -57,4 +57,13 @@ object Platform {
   def setPtrLong(ptr: Pointer, offset: Int, value: Long): Unit = !((ptr + offset)).asInstanceOf[Ptr[Long]] = value
   def setPtrInt(ptr: Pointer, offset: Int, value: Int): Unit = !((ptr + offset)).asInstanceOf[Ptr[Int]] = value
   def setPtrByte(ptr: Pointer, offset: Int, value: Byte): Unit = !((ptr + offset)).asInstanceOf[Ptr[Byte]] = value
+
+  def toCWideString[T](str: String)(fn: Ptr[CWideChar] => T): T = {
+    val cwstr = Zone { implicit zone =>
+      CPythonAPI.Py_DecodeLocale(toCString(str), null)
+    }
+    val t = fn(cwstr)
+    CPythonAPI.PyMem_RawFree(cwstr.asInstanceOf[Ptr[Byte]])
+    t
+  }
 }

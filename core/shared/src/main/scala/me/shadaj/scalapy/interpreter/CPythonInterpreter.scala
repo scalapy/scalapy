@@ -1,12 +1,25 @@
 package me.shadaj.scalapy.interpreter
 
 import java.{util => ju}
+import scala.sys
+import scala.util.Properties
 
 import me.shadaj.scalapy.py.PythonException
 import me.shadaj.scalapy.py.IndexError
 
 object CPythonInterpreter {
-  CPythonAPI.Py_Initialize()
+  private def initialize: Unit = {
+    val programName =
+      Option(System.getenv("SCALAPY_PYTHON_PROGRAMNAME"))
+        .orElse(Properties.propOrNone("scalapy.python.programname"))
+
+    programName.fold(CPythonAPI.Py_Initialize())(Platform.toCWideString(_) { programName =>
+      CPythonAPI.Py_SetProgramName(programName)
+      CPythonAPI.Py_Initialize()
+    })
+  }
+
+  initialize
 
   private[scalapy] val globals: Platform.Pointer = CPythonAPI.PyDict_New()
   CPythonAPI.Py_IncRef(globals)
@@ -575,4 +588,3 @@ object CPythonInterpreter {
     }
   }
 }
-
