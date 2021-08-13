@@ -1,8 +1,5 @@
 package me.shadaj.scalapy.interpreter
 
-import scala.sys
-import scala.util.Try
-
 import com.sun.jna.{Native, NativeLong, Memory, WString}
 import scala.util.{Success, Failure, Properties}
 
