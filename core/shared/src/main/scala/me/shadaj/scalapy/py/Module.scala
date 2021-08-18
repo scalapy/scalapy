@@ -5,7 +5,7 @@ import scala.reflect.ClassTag
 
 import me.shadaj.scalapy.interpreter.CPythonInterpreter
 
-@native trait Module extends Dynamic
+@native class Module extends Dynamic
 
 object Module {
   def apply(module: String): Module = {

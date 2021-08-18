@@ -4,7 +4,7 @@ import me.shadaj.scalapy.interpreter
 
 import org.scalatest.funsuite.AnyFunSuite
 
-@native trait StringObjectFacade extends Object {
+@native class StringObjectFacade extends Object {
   def replace(old: String, newValue: String): String = native
 }
 

@@ -7,12 +7,12 @@ class ThreadStressTest extends AnyFunSuite {
     val list = Dynamic.global.list()
 
     val threads = (1 to 5000).map { i =>
-      val t = new Thread(() => {
-        list.append(i)
+      val t = new Thread(new Runnable () {
+        def run() = {
+            list.append(i)
+        }
       })
-
       t.start()
-
       t
     }
 

@@ -8,12 +8,20 @@ import me.shadaj.scalapy.readwrite.{Reader, Writer}
 
 trait Any { self =>
   private var cleaned = false
+    // var noOfObjects = 0;
   
-  private[scalapy] val rawValue: PyValue
+    // // Instead of performing increment in the constructor
+    // // instance block is preferred to make this program generic.
+    // {
+    //     noOfObjects += 1;
+    // }
+    
+  private[scalapy] var rawValue: PyValue = null
   private[scalapy] def value: PyValue = {
     if (cleaned) {
       throw new IllegalAccessException("The Python value you are try to access has already been released by a call to py.Any.del()")
     } else {
+     // println("HASHCODE: " + rawValue.hashCode() + " rawValue: " + rawValue.getStringified)
       rawValue
     }
   }
@@ -37,7 +45,7 @@ trait Any { self =>
 object Any {
   def populateWith(v: PyValue): Any = {
     new Any {
-      val rawValue = v
+      rawValue = v
     }
   }
 

@@ -13,7 +13,7 @@ package object py extends PyMacros {
   def module(name: String) = Module(name)
   def module(name: String, subname: String) = Module(name, subname)
 
-  @py.native trait None extends Any
+  @py.native class None extends Any
   val None = Any.populateWith(CPythonInterpreter.noneValue).as[None]
 
   type NoneOr[T] = None | T
@@ -46,10 +46,12 @@ package object py extends PyMacros {
 
   implicit def seqConvertableSeqElem[T, C](implicit ev: C => scala.collection.Seq[T], elemConvertable: ConvertableToSeqElem[T]): ConvertableToSeqElem[C] = new ConvertableToSeqElem[C] {
     def convertCopy(v: C): Platform.Pointer = {
+
       CPythonInterpreter.createListCopy(ev(v), elemConvertable.convertCopy)
     }
 
     def convertProxy(v: C): PyValue = {
+
       CPythonInterpreter.createListProxy(ev(v), elemConvertable.convertProxy)
     }
   }

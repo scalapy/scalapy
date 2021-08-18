@@ -4,7 +4,7 @@ import scala.language.dynamics
 
 import me.shadaj.scalapy.interpreter.CPythonInterpreter
 
-@native trait Dynamic extends Any with AnyDynamics
+@native class Dynamic extends Any with AnyDynamics
 
 object Dynamic {
   object global extends scala.Dynamic {
@@ -28,37 +28,61 @@ object Dynamic {
 
 trait AnyDynamics extends Any with scala.Dynamic {
   def apply(params: Any*): Dynamic = {
-    implicitly[FacadeCreator[Dynamic]].create(
-      CPythonInterpreter.call(value, params.map(_.value), Seq())
-    )
+    // implicitly[FacadeCreator[Dynamic]].create(
+    //   CPythonInterpreter.call(value, params.map(_.value), Seq())
+    // )
+    val dynamic = implicitly[FacadeCreator[Dynamic]].create
+    dynamic.rawValue = CPythonInterpreter.call(value, params.map(_.value), Seq())
+    dynamic
   }
 
   def applyDynamic(method: String)(params: Any*): Dynamic = {
-    implicitly[FacadeCreator[Dynamic]].create(
-      CPythonInterpreter.call(value, method, params.map(_.value), Seq())
-    )
+    // implicitly[FacadeCreator[Dynamic]].create(
+    //   CPythonInterpreter.call(value, method, params.map(_.value), Seq())
+    // )
+    val dynamic = implicitly[FacadeCreator[Dynamic]].create
+    dynamic.rawValue = CPythonInterpreter.call(value, method, params.map(_.value), Seq())
+    dynamic
+    // new FacadeValueProvider(CPythonInterpreter.call(value, method, params.map(_.value), Seq())) with Dynamic
   }
 
   def applyNamed(params: (String, Any)*): Dynamic = {
-    implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.call(
+    // implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.call(
+    //   value,
+    //   params.filter(t => t._1.isEmpty && t._2 != null).map(_._2.value),
+    //   params.filter(t => t._1.nonEmpty && t._2 != null).map(t => (t._1, t._2.value))
+    // ))
+    val dynamic = implicitly[FacadeCreator[Dynamic]].create
+    dynamic.rawValue = CPythonInterpreter.call(
       value,
       params.filter(t => t._1.isEmpty && t._2 != null).map(_._2.value),
       params.filter(t => t._1.nonEmpty && t._2 != null).map(t => (t._1, t._2.value))
-    ))
+    )
+    dynamic
   }
 
   def applyDynamicNamed(method: String)(params: (String, Any)*): Dynamic = {
-    implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.call(
+    // implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.call(
+    //   value, method,
+    //   params.filter(t => t._1.isEmpty && t._2 != null).map(_._2.value),
+    //   params.filter(t => t._1.nonEmpty && t._2 != null).map(t => (t._1, t._2.value))
+    // ))
+    val dynamic = implicitly[FacadeCreator[Dynamic]].create
+    dynamic.rawValue = CPythonInterpreter.call(
       value, method,
       params.filter(t => t._1.isEmpty && t._2 != null).map(_._2.value),
       params.filter(t => t._1.nonEmpty && t._2 != null).map(t => (t._1, t._2.value))
-    ))
+    )
+    dynamic
   }
 
   def selectDynamic(term: String): Dynamic = {
-    implicitly[FacadeCreator[Dynamic]].create(
-      CPythonInterpreter.select(value, term)
-    )
+    // implicitly[FacadeCreator[Dynamic]].create(
+    //   CPythonInterpreter.select(value, term)
+    // )
+    val dynamic = implicitly[FacadeCreator[Dynamic]].create
+    dynamic.rawValue = CPythonInterpreter.select(value, term)
+    dynamic
   }
 
   def updateDynamic(name: String)(newValue: Any): Unit = {
@@ -66,9 +90,12 @@ trait AnyDynamics extends Any with scala.Dynamic {
   }
 
   def bracketAccess(key: Any): Dynamic = {
-    implicitly[FacadeCreator[Dynamic]].create(
-      CPythonInterpreter.selectBracket(value, key.value)
-    )
+    // implicitly[FacadeCreator[Dynamic]].create(
+    //   CPythonInterpreter.selectBracket(value, key.value)
+    // )
+    val dynamic = implicitly[FacadeCreator[Dynamic]].create
+    dynamic.rawValue = CPythonInterpreter.selectBracket(value, key.value)
+    dynamic
   }
 
   def bracketUpdate(key: Any, newValue: Any): Unit = {
@@ -84,30 +111,51 @@ trait AnyDynamics extends Any with scala.Dynamic {
   }
 
   def unary_+(): Dynamic = {
-    implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.unaryPos(value))
+    // implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.unaryPos(value))
+    val dynamic = implicitly[FacadeCreator[Dynamic]].create
+    dynamic.rawValue = CPythonInterpreter.unaryPos(value)
+    dynamic
   }
 
   def unary_-(): Dynamic = {
-    implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.unaryNeg(value))
+    // implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.unaryNeg(value))
+    val dynamic = implicitly[FacadeCreator[Dynamic]].create
+    dynamic.rawValue = CPythonInterpreter.unaryNeg(value)
+    dynamic
   }
 
   def +(that: Any): Dynamic = {
-    implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.binaryAdd(value, that.value))
+    // implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.binaryAdd(value, that.value))
+    val dynamic = implicitly[FacadeCreator[Dynamic]].create
+    dynamic.rawValue = CPythonInterpreter.binaryAdd(value, that.value)
+    dynamic
   }
 
   def -(that: Any): Dynamic = {
-    implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.binarySub(value, that.value))
+    // implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.binarySub(value, that.value))
+    val dynamic = implicitly[FacadeCreator[Dynamic]].create
+    dynamic.rawValue = CPythonInterpreter.binarySub(value, that.value)
+    dynamic
   }
 
   def *(that: Any): Dynamic = {
-    implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.binaryMul(value, that.value))
+    // implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.binaryMul(value, that.value))
+    val dynamic = implicitly[FacadeCreator[Dynamic]].create
+    dynamic.rawValue = CPythonInterpreter.binaryMul(value, that.value)
+    dynamic
   }
 
   def /(that: Any): Dynamic = {
-    implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.binaryDiv(value, that.value))
+    // implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.binaryDiv(value, that.value))
+    val dynamic = implicitly[FacadeCreator[Dynamic]].create
+    dynamic.rawValue = CPythonInterpreter.binaryDiv(value, that.value)
+    dynamic
   }
 
   def %(that: Any): Dynamic = {
-    implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.binaryMod(value, that.value))
+    // implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.binaryMod(value, that.value))
+    val dynamic = implicitly[FacadeCreator[Dynamic]].create
+    dynamic.rawValue = CPythonInterpreter.binaryMod(value, that.value)
+    dynamic
   }
 }

@@ -32,7 +32,6 @@ lazy val macros = crossProject(JVMPlatform, NativePlatform)
   .in(file("coreMacros"))
   .settings(
     name := "scalapy-macros",
-    crossScalaVersions := scala2Versions,
     libraryDependencies ++= {
       CrossVersion.partialVersion(scalaVersion.value) match {
         case Some((2, _)) => Seq(
@@ -48,6 +47,10 @@ lazy val macros = crossProject(JVMPlatform, NativePlatform)
         case _ => sharedSourceDir / "scala-3"
       }
     }
+  ).jvmSettings(
+    crossScalaVersions := supportedScalaVersions
+  ).nativeSettings(
+    crossScalaVersions := scala2Versions
   )
 
 lazy val macrosJVM = macros.jvm
@@ -240,8 +243,10 @@ lazy val bench = crossProject(JVMPlatform, NativePlatform)
     name := "scalapy-bench",
     version := "0.1.0-SNAPSHOT"
   ).jvmSettings(
+    crossScalaVersions := supportedScalaVersions,
     javaOptions += s"-Djna.library.path=$pythonLibsDir"
   ).nativeSettings(
+    crossScalaVersions := scala2Versions,
     nativeLinkingOptions ++= pythonLdFlags,
     nativeMode := "release-fast"
   ).dependsOn(core)

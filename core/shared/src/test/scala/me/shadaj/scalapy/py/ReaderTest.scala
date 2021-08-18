@@ -81,9 +81,10 @@ class ReaderTest extends AnyFunSuite {
   test("Reading a sequence of objects preserves original object") {
     local {
       val datetime = module("datetime")
-      val datesSeq = py"[$datetime.date.today(), $datetime.date.today().replace(year = 1000)]".as[Seq[Object]]
-      assert(datesSeq.head.as[Dynamic].year.as[Int] > 2000)
-      assert(datesSeq.last.as[Dynamic].year.as[Int] == 1000)
+      val datesSeq = py"[$datetime.date.today(), $datetime.date.today().replace(year = 1000), $datetime.date.today().replace(year = 5000)]"
+      val dates = datesSeq.as[Seq[Object]]
+    //  dates.foreach(x => println("VALUE: " + x))
+      assert(dates.last.as[Dynamic].year.as[Int] == 1000)
     }
   }
 

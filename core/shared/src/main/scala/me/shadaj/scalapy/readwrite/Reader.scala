@@ -21,6 +21,7 @@ trait Reader[T] {
   // borrowed, no references should be leaded without a ref count bump
   // assumes that GIL is held
   def readNative(r: Platform.Pointer): T = {
+    //println("RRRRRRRRRR")
     read(PyValue.fromBorrowed(r))
   }
 }
@@ -31,7 +32,18 @@ object Reader extends TupleReaders with FunctionReaders {
   }
 
   implicit def facadeReader[F <: py.Any](implicit creator: FacadeCreator[F]): Reader[F] = new Reader[F] {
-    override def readNative(r: Platform.Pointer): F = creator.create(PyValue.fromBorrowed(r))
+    override def readNative(r: Platform.Pointer): F = {
+      // creator.create(PyValue.fromBorrowed(r))
+      // new FacadeValueProvider(PyValue.fromBorrowed(r)) with F
+      val f = creator.create// new F {}
+    
+      //println("F VALUE: " + f)
+      f.rawValue = PyValue.fromBorrowed(r)
+      if (f.rawValue != null) {
+        println("F object: " + f)
+      }
+      f
+    }
   }
 
   implicit val unitReader: Reader[Unit] = new Reader[Unit] {
@@ -105,6 +117,7 @@ object Reader extends TupleReaders with FunctionReaders {
 
   implicit val stringReader: Reader[String] = new Reader[String] {
     override def readNative(r: Platform.Pointer): String = {
+
       val cStr = CPythonAPI.PyUnicode_AsUTF8(r)
       CPythonInterpreter.throwErrorIfOccured()
       Platform.fromCString(cStr, java.nio.charset.Charset.forName("UTF-8"))
@@ -123,27 +136,33 @@ object Reader extends TupleReaders with FunctionReaders {
   }
 
   implicit def mutableSeqReader[T](implicit reader: Reader[T], writer: Writer[T]): Reader[mutable.Seq[T]] = new Reader[mutable.Seq[T]] {
-    override def read(r: PyValue) = r.dup().getSeq(reader.readNative, writer.writeNative)
+    override def read(r: PyValue) = {
+      r.dup().getSeq(reader.readNative, writer.writeNative)
+    }
   }
 
   implicit def seqReader[T, C[A] <: Iterable[A]](implicit reader: Reader[T], bf: Factory[T, C[T]]): Reader[C[T]] = new Reader[C[T]] {
     override def readNative(r: Platform.Pointer) = {
       val length = Platform.cSizeToLong(CPythonAPI.PySequence_Length(r)).toInt
       CPythonInterpreter.throwErrorIfOccured()
-
       val builder = bf.newBuilder
       builder.sizeHint(length)
+      val buffer = new mutable.ArrayBuffer[T]()
 
-      (0 until length).foreach { i =>
+      val result = (0 until length).flatMap { i =>
         val ret = CPythonAPI.PySequence_GetItem(r, i)
         CPythonInterpreter.throwErrorIfOccured()
         try {
+          println("----------------------")
+
           builder += reader.readNative(ret)
+          List(reader.readNative(ret)) 
         } finally {
           CPythonAPI.Py_DecRef(ret)
+          List()
         }
       }
-
+      result.foreach(x =>println("ELEMENT: " + x))
       builder.result()
     }
   }

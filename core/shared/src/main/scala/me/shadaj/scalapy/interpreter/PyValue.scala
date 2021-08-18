@@ -61,6 +61,7 @@ final class PyValue private[PyValue](var underlying: Platform.Pointer, safeGloba
   def getSeq[T](read: Platform.Pointer => T, write: T => Platform.Pointer): mutable.Seq[T] = new mutable.Seq[T] {
     override def length: Int = CPythonInterpreter.withGil {
       val ret = Platform.cSizeToLong(CPythonAPI.PySequence_Length(underlying)).toInt
+    
       CPythonInterpreter.throwErrorIfOccured()
       ret
     }
@@ -68,6 +69,7 @@ final class PyValue private[PyValue](var underlying: Platform.Pointer, safeGloba
     override def apply(idx: Int): T = CPythonInterpreter.withGil {
       val ret = CPythonAPI.PySequence_GetItem(underlying, idx)
       CPythonInterpreter.throwErrorIfOccured()
+      
       try {
         read(ret)
       } finally {
@@ -108,6 +110,7 @@ final class PyValue private[PyValue](var underlying: Platform.Pointer, safeGloba
     def iterator: Iterator[(PyValue, PyValue)] = CPythonInterpreter.withGil {
       val keysList = PyValue.fromNew(CPythonAPI.PyDict_Keys(underlying))
       CPythonInterpreter.throwErrorIfOccured()
+
       keysList.getSeq(PyValue.fromBorrowed(_), null).toIterator.map { k =>
         (k, get(k).get)
       }
@@ -127,6 +130,7 @@ final class PyValue private[PyValue](var underlying: Platform.Pointer, safeGloba
   }
 
   private[scalapy] def dup(): PyValue = {
+    
     if (underlying != null) {
       PyValue.fromBorrowed(underlying)
     } else {
