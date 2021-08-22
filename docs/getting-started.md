@@ -17,7 +17,7 @@ libraryDependencies += "me.shadaj" %% "scalapy-core" % "0.5.0"
 libraryDependencies += "me.shadaj" %%% "scalapy-core" % "0.5.0"
 ```
 
-You'll then need to add the Python native libraries to your project and configure SBT to run your code in a separate JVM instance.
+You'll then need to add the Python native libraries to your project and configure SBT to run your code in a separate JVM instance, either manually,
 
 ```scala
 fork := true
@@ -40,10 +40,46 @@ lazy val pythonLibsDir = {
 javaOptions += s"-Djna.library.path=$pythonLibsDir"
 ```
 
+or using the [`python-native-libs`](https://github.com/kiendang/python-native-libs) helper library,
+
+First, add `python-native-libs` to `project/plugins.sbt`
+
+```scala
+libraryDependencies += "ai.kien" %% "python-native-libs" % "0.2.1"
+```
+
+Then, in `build.sbt`,
+
+```scala
+import ai.kien.python.Python
+
+lazy val python = Python("<optional-path-to-a-python-interpreter-executable>")
+
+lazy val javaOpts = python.scalapyProperties.get.map {
+  case (k, v) => s"""-D$k=$v"""
+}.toSeq
+
+javaOptions += javaOpts
+```
+
 If you'd like to use [Scala Native](https://scala-native.readthedocs.io/), follow the instructions there to create a project with Scala Native `0.4.0-M2`. Then, add the following additional configuration to your SBT build to link the Python interpreter.
+
+Manually,
 
 ```scala
 lazy val pythonLdFlags = ... // same as above
+
+nativeLinkingOptions ++= pythonLdFlags
+```
+
+Using `python-native-libs`,
+
+```scala
+import ai.kien.python.Python
+
+lazy val python = Python("<optional-path-to-a-python-interpreter-executable>")
+
+lazy val pythonLdFlags = python.ldflags.get
 
 nativeLinkingOptions ++= pythonLdFlags
 ```
