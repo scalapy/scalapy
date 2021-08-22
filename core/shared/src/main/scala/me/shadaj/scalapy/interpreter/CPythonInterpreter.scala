@@ -1,7 +1,6 @@
 package me.shadaj.scalapy.interpreter
 
 import java.{util => ju}
-import scala.sys
 import scala.util.Properties
 
 import me.shadaj.scalapy.py.PythonException
@@ -451,6 +450,12 @@ object CPythonInterpreter {
         if (callable == null) {
           CPythonAPI.PyErr_Clear()
           callable = CPythonAPI.PyDict_GetItemWithError(builtins, methodString)
+          if (callable == null) {
+            CPythonAPI.PyErr_SetString(
+              selectGlobal("NameError").underlying,
+              Platform.toCString(s"name '$method' is not defined")
+            )
+          }
         }
 
         CPythonAPI.Py_IncRef(callable)
@@ -490,6 +495,12 @@ object CPythonInterpreter {
         if (Platform.pointerToLong(gottenValue) == 0) {
           CPythonAPI.PyErr_Clear()
           gottenValue = CPythonAPI.PyDict_GetItemWithError(builtins, nameString)
+          if (Platform.pointerToLong(gottenValue) == 0) {
+            CPythonAPI.PyErr_SetString(
+              selectGlobal("NameError").underlying,
+              Platform.toCString(s"name '$name' is not defined")
+            )
+          }
         }
 
         CPythonAPI.Py_DecRef(nameString)

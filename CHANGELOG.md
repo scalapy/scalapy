@@ -5,6 +5,9 @@
 + The version of the Python native library can now be controlled with the `scalapy.python.library` system property ([PR #198](https://github.com/shadaj/scalapy/pull/198))
 + Enable running `Py_SetProgramName` with user provided input prior to `Py_Initialize` to set the correct paths to Python run-time libraries. Input to `Py_SetProgramName`, the Python interpreter executable, can be controlled with either the `scalapy.python.programname` system property or the `SCALAPY_PYTHON_PROGRAMNAME` environment variable ([PR #200](https://github.com/shadaj/scalapy/pull/200))
 
+### Bug Fixes :bug:
++ Raise a `NameError` exception when attempting to call a function or access a variable that does not exist in the global namespace ([PR #207](https://github.com/shadaj/scalapy/pull/207))
+
 ## v0.5.0
 ### Highlights :tada:
 + Significantly optimize transfers from Scala to Python, which are now up to 5x faster on the JVM and 4x faster on Scala Native ([PR #179](https://github.com/shadaj/scalapy/pull/179))
