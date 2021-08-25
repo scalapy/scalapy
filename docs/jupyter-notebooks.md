@@ -19,7 +19,7 @@ In your `jupyter/kernels/scala/kernel.json` file, replace the contents with
   "argv" : [
     "bash",
     "-c",
-    "env SCALAPY_PYTHON_LIBRARY=python3.6m java -Djna.library.path=/usr/lib/x86_64-linux-gnu/ -jar /usr/local/share/jupyter/kernels/scala/launcher.jar --connection-file {connection_file}"
+    "env SCALAPY_PYTHON_LIBRARY=python3.7m java -Djna.library.path=/usr/lib/x86_64-linux-gnu/ -jar /usr/local/share/jupyter/kernels/scala/launcher.jar --connection-file {connection_file}"
   ]
 }"
 ```
@@ -30,7 +30,7 @@ Make sure to replace `/usr/lib/x86_64-linux-gnu/libpython3.6m.so` with the path 
 ScalaPy on the JVM contains with all the logic to load native libraries built-in, so you can import ScalaPy and start using it as usual!
 
 ```scala
-import $ivy.`me.shadaj::scalapy:0.4.1`
+import $ivy.`me.shadaj::scalapy-core:0.5.0`
 
 import me.shadaj.scalapy.py
 ```
