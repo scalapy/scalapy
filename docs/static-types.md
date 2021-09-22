@@ -19,6 +19,8 @@ import me.shadaj.scalapy.py
 }
 ```
 
+**Note:** If using Scala 3, you should define a static type as a subclass, instead of a trait as shown in this example.
+
 Once you have this type facade, it is usable with the `.as` method just like converting to existing Scala types. So, to get a type-safe reference to the Python string we have loaded, we convert it to our facade type.
 
 ```scala mdoc
