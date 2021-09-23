@@ -79,4 +79,6 @@ object Platform {
   def setPtrLong(ptr: Pointer, offset: Int, value: Long): Unit = ptr.setLong(offset, value)
   def setPtrInt(ptr: Pointer, offset: Int, value: Int): Unit = ptr.setInt(offset, value)
   def setPtrByte(ptr: Pointer, offset: Int, value: Byte): Unit = ptr.setByte(offset, value)
+
+  def toCWideString[T](str: String)(fn: jna.WString => T): T = fn(new jna.WString(str))
 }

@@ -4,7 +4,7 @@ import me.shadaj.scalapy.interpreter
 
 import org.scalatest.funsuite.AnyFunSuite
 
-class SpecialSyntaxTest extends AnyFunSuite {
+class SpecialSyntaxTest extends CrossScalaSpecialSyntaxTest {
   test("Can use with statement with file object") {
     local {
       val opened = if (interpreter.Platform.isNative) {

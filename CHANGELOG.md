@@ -1,11 +1,27 @@
 # Changelog
 ## vNEXT
 ### Highlights :tada:
++ Add initial support for Scala 3. To create static facades use `class` instead of `trait` in Scala 3. Also, `@PyBracketAccess` currently is not supported in this version.
++ Add support for bracket syntax to facades. The annotation `@PyBracketAccess` can be used on methods to mark them as representing bracket access on an object. The target method must have one (to read the value) or two parameters (to update the value) ([PR #194](https://github.com/shadaj/scalapy/pull/194)).
++ The version of the Python native library can now be controlled with the `scalapy.python.library` system property ([PR #198](https://github.com/shadaj/scalapy/pull/198))
++ Enable running `Py_SetProgramName` with user provided input prior to `Py_Initialize` to set the correct paths to Python run-time libraries. Input to `Py_SetProgramName`, the Python interpreter executable, can be controlled with either the `scalapy.python.programname` system property or the `SCALAPY_PYTHON_PROGRAMNAME` environment variable ([PR #200](https://github.com/shadaj/scalapy/pull/200))
++ Add instructions on how to set up a ScalaPy sbt project using [`python-native-libs`](https://github.com/kiendang/python-native-libs) ([PR #210](https://github.com/shadaj/scalapy/pull/210))
+
+### Bug Fixes :bug:
++ Raise a `NameError` exception when attempting to call a function or access a variable that does not exist in the global namespace ([PR #207](https://github.com/shadaj/scalapy/pull/207))
+
+## v0.5.0
+### Highlights :tada:
 + Significantly optimize transfers from Scala to Python, which are now up to 5x faster on the JVM and 4x faster on Scala Native ([PR #179](https://github.com/shadaj/scalapy/pull/179))
 + Optimize transfers from Python to Scala, which are now up to 4x faster on the JVM and 3x faster on Scala Native ([PR #183](https://github.com/shadaj/scalapy/pull/183))
++ Introduce a pre-alpha type facade generator that generates Scala types through mypy ([PR #110](https://github.com/shadaj/scalapy/pull/110))
+  + This is pre-alpha in the sense that types generated for any module, including Python builtins, are likely to require manual patching to compile
+  + **However**, with a bit of patching, the types for many libraries are good enough to use directly without having to fall back to dynamic interfaces
+  + The current type generator has been merged as a very experimental feature just so that others in the community can try it out. It will be rewritten in the near future with a cleaner architecture that will enable generation of more complex types correctly.
 + Python values can now be loaded into any immutable Scala collection type as a copy, not just `Seq` ([PR #179](https://github.com/shadaj/scalapy/pull/179))
 + Allow converting nested sequences to Python using a single call to `toPythonCopy` or `toPythonProxy` ([PR #178](https://github.com/shadaj/scalapy/pull/178))
 + Add API equivalents for the Python `del` keyword (`del foo.bar`, `del foo["key"]`, and `del foo`) ([PR #175](https://github.com/shadaj/scalapy/pull/175), [PR #177](https://github.com/shadaj/scalapy/pull/177))
++ Support referential equality of Python values with a corresponding hash-code implementation ([PR #110](https://github.com/shadaj/scalapy/pull/110))
 
 ### Breaking Changes :warning:
 + Reading a Python collection as an immutable sequence will now load a copy. To load a proxy that can observe changes, load sequences with `.as[mutable.Seq[...]]` ([PR #179](https://github.com/shadaj/scalapy/pull/179))

@@ -7,3 +7,8 @@ website/node_modules
 *.bench.txt
 lowered.hnir
 .vscode/
+facadeGen/.mypy_cache
+.metals/
+.bsp/
+.bloop/
+**/.DS_store

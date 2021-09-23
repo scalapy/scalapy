@@ -32,5 +32,25 @@ class ErrorTest extends AnyFunSuite {
       assert(exp.getMessage.contains("AttributeError"))
     }
   }
-}
 
+  test("Throwing a NameError when accessing a non-existent global variable") {
+    local {
+      val exp = intercept[PythonException](Dynamic.global.xyz)
+      assert(exp.getMessage.contains("NameError"))
+    }
+  }
+
+  test("Throwing a NameError when accessing an attribute of a non-existent global variable") {
+    local {
+      val exp = intercept[PythonException](Dynamic.global.xyz.abc)
+      assert(exp.getMessage.contains("NameError"))
+    }
+  }
+
+  test("Throwing a NameError when calling a non-existent global function") {
+    local {
+      val exp = intercept[PythonException](Dynamic.global.xyz())
+      assert(exp.getMessage.contains("NameError"))
+    }
+  }
+}

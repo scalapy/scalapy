@@ -16,6 +16,12 @@ final class PyValue private[PyValue](var underlying: Platform.Pointer, safeGloba
     myAllocatedValues.head.enqueue(this)
   }
 
+  override def equals(obj: scala.Any): Boolean = {
+    obj.isInstanceOf[PyValue] && underlying == obj.asInstanceOf[PyValue].underlying
+  }
+
+  override def hashCode(): Int = underlying.hashCode()
+
   def getStringified: String = CPythonInterpreter.withGil {
     val pyStr = CPythonAPI.PyObject_Str(underlying)
     CPythonInterpreter.throwErrorIfOccured()

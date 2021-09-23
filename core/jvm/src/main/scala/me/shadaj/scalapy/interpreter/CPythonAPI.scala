@@ -1,14 +1,13 @@
 package me.shadaj.scalapy.interpreter
 
-import scala.sys
-import scala.util.Try
-
-import com.sun.jna.{Native, NativeLong, Memory}
-import scala.util.{Success, Failure}
+import com.sun.jna.{Native, NativeLong, Memory, WString}
+import scala.util.{Success, Failure, Properties}
 
 class CPythonAPIInterface {
   val pythonLibrariesToTry =
-    sys.env.get("SCALAPY_PYTHON_LIBRARY").toSeq ++
+    Option(System.getenv("SCALAPY_PYTHON_LIBRARY"))
+      .orElse(Properties.propOrNone("scalapy.python.library"))
+      .toSeq ++
       Seq(
         "python3",
         "python3.7", "python3.7m",
@@ -22,13 +21,18 @@ class CPythonAPIInterface {
   } catch {
     case t: Throwable => Failure(t)
   })
-  
+
   loadAttempts.find(_.isSuccess).getOrElse {
     loadAttempts.foreach(_.failed.get.printStackTrace())
     throw new Exception(s"Unable to locate Python library, tried ${pythonLibrariesToTry.mkString(", ")}")
   }
 
+  @scala.native def Py_SetProgramName(str: WString): Unit
   @scala.native def Py_Initialize(): Unit
+
+  @scala.native def Py_DecodeLocale(str: String, size: Platform.Pointer): WString
+
+  @scala.native def PyMem_RawFree(p: Platform.Pointer): Unit
 
   @scala.native def PyEval_SaveThread(): Platform.Pointer
   @scala.native def PyGILState_Ensure(): Int

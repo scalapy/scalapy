@@ -5,6 +5,7 @@ import scala.language.experimental.macros
 
 import scala.annotation.StaticAnnotation
 class native extends StaticAnnotation
+class PyBracketAccess extends StaticAnnotation
 
 object FacadeImpl {
   def creator[T <: Any](c: whitebox.Context)(implicit tag: c.WeakTypeTag[T]): c.Tree = {
@@ -31,12 +32,34 @@ object FacadeImpl {
     val returnType = method.returnType
     val paramss = method.paramLists
 
-    paramss.headOption match {
-      case Some(params) =>
-        val paramExprs = params.map(_.name)
-        c.Expr[T](q"as[_root_.me.shadaj.scalapy.py.Dynamic].applyDynamic($methodName)(..$paramExprs).as[$returnType]")
-      case scala.None =>
-        c.Expr[T](q"as[_root_.me.shadaj.scalapy.py.Dynamic].selectDynamic($methodName).as[$returnType]")
+    if (c.enclosingMethod.symbol.annotations.exists(_.tpe =:= typeOf[PyBracketAccess])) {
+      paramss.headOption match {
+        case Some(params) =>
+          val paramExprs = params.map(_.asTerm).map(_.name)
+          paramExprs.length match {
+            case 0 => 
+              c.error(c.enclosingPosition, "PyBracketAccess functions require at least one parameter") 
+              null
+            case 1 => 
+              c.Expr[T](q"as[_root_.me.shadaj.scalapy.py.Dynamic].bracketAccess(${paramExprs(0)}).as[$returnType]")
+            case 2 => 
+              c.Expr[T](q"as[_root_.me.shadaj.scalapy.py.Dynamic].bracketUpdate(${paramExprs(0)}, ${paramExprs(1)})")
+            case _ => 
+              c.error(c.enclosingPosition, "Too many parameters to PyBracketAccess function")
+              null
+          }
+        case scala.None => 
+          c.error(c.enclosingPosition, "PyBracketAccess functions require at least one parameter")
+          null
+      }
+    } else {
+      paramss.headOption match {
+        case Some(params) =>
+          val paramExprs = params.map(_.name)
+          c.Expr[T](q"as[_root_.me.shadaj.scalapy.py.Dynamic].applyDynamic($methodName)(..$paramExprs).as[$returnType]")
+        case scala.None =>
+          c.Expr[T](q"as[_root_.me.shadaj.scalapy.py.Dynamic].selectDynamic($methodName).as[$returnType]")
+      }
     }
   }
 

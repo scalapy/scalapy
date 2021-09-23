@@ -1,12 +1,24 @@
 package me.shadaj.scalapy.interpreter
 
 import java.{util => ju}
+import scala.util.Properties
 
 import me.shadaj.scalapy.py.PythonException
 import me.shadaj.scalapy.py.IndexError
 
 object CPythonInterpreter {
-  CPythonAPI.Py_Initialize()
+  private def initialize: Unit = {
+    val programName =
+      Option(System.getenv("SCALAPY_PYTHON_PROGRAMNAME"))
+        .orElse(Properties.propOrNone("scalapy.python.programname"))
+
+    programName.fold(CPythonAPI.Py_Initialize())(Platform.toCWideString(_) { programName =>
+      CPythonAPI.Py_SetProgramName(programName)
+      CPythonAPI.Py_Initialize()
+    })
+  }
+
+  initialize
 
   private[scalapy] val globals: Platform.Pointer = CPythonAPI.PyDict_New()
   CPythonAPI.Py_IncRef(globals)
@@ -438,6 +450,12 @@ object CPythonInterpreter {
         if (callable == null) {
           CPythonAPI.PyErr_Clear()
           callable = CPythonAPI.PyDict_GetItemWithError(builtins, methodString)
+          if (callable == null) {
+            CPythonAPI.PyErr_SetString(
+              selectGlobal("NameError").underlying,
+              Platform.toCString(s"name '$method' is not defined")
+            )
+          }
         }
 
         CPythonAPI.Py_IncRef(callable)
@@ -477,6 +495,12 @@ object CPythonInterpreter {
         if (Platform.pointerToLong(gottenValue) == 0) {
           CPythonAPI.PyErr_Clear()
           gottenValue = CPythonAPI.PyDict_GetItemWithError(builtins, nameString)
+          if (Platform.pointerToLong(gottenValue) == 0) {
+            CPythonAPI.PyErr_SetString(
+              selectGlobal("NameError").underlying,
+              Platform.toCString(s"name '$name' is not defined")
+            )
+          }
         }
 
         CPythonAPI.Py_DecRef(nameString)
@@ -575,4 +599,3 @@ object CPythonInterpreter {
     }
   }
 }
-

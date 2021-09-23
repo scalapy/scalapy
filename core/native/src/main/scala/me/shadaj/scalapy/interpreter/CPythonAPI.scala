@@ -4,7 +4,12 @@ import scala.scalanative.unsafe._
 
 @extern
 object CPythonAPI {
+  def Py_SetProgramName(str: Ptr[CWideChar]): Unit = extern
   def Py_Initialize(): Unit = extern
+
+  def Py_DecodeLocale(str: CString, size: Ptr[CSize]): Ptr[CWideChar] = extern
+
+  def PyMem_RawFree(p: Platform.Pointer): Unit = extern
 
   def PyEval_SaveThread(): Platform.Pointer = extern
   def PyGILState_Ensure(): Int = extern
@@ -24,7 +29,7 @@ object CPythonAPI {
   def PyNumber_Multiply(o1: Platform.Pointer, o2: Platform.Pointer): Platform.Pointer = extern
   def PyNumber_TrueDivide(o1: Platform.Pointer, o2: Platform.Pointer): Platform.Pointer = extern
   def PyNumber_Remainder(o1: Platform.Pointer, o2: Platform.Pointer): Platform.Pointer = extern
-  
+
   def PyLong_FromLongLong(long: CLongLong): Platform.Pointer = extern
   def PyLong_AsLong(pyLong: Platform.Pointer): CLong = extern
   def PyLong_AsLongLong(pyLong: Platform.Pointer): CLongLong = extern
