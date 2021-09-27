@@ -3,9 +3,9 @@ import scala.sys.process._
 
 organization in ThisBuild := "me.shadaj"
 
-lazy val scala212Version = "2.12.13"
+lazy val scala212Version = "2.12.15"
 lazy val scala213Version = "2.13.6"
-lazy val scala3Version = "3.0.0"
+lazy val scala3Version = "3.0.2"
 lazy val supportedScalaVersions = List(scala212Version, scala213Version, scala3Version)
 lazy val scala2Versions = List(scala212Version, scala213Version)
 
@@ -181,7 +181,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
         case _ => Seq.empty
       }
     },
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.9" % Test,
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.10" % Test,
     unmanagedSourceDirectories in Compile += {
       val sharedSourceDir = (baseDirectory in ThisBuild).value / "core/shared/src/main"
       if (scalaVersion.value.startsWith("2.13.") || scalaVersion.value.startsWith("3")) sharedSourceDir / "scala-2.13"
@@ -196,7 +196,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
     }
   ).jvmSettings(
     crossScalaVersions := supportedScalaVersions,
-    libraryDependencies += "net.java.dev.jna" % "jna" % "5.8.0",
+    libraryDependencies += "net.java.dev.jna" % "jna" % "5.9.0",
     fork in Test := true,
     javaOptions in Test += s"-Djna.library.path=$pythonLibsDir",
     unmanagedSources / excludeFilter := HiddenFileFilter || "*Native*"
