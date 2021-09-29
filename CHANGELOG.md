@@ -1,6 +1,7 @@
 # Changelog
 ## vNEXT
 ### Highlights :tada:
++ Add support for bracket syntax to facades in Scala 3. Also, handle `@py.native` annotation in `native_impl` and `native_named_impl` methods
 + Add initial support for Scala 3. To create static facades use `class` instead of `trait` in Scala 3. Also, `@PyBracketAccess` currently is not supported in this version.
 + Add support for bracket syntax to facades. The annotation `@PyBracketAccess` can be used on methods to mark them as representing bracket access on an object. The target method must have one (to read the value) or two parameters (to update the value) ([PR #194](https://github.com/shadaj/scalapy/pull/194)).
 + The version of the Python native library can now be controlled with the `scalapy.python.library` system property ([PR #198](https://github.com/shadaj/scalapy/pull/198))
