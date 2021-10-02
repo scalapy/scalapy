@@ -4,7 +4,7 @@ import me.shadaj.scalapy.interpreter
 
 import org.scalatest.funsuite.AnyFunSuite
 
-class SpecialSyntaxTest extends CrossScalaSpecialSyntaxTest {
+class SpecialSyntaxTest extends AnyFunSuite {
   test("Can use with statement with file object") {
     local {
       val opened = if (interpreter.Platform.isNative) {
@@ -20,6 +20,15 @@ class SpecialSyntaxTest extends CrossScalaSpecialSyntaxTest {
     local {
       val myList = py"[1, 2, 3]"
       assert(myList.bracketAccess(1).as[Int] == 2)
+    }
+  }
+
+  test("Can access and update the list elements using brackets") {
+    local {
+      val myList = py"[1, 2, 3]".as[IntList]
+      assert(myList(1) == 2)
+      myList(1) = 3
+      assert(myList(1) == 3)
     }
   }
 

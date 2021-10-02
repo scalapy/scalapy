@@ -11,3 +11,11 @@ import me.shadaj.scalapy.interpreter
 }
 
 @native object StringModuleStaticFacade extends StaticModule("string") with StringModuleFacade
+
+@native trait IntList extends Any {
+  @PyBracketAccess
+  def apply(index: Int): Int = native
+
+  @PyBracketAccess
+  def update(index: Int, newValue: Int): Unit = native
+}

@@ -1,8 +1,9 @@
 package me.shadaj.scalapy.py
 
 import scala.quoted.*
-import scala.annotation.StaticAnnotation
 
+import scala.annotation.StaticAnnotation
+class PyBracketAccess extends StaticAnnotation
 class native extends StaticAnnotation
 
 class FacadeCreator[T]
@@ -85,6 +86,18 @@ object FacadeImpl {
   def native_impl[T: Type](using Quotes): Expr[T] = {
     import quotes.reflect.*
 
+    if (!Symbol.spliceOwner.owner.owner.hasAnnotation(Symbol.requiredClass("me.shadaj.scalapy.py.native"))) {
+      report.throwError("py.native implemented functions can only be declared inside traits annotated as @py.native")
+    }
+
+    def constructASTforMethodFrom(arg: quotes.reflect.Term) = {
+      val argumentType = arg.tpe.typeSymbol
+      val applyArgTypeToWriter = Helper.writerTypeRepr.appliedTo(TypeIdent(argumentType).tpe)
+      val tree = Apply(Apply(TypeApply(Ref(Helper.methodFromSymbol),List(TypeIdent(argumentType))),List(arg)),
+      List(searchImplicit(applyArgTypeToWriter)))
+      tree
+    }
+
     val evidenceForDynamic = searchImplicit(Helper.readerTypeRepr.appliedTo(Helper.dynamicTypeRepr))
     val evidenceForTypeT = searchImplicit(Helper.readerTypeRepr.appliedTo(TypeTree.of[T].tpe))
 
@@ -97,35 +110,57 @@ object FacadeImpl {
 
     val args = refss.headOption.toList.flatten
 
-    if (args.isEmpty) {
-      val selectDynamicAST = Apply(TypeApply(Select.unique(Apply(Select.unique(Apply(TypeApply(
-        Select.unique(resolveThis,"as"),List(TypeIdent(Helper.classDynamicSymbol))),List(evidenceForDynamic)),  
-        "selectDynamic"),List(Expr(methodName).asTerm)),"as"), List(TypeTree.of[T])),List(evidenceForTypeT)) 
-      selectDynamicAST.asExprOf[T]
+
+    if (Symbol.spliceOwner.owner.hasAnnotation(Symbol.requiredClass("me.shadaj.scalapy.py.PyBracketAccess"))) {
+      if (args.size == 0) {
+        report.throwError("PyBracketAccess functions require at least one parameter")
+      }
+      else if (args.size == 1) {
+        val bracketAccessAST = Apply(TypeApply(Select.unique(Apply(Select.unique(Apply(TypeApply(
+          Select.unique(resolveThis,"as"),List(TypeIdent(Helper.classDynamicSymbol))),List(evidenceForDynamic)),  
+          "bracketAccess"),List(constructASTforMethodFrom(args(0)))),"as"), List(TypeTree.of[T])),List(evidenceForTypeT))
+
+        bracketAccessAST.asExprOf[T]
+      }
+      else if (args.size == 2) {
+        val bracketUpdateAST = Apply(Select.unique(Apply(TypeApply(
+          Select.unique(resolveThis,"as"),List(TypeIdent(Helper.classDynamicSymbol))),List(evidenceForDynamic)),  
+          "bracketUpdate"),List(constructASTforMethodFrom(args(0)), constructASTforMethodFrom(args(1))))
+
+          bracketUpdateAST.asExprOf[T]
+      }
+      else {
+        report.throwError("Too many parameters to PyBracketAccess function")
+      }
     }
     else {
-      def constructASTforMethodFrom(arg: quotes.reflect.Term) = {
-        val argumentType = arg.tpe.typeSymbol
-        val applyArgTypeToWriter = Helper.writerTypeRepr.appliedTo(TypeIdent(argumentType).tpe)
-        val tree = Apply(Apply(TypeApply(Ref(Helper.methodFromSymbol),List(TypeIdent(argumentType))),List(arg)),
-          List(searchImplicit(applyArgTypeToWriter)))
-        tree
+      if (args.isEmpty) {
+        val selectDynamicAST = Apply(TypeApply(Select.unique(Apply(Select.unique(Apply(TypeApply(
+          Select.unique(resolveThis,"as"),List(TypeIdent(Helper.classDynamicSymbol))),List(evidenceForDynamic)),  
+          "selectDynamic"),List(Expr(methodName).asTerm)),"as"), List(TypeTree.of[T])),List(evidenceForTypeT))
+
+        selectDynamicAST.asExprOf[T]
       }
+      else {
+        val typedVarargs = Typed(Inlined(None, Nil, Repeated(args.map(arg => constructASTforMethodFrom(arg)),
+          TypeIdent(Helper.classAnySymbol))),Applied(TypeIdent(defn.RepeatedParamClass),List(TypeIdent(Helper.classAnySymbol))))
 
-      val typedVarargs = Typed(Inlined(None, Nil, Repeated(args.map(arg => constructASTforMethodFrom(arg)),
-        TypeIdent(Helper.classAnySymbol))),Applied(TypeIdent(defn.RepeatedParamClass),List(TypeIdent(Helper.classAnySymbol))))
+        val applyDynamicAST = Apply(TypeApply(Select.unique(Apply(Apply(Select.unique(Apply(TypeApply(
+          Select.unique(resolveThis,"as"),List(TypeIdent(Helper.classDynamicSymbol))),List(evidenceForDynamic)),
+          "applyDynamic"),List(Expr(methodName).asTerm)),List(typedVarargs)),"as"),List(TypeTree.of[T])),
+          List(evidenceForTypeT))
 
-      val applyDynamicAST = Apply(TypeApply(Select.unique(Apply(Apply(Select.unique(Apply(TypeApply(
-        Select.unique(resolveThis,"as"),List(TypeIdent(Helper.classDynamicSymbol))),List(evidenceForDynamic)),
-        "applyDynamic"),List(Expr(methodName).asTerm)),List(typedVarargs)),"as"),List(TypeTree.of[T])),
-        List(evidenceForTypeT))
-
-      applyDynamicAST.asExprOf[T]
+        applyDynamicAST.asExprOf[T]
+      }
     }
   }
 
   def native_named_impl[T: Type](using Quotes): Expr[T] = {
     import quotes.reflect.*
+
+    if (!Symbol.spliceOwner.owner.owner.hasAnnotation(Symbol.requiredClass("me.shadaj.scalapy.py.native"))) {
+      report.throwError("py.native implemented functions can only be declared inside traits annotated as @py.native")
+    }
 
     val evidenceForDynamic = searchImplicit(Helper.readerTypeRepr.appliedTo(Helper.dynamicTypeRepr))
     val evidenceForTypeT = searchImplicit(Helper.readerTypeRepr.appliedTo(TypeTree.of[T].tpe))
@@ -142,7 +177,8 @@ object FacadeImpl {
     if (args.isEmpty) {
       val selectDynamicAST = Apply(TypeApply(Select.unique(Apply(Select.unique(Apply(TypeApply(
         Select.unique(resolveThis,"as"),List(TypeIdent(Helper.classDynamicSymbol))),List(evidenceForDynamic)),  
-        "selectDynamic"),List(Expr(methodName).asTerm)),"as"),List(TypeTree.of[T])),List(evidenceForTypeT)) 
+        "selectDynamic"),List(Expr(methodName).asTerm)),"as"),List(TypeTree.of[T])),List(evidenceForTypeT))
+
       selectDynamicAST.asExprOf[T]
     }
     else {
