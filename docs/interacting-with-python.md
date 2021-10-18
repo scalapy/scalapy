@@ -48,7 +48,7 @@ val mySeqToCopy = Seq(Seq(1, 2), Seq(3))
 mySeqToCopy.toPythonCopy
 ```
 
-If you'd like to create a proxy of the sequence instead, which uses less memory and can observe mutations but comes with a larger overhead for repeated access from Python, you can use `toPythonCopy`:
+If you'd like to create a proxy of the sequence instead, which uses less memory and can observe mutations but comes with a larger overhead for repeated access from Python, you can use `toPythonProxy`:
 
 ```scala mdoc
 val mySeqToProxy = Array(1, 2, 3)

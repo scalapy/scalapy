@@ -19,9 +19,9 @@ jobs:
     steps:
       - uses: actions/checkout@master
       - name: Set up JDK 1.8 and SBT
-        uses: olafurpg/setup-scala@v10
+        uses: olafurpg/setup-scala@v13
         with:
-          java-version: 1.8
+          java-version: openjdk@1.16
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
         with:
@@ -41,9 +41,9 @@ jobs:
     steps:
     - uses: actions/checkout@master
     - name: Set up JDK 1.8 and SBT
-      uses: olafurpg/setup-scala@v10
+      uses: olafurpg/setup-scala@v13
       with:
-        java-version: 1.8
+        java-version: openjdk@1.16
     - run: git fetch --unshallow
     - name: Publish with SBT
       run: export JAVA_OPTS="-Xmx4g" && bash ./publish.sh
