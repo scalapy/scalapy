@@ -153,3 +153,17 @@ println(myValue)
 ```
 
 There are two key points to note when using this API. First, although the Python value is still available in Scala, any attempts to access it will result in an exception since the value has been released. Second, if there are multiple references to a single Python value from your Scala code, `del` will only delete a single reference and the underlying value will not be freed since other Scala code still holds a reference to it.
+
+## Zoned Memory Management
+By default, ScalaPy uses the JVM's garbage collector to determine when to free memory on the Python side. However, if your code allocates many Python values and immediately releases them, your application may use more memory than needed since the JVM lazily performs garbage collection. In addition, Scala Native currently does not support the necessary APIs to automatically release memory on the Python side. In these situations, you can use the `py.local` API to mark a chunk of your application where all new Python values will be freed at the end of the block.
+
+For example, we can use `py.local` to allocate a large number of Python values and then immediately release them:
+```scala mdoc
+py.local {
+  (1 to 100).foreach { _ =>
+    py.Dynamic.global.len(Seq(1, 2, 3).toPythonCopy)
+  }
+}
+```
+
+In this code, we can manipulate the values allocated inside the `py.local` block as long as we are still in its scope. If we try to access the values after the block ends, we will get an exception.
