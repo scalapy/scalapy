@@ -4,7 +4,7 @@ import scala.sys.process._
 organization in ThisBuild := "me.shadaj"
 
 lazy val scala212Version = "2.12.15"
-lazy val scala213Version = "2.13.6"
+lazy val scala213Version = "2.13.7"
 lazy val scala3Version = "3.0.2"
 lazy val supportedScalaVersions = List(scala212Version, scala213Version, scala3Version)
 lazy val scala2Versions = List(scala212Version, scala213Version)
