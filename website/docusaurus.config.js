@@ -23,7 +23,7 @@ module.exports = {
         },
         {
           href: 'https://github.com/shadaj/scalapy/blob/master/CHANGELOG.md',
-          label: 'v0.5.0',
+          label: 'v0.5.1',
           position: 'right',
         },
         {

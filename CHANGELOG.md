@@ -1,5 +1,7 @@
 # Changelog
 ## vNEXT
+
+## v0.5.1
 ### Highlights :tada:
 + Add initial support for Scala 3. To create static facades use `class` instead of `trait` in Scala 3 ([PR #195](https://github.com/shadaj/scalapy/pull/195), [PR #225](https://github.com/shadaj/scalapy/pull/225))
 + Add support for bracket syntax to facades. The annotation `@PyBracketAccess` can be used on methods to mark them as representing bracket access on an object. The target method must have one (to read the value) or two parameters (to update the value) ([PR #194](https://github.com/shadaj/scalapy/pull/194)).
