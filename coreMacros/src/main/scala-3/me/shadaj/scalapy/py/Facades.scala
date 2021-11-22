@@ -91,9 +91,8 @@ object FacadeImpl {
     }
 
     def constructASTforMethodFrom(arg: quotes.reflect.Term) = {
-      val argumentType = arg.tpe.typeSymbol
-      val applyArgTypeToWriter = Helper.writerTypeRepr.appliedTo(TypeIdent(argumentType).tpe)
-      val tree = Apply(Apply(TypeApply(Ref(Helper.methodFromSymbol),List(TypeIdent(argumentType))),List(arg)),
+      val applyArgTypeToWriter = Helper.writerTypeRepr.appliedTo(arg.tpe.widen)
+      val tree = Apply(Apply(TypeApply(Ref(Helper.methodFromSymbol),List(Inferred(arg.tpe.widen))),List(arg)),
       List(searchImplicit(applyArgTypeToWriter)))
       tree
     }
@@ -183,10 +182,9 @@ object FacadeImpl {
     }
     else {
       def constructASTforMethodFrom(arg: quotes.reflect.Term) = {
-        val argumentType = arg.tpe.typeSymbol
-        val applyArgTypeToWriter = Helper.writerTypeRepr.appliedTo(TypeIdent(argumentType).tpe)
-        val tree = Apply(Apply(TypeApply(Ref(Helper.methodFromSymbol),List(TypeIdent(argumentType))),List(arg)),
-          List(searchImplicit(applyArgTypeToWriter)))
+        val applyArgTypeToWriter = Helper.writerTypeRepr.appliedTo(arg.tpe.widen)
+        val tree = Apply(Apply(TypeApply(Ref(Helper.methodFromSymbol),List(Inferred(arg.tpe.widen))),List(arg)),
+        List(searchImplicit(applyArgTypeToWriter)))
         tree
       }
 
