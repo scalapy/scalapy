@@ -1,5 +1,7 @@
 # Changelog
 ## vNEXT
+### Highlights :tada:
++ Fix getting types of the facades methods arguments in the `native_impl` method implementation in Scala 3. Create new test class `SpecialCasesTest` ([#237](https://github.com/shadaj/scalapy/pull/237))
 
 ## v0.5.1
 ### Highlights :tada:
