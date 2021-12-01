@@ -21,3 +21,7 @@ import me.shadaj.scalapy.interpreter
   @PyBracketAccess
   def update(index: Int, newValue: Int): Unit = native
 }
+
+@native class ReduceFacade extends Any {
+  def reduce(lambda: (Int, Int) => Int, numbers: Any, initializer: Int): Int = native
+}
