@@ -1,17 +1,31 @@
+package me.shadaj.scalapy.py.bench
+
 import me.shadaj.scalapy.py
+import org.openjdk.jmh.annotations._
+import java.util.concurrent.TimeUnit
 import me.shadaj.scalapy.interpreter.PyValue
-import me.shadaj.scalapy.interpreter.CPythonInterpreter
 import me.shadaj.scalapy.py.SeqConverters
+import me.shadaj.scalapy.interpreter.CPythonInterpreter
 
-object TensorFlowAppPythonBenchmark extends communitybench.Benchmark {
+//@Warmup(iterations = 5, time = 100, timeUnit = MILLISECONDS)
+//@Measurement(iterations = 100, time = 100, timeUnit = MILLISECONDS)
+//@Fork(5)
+@BenchmarkMode(Array(Mode.AverageTime))
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
+@State(Scope.Thread)
+class TensorFlowAppPythonBenchmark {
   PyValue.disableAllocationWarning()
-
-  def run(input: String): Unit = py.local {
+  
+  @Param(Array("100","1000","10000"))
+  var length :Int = _
+  
+  @Benchmark
+  def run(): Unit = py.local {
     CPythonInterpreter.execManyLines(
-      """import tensorflow as tf
+     s"""import tensorflow as tf
         |import numpy as np
         |
-        |xData = np.random.rand(100).astype(np.float32)
+        |xData = np.random.rand($length).astype(np.float32)
         |yData = (xData * 0.1) + 0.3
         |
         |W = tf.Variable(tf.random_uniform([1], -1, 1))
@@ -29,9 +43,5 @@ object TensorFlowAppPythonBenchmark extends communitybench.Benchmark {
         |for step in range(50):
         |  sess.run(train)""".stripMargin
     )
-  }
-
-  override def main(args: Array[String]): Unit = {
-    super.main(args.init)
   }
 }
