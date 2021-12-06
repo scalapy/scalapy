@@ -1,16 +1,24 @@
 # ScalaPy Benchmarks
 
-Based on the [Scala Native Benchmarks](https://github.com/scala-native/scala-native-benchmarks)
 
 ## Running benchmarks
-From the root directory,
 
+From sbt shell
 ```bash
-python3 bench/scripts/run.py
+// run all benchmarks
+benchJVM/jmh:run
+// run a specific benchmark
+benchJVM/jmh:run package me.shadaj.scalapy.py.bench.CreatePythonCopyBenchmark 
 ```
 
-## Viewing result summary
+## cusomize benchmark
 
-```bash
-python3 bench/scripts/summary.py
+pass arguments from sbt shell like `jmh:run -i 3 -wi 3 -f1 -t1 me.shadaj.scalapy.py.bench.CreatePythonCopyBenchmark` 
+or edit these parameters of benchmark classes.
+```scala
+//@Warmup(iterations = 5, time = 100, timeUnit = MILLISECONDS)
+//@Measurement(iterations = 100, time = 100, timeUnit = MILLISECONDS)
+//@Fork(5)
+@BenchmarkMode(Array(Mode.AverageTime))
+@OutputTimeUnit(TimeUnit.MILLISECONDS)
 ```
