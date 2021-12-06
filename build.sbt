@@ -239,6 +239,7 @@ lazy val docs = project
 lazy val bench = crossProject(JVMPlatform, NativePlatform)
   .crossType(CrossType.Pure)
   .in(file("bench"))
+  .enablePlugins(JmhPlugin)
   .settings(
     name := "scalapy-bench",
     version := "0.1.0-SNAPSHOT"
