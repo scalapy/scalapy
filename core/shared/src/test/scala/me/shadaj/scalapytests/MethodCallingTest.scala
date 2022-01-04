@@ -1,4 +1,6 @@
-package me.shadaj.scalapy.py
+package me.shadaj.scalapytests
+
+import me.shadaj.scalapy.py._
 
 import me.shadaj.scalapy.interpreter
 
@@ -30,6 +32,15 @@ class MethodCallingTest extends AnyFunSuite {
       val num1 = py"4"
       val num2 = py"2"
       assert((num1.as[Dynamic] / num2).as[Double] == 2)
+    }
+  }
+
+  test("Can select value property on an object") {
+    try {
+      val obj = py""
+      val other = obj.value
+    } catch {
+      case e: Throwable => // compile-only test
     }
   }
 

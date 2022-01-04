@@ -1,7 +1,10 @@
 # Changelog
 ## vNEXT
 ### Highlights :tada:
-+ Fix getting types of the facades methods arguments in the `native_impl` method implementation in Scala 3. Create new test class `SpecialCasesTest` ([#237](https://github.com/shadaj/scalapy/pull/237))
++ Fix getting types of the facades methods arguments in the `native_impl` method implementation in Scala 3. Create new test class `SpecialCasesTest` ([PR #237](https://github.com/shadaj/scalapy/pull/237))
+
+### Bug Fixes :bug:
++ Avoid compiler crashes when accessing dynamic fields and methods whose names collide with internal names ([PR #247](https://github.com/shadaj/scalapy/pull/247))
 
 ## v0.5.1
 ### Highlights :tada:

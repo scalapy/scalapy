@@ -5,17 +5,17 @@ import scala.language.dynamics
 import me.shadaj.scalapy.interpreter.PyValue
 
 trait StaticModule(name: String) extends Module {
-  rawValue = module(name).value
+  __scalapy__rawValue = module(name).__scalapy_value
 }
 
 trait StaticValue(value: Any) extends Any {
-  rawValue = value.value
+  __scalapy__rawValue = value.__scalapy_value
 }
 
 abstract class FacadeCreator[F <: Any] {
   def create(value: PyValue): F = 
     val f = create
-    f.rawValue = value
+    f.__scalapy__rawValue = value
     f
   
   def create: F

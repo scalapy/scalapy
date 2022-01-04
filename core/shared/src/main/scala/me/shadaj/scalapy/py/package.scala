@@ -79,7 +79,7 @@ package object py extends PyMacros {
 
   object PyQuotable {
     implicit def fromAny(any: py.Any): PyQuotable = {
-      new PyQuotable(CPythonInterpreter.getVariableReference(any.value))
+      new PyQuotable(CPythonInterpreter.getVariableReference(any.__scalapy_value))
     }
 
     implicit def fromValue[V](value: V)(implicit writer: Writer[V]): PyQuotable = {

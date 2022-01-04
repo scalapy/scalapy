@@ -26,8 +26,8 @@ abstract class Writer[T] {
 object Writer extends TupleWriters with FunctionWriters {
   implicit def anyWriter[T <: py.Any]: Writer[T] = new Writer[T] {
     override def writeNative(v: T): Platform.Pointer = {
-      CPythonAPI.Py_IncRef(v.value.underlying)
-      v.value.underlying
+      CPythonAPI.Py_IncRef(v.__scalapy_value.underlying)
+      v.__scalapy_value.underlying
     }
   }
 

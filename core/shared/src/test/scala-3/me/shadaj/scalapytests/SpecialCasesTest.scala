@@ -1,5 +1,6 @@
-package me.shadaj.scalapy.py
+package me.shadaj.scalapytests
 
+import me.shadaj.scalapy.py._
 import org.scalatest.funsuite.AnyFunSuite
 
 class SpecialCasesTest extends AnyFunSuite {
