@@ -10,28 +10,28 @@ import me.shadaj.scalapy.readwrite.{Reader, Writer}
 trait Any extends AnyRawValue { self =>
   private var cleaned = false
   
-  private[scalapy] def value: PyValue = {
+  private[scalapy] def __scalapy_value: PyValue = {
     if (cleaned) {
       throw new IllegalAccessException("The Python value you are try to access has already been released by a call to py.Any.del()")
     } else {
-      rawValue
+      __scalapy__rawValue
     }
   }
 
-  override def toString: String = value.getStringified
+  override def toString: String = __scalapy_value.getStringified
 
-  final def as[T: Reader]: T = implicitly[Reader[T]].read(value)
+  final def as[T: Reader]: T = implicitly[Reader[T]].read(__scalapy_value)
 
   final def del(): Unit = {
-    value.cleanup()
+    __scalapy_value.cleanup()
     cleaned = true
   }
 
   override def equals(obj: scala.Any): Boolean = {
-    obj.isInstanceOf[Any] && value == obj.asInstanceOf[Any].value
+    obj.isInstanceOf[Any] && __scalapy_value == obj.asInstanceOf[Any].__scalapy_value
   }
 
-  override def hashCode(): Int = value.hashCode()
+  override def hashCode(): Int = __scalapy_value.hashCode()
 }
 
 object Any extends AnyPopulateWith {

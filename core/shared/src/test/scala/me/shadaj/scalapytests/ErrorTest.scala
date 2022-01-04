@@ -1,7 +1,8 @@
-package me.shadaj.scalapy.py
+package me.shadaj.scalapytests
+
+import me.shadaj.scalapy.py._
 
 import org.scalatest.funsuite.AnyFunSuite
-
 
 class ErrorTest extends AnyFunSuite {
   test("Gets exception when running Python fails") {
