@@ -51,6 +51,8 @@ libraryDependencies += "ai.kien" %% "python-native-libs" % "0.2.1"
 Then, in `build.sbt`,
 
 ```scala
+fork := true
+
 import ai.kien.python.Python
 
 lazy val python = Python("<optional-path-to-a-python-interpreter-executable>")
@@ -59,7 +61,7 @@ lazy val javaOpts = python.scalapyProperties.get.map {
   case (k, v) => s"""-D$k=$v"""
 }.toSeq
 
-javaOptions += javaOpts
+javaOptions ++= javaOpts
 ```
 
 If you'd like to use [Scala Native](https://scala-native.readthedocs.io/), follow the instructions there to create a project with Scala Native `0.4.0-M2`. Then, add the following additional configuration to your SBT build to link the Python interpreter.
