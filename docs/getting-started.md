@@ -45,7 +45,7 @@ or using the [`python-native-libs`](https://github.com/kiendang/python-native-li
 First, add `python-native-libs` to `project/plugins.sbt`
 
 ```scala
-libraryDependencies += "ai.kien" %% "python-native-libs" % "0.2.1"
+libraryDependencies += "ai.kien" %% "python-native-libs" % "0.2.2"
 ```
 
 Then, in `build.sbt`,
