@@ -6,6 +6,7 @@
 ### Bug Fixes :bug:
 + Avoid compiler crashes when accessing dynamic fields and methods whose names collide with internal names ([PR #247](https://github.com/shadaj/scalapy/pull/247))
 + Fix instructions for `python-native-libs` in Getting Started guide ([PR 249](https://github.com/shadaj/scalapy/pull/249))
++ Fix implicit resolution bugs when converting Scala collections to Python ([PR #253](https://github.com/shadaj/scalapy/pull/253))
 
 ## v0.5.1
 ### Highlights :tada:
