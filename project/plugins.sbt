@@ -4,7 +4,7 @@ addSbtPlugin("org.scala-native"   % "sbt-scala-native"              % "0.4.0")
 
 addSbtPlugin("com.jsuereth" % "sbt-pgp" % "2.0.2")
 
-addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.9.10")
+addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.9.12")
 
 addSbtPlugin("com.dwijnand" % "sbt-dynver" % "4.1.1")
 
