@@ -22,12 +22,12 @@ module.exports = {
           position: 'left',
         },
         {
-          href: 'https://github.com/shadaj/scalapy/blob/master/CHANGELOG.md',
+          href: 'https://github.com/scalapy/scalapy/blob/master/CHANGELOG.md',
           label: 'v0.5.1',
           position: 'right',
         },
         {
-          href: 'https://github.com/shadaj/scalapy',
+          href: 'https://github.com/scalapy/scalapy',
           label: 'GitHub',
           position: 'right',
         },
@@ -54,7 +54,7 @@ module.exports = {
           items: [
             {
               label: 'Gitter Chat',
-              href: 'https://gitter.im/shadaj/scalapy',
+              href: 'https://gitter.im/scalapy/scalapy',
             }
           ],
         },
@@ -63,11 +63,11 @@ module.exports = {
           items: [
             {
               label: 'GitHub',
-              href: 'https://github.com/shadaj/scalapy',
+              href: 'https://github.com/scalapy/scalapy',
             },
             {
               label: 'Releases',
-              href: 'https://github.com/shadaj/scalapy/blob/master/CHANGELOG.md',
+              href: 'https://github.com/scalapy/scalapy/blob/master/CHANGELOG.md',
             },
           ],
         },
@@ -82,9 +82,6 @@ module.exports = {
         docs: {
           path: '../built-docs/target/mdoc',
           sidebarPath: require.resolve('./sidebars.js'),
-          // Please change this to your repo.
-          // editUrl:
-          //   'https://github.com/shadaj/scalapy/edit/master/website/',
         },
         theme: {
           customCss: require.resolve('./src/css/custom.css'),

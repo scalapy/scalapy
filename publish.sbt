@@ -7,7 +7,7 @@ ThisBuild / Test / publishArtifact := false
 ThisBuild / publishTo := sonatypePublishToBundle.value
 
 ThisBuild / pomExtra :=
-  <url>https://github.com/shadaj/scalapy</url>
+  <url>https://github.com/scalapy/scalapy</url>
     <licenses>
       <license>
         <name>MIT</name>
@@ -16,8 +16,8 @@ ThisBuild / pomExtra :=
       </license>
     </licenses>
     <scm>
-      <url>https://github.com/shadaj/scalapy.git</url>
-      <connection>https://github.com/shadaj/scalapy.git</connection>
+      <url>https://github.com/scalapy/scalapy.git</url>
+      <connection>https://github.com/scalapy/scalapy.git</connection>
     </scm>
     <developers>
       <developer>

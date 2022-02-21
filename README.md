@@ -1,8 +1,8 @@
-<p align="center"><img width="800" src="https://github.com/shadaj/scalapy/raw/main/logo.png"/></p>
+<p align="center"><img width="800" src="https://github.com/scalapy/scalapy/raw/main/logo.png"/></p>
 <p align="center"><i>Use the world of Python from the comfort of Scala!</i></p>
 <p align="center">
-  <a href="https://travis-ci.com/shadaj/scalapy">
-    <img src="https://travis-ci.com/shadaj/scalapy.svg?branch=master"/>
+  <a href="https://github.com/scalapy/scalapy/actions/workflows/sbt.yml">
+    <img src="https://github.com/scalapy/scalapy/actions/workflows/sbt.yml/badge.svg"/>
   </a>
     <a href="https://maven-central-latest.netlify.com/.netlify/functions/latest-link?org=me.shadaj&name=scalapy-core_2.12&format=libraryDependencies%20%2B%3D%20%22me.shadaj%22%20%25%25%20%22scalapy-core%22%20%25%20%22VERSION%22">
     <img src="https://maven-central-latest.netlify.com/.netlify/functions/latest-link?org=me.shadaj&name=scalapy-core_2.12&formatRedirect=https%3A%2F%2Fimg.shields.io%2Fbadge%2Fmaven--central-VERSIONDOUBLEDASHED-orange.svg"/>
