@@ -2,6 +2,7 @@
 ## vNEXT
 ### Highlights :tada:
 + Fix getting types of the facades methods arguments in the `native_impl` method implementation in Scala 3. Create new test class `SpecialCasesTest` ([PR #237](https://github.com/shadaj/scalapy/pull/237))
++ No longer try to load other Python library versions when the one specified by user fails to load ([PR #270](https://github.com/shadaj/scalapy/pull/270))
 
 ### Bug Fixes :bug:
 + Avoid compiler crashes when accessing dynamic fields and methods whose names collide with internal names ([PR #247](https://github.com/shadaj/scalapy/pull/247))
