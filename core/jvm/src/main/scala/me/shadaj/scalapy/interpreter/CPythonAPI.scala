@@ -1,26 +1,21 @@
 package me.shadaj.scalapy.interpreter
 
 import com.sun.jna.{Native, NativeLong, Memory, WString}
-import scala.util.{Success, Failure, Properties}
+import scala.util.{Success, Failure, Properties, Try}
 
 class CPythonAPIInterface {
   val pythonLibrariesToTry =
     Option(System.getenv("SCALAPY_PYTHON_LIBRARY"))
       .orElse(Properties.propOrNone("scalapy.python.library"))
-      .toSeq ++
-      Seq(
+      .map(Seq(_))
+      .getOrElse(Seq(
         "python3",
         "python3.7", "python3.7m",
         "python3.8", "python3.8m",
         "python3.9", "python3.9m"
-      )
+      ))
 
-  val loadAttempts = pythonLibrariesToTry.toStream.map(n => try {
-    Native.register(n)
-    Success(true)
-  } catch {
-    case t: Throwable => Failure(t)
-  })
+  val loadAttempts = pythonLibrariesToTry.toStream.map(n => Try(Native.register(n)))
 
   loadAttempts.find(_.isSuccess).getOrElse {
     loadAttempts.foreach(_.failed.get.printStackTrace())
