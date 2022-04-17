@@ -2,10 +2,6 @@ package me.shadaj.scalapy.py
 
 import scala.quoted.*
 
-import scala.annotation.StaticAnnotation
-class PyBracketAccess extends StaticAnnotation
-class native extends StaticAnnotation
-
 class FacadeCreator[T]
 
 trait Any
