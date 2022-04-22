@@ -11,10 +11,10 @@ ScalaPy makes it easy to use Python libraries from Scala code. With a simple API
 First, add ScalaPy to your SBT build:
 ```scala
 // JVM
-libraryDependencies += "me.shadaj" %% "scalapy-core" % "0.5.1"
+libraryDependencies += "me.shadaj" %% "scalapy-core" % "0.5.2"
 
 // Scala Native
-libraryDependencies += "me.shadaj" %%% "scalapy-core" % "0.5.1"
+libraryDependencies += "me.shadaj" %%% "scalapy-core" % "0.5.2"
 ```
 
 You'll then need to add the Python native libraries to your project and configure SBT to run your code in a separate JVM instance, either manually,
