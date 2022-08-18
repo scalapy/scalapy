@@ -10,6 +10,7 @@ class CPythonAPIInterface {
       .map(Seq(_))
       .getOrElse(Seq(
         "python3",
+        "python3.10", "python3.10m",
         "python3.9", "python3.9m",
         "python3.8", "python3.8m",
         "python3.7", "python3.7m"
@@ -19,7 +20,8 @@ class CPythonAPIInterface {
 
   loadAttempts.find(_.isSuccess).getOrElse {
     loadAttempts.foreach(_.failed.get.printStackTrace())
-    throw new Exception(s"Unable to locate Python library, tried ${pythonLibrariesToTry.mkString(", ")}")
+    val lastExceptionOpt = loadAttempts.reverseIterator.collectFirst { case Failure(e) => e }
+    throw new Exception(s"Unable to locate Python library, tried ${pythonLibrariesToTry.mkString(", ")}", lastExceptionOpt.orNull)
   }
 
   @scala.native def Py_SetProgramName(str: WString): Unit
