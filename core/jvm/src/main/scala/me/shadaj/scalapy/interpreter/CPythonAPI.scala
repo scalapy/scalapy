@@ -20,7 +20,8 @@ class CPythonAPIInterface {
 
   loadAttempts.find(_.isSuccess).getOrElse {
     loadAttempts.foreach(_.failed.get.printStackTrace())
-    throw new Exception(s"Unable to locate Python library, tried ${pythonLibrariesToTry.mkString(", ")}")
+    val lastExceptionOpt = loadAttempts.reverseIterator.collectFirst { case Failure(e) => e }
+    throw new Exception(s"Unable to locate Python library, tried ${pythonLibrariesToTry.mkString(", ")}", lastExceptionOpt.orNull)
   }
 
   @scala.native def Py_SetProgramName(str: WString): Unit
