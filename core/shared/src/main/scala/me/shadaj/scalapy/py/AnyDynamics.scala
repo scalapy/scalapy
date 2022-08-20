@@ -61,11 +61,11 @@ trait AnyDynamics extends Any with scala.Dynamic {
     CPythonInterpreter.deleteAttribute(__scalapy_value, name)
   }
 
-  def unary_+(): Dynamic = {
+  def unary_+ : Dynamic = {
     implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.unaryPos(__scalapy_value))
   }
 
-  def unary_-(): Dynamic = {
+  def unary_- : Dynamic = {
     implicitly[FacadeCreator[Dynamic]].create(CPythonInterpreter.unaryNeg(__scalapy_value))
   }
 
