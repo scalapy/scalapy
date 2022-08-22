@@ -7,9 +7,9 @@ import scala.collection.mutable.Stack
 import scala.collection.mutable.Queue
 
 final class PyValue private[PyValue](var underlying: Platform.Pointer, safeGlobal: Boolean = false) {
-  val myAllocatedValues = PyValue.allocatedValues.get
+  val myAllocatedValues = PyValue.allocatedValues.get()
   if (Platform.isNative && myAllocatedValues.isEmpty && !safeGlobal && !PyValue.disabledAllocationWarning) {
-    println(s"Warning: the value ${this.getStringified} was allocated into a global space, which means it will not be garbage collected in Scala Native")
+    System.err.println(s"Warning: the value ${this.getStringified} was allocated into a global space, which means it will not be garbage collected in Scala Native")
   }
 
   if (!safeGlobal && myAllocatedValues.nonEmpty) {
