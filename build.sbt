@@ -3,11 +3,10 @@ import scala.sys.process._
 
 organization in ThisBuild := "me.shadaj"
 
-lazy val scala212Version = "2.12.15"
-lazy val scala213Version = "2.13.6"
-lazy val scala3Version = "3.0.2"
+lazy val scala212Version = "2.12.16"
+lazy val scala213Version = "2.13.8"
+lazy val scala3Version = "3.1.3"
 lazy val supportedScalaVersions = List(scala212Version, scala213Version, scala3Version)
-lazy val scala2Versions = List(scala212Version, scala213Version)
 
 scalaVersion in ThisBuild := scala213Version
 
@@ -46,11 +45,8 @@ lazy val macros = crossProject(JVMPlatform, NativePlatform)
         case Some((2, _)) => sharedSourceDir / "scala-2"
         case _ => sharedSourceDir / "scala-3"
       }
-    }
-  ).jvmSettings(
+    },
     crossScalaVersions := supportedScalaVersions
-  ).nativeSettings(
-    crossScalaVersions := scala2Versions
   )
 
 lazy val macrosJVM = macros.jvm
@@ -172,7 +168,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
       IO.write(fileToWrite, toWrite)
       Seq(fileToWrite)
     },
-    libraryDependencies += "org.scala-lang.modules" %%% "scala-collection-compat" % "2.5.0",
+    libraryDependencies += "org.scala-lang.modules" %%% "scala-collection-compat" % "2.8.1",
     libraryDependencies ++= {
       CrossVersion.partialVersion(scalaVersion.value) match {
         case Some((2, _)) => Seq(
@@ -181,7 +177,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
         case _ => Seq.empty
       }
     },
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.10" % Test,
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.13" % Test,
     unmanagedSourceDirectories in Compile += {
       val sharedSourceDir = (baseDirectory in ThisBuild).value / "core/shared/src/main"
       if (scalaVersion.value.startsWith("2.13.") || scalaVersion.value.startsWith("3")) sharedSourceDir / "scala-2.13"
@@ -193,15 +189,14 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
         case Some((2, _)) => sharedSourceDir / "scala-2"
         case _ => sharedSourceDir / "scala-3"
       }
-    }
+    },
+    crossScalaVersions := supportedScalaVersions
   ).jvmSettings(
-    crossScalaVersions := supportedScalaVersions,
-    libraryDependencies += "net.java.dev.jna" % "jna" % "5.10.0",
+    libraryDependencies += "net.java.dev.jna" % "jna" % "5.11.0",
     fork in Test := true,
     javaOptions in Test += s"-Djna.library.path=$pythonLibsDir",
     unmanagedSources / excludeFilter := HiddenFileFilter || "*Native*"
   ).nativeSettings(
-    crossScalaVersions := scala2Versions,
     nativeLinkStubs := true,
     nativeLinkingOptions ++= pythonLdFlags
   )
@@ -241,12 +236,11 @@ lazy val bench = crossProject(JVMPlatform, NativePlatform)
   .in(file("bench"))
   .settings(
     name := "scalapy-bench",
-    version := "0.1.0-SNAPSHOT"
+    version := "0.1.0-SNAPSHOT",
+    crossScalaVersions := supportedScalaVersions
   ).jvmSettings(
-    crossScalaVersions := supportedScalaVersions,
     javaOptions += s"-Djna.library.path=$pythonLibsDir"
   ).nativeSettings(
-    crossScalaVersions := scala2Versions,
     nativeLinkingOptions ++= pythonLdFlags,
     nativeMode := "release-fast"
   ).dependsOn(core)

@@ -30,7 +30,7 @@ object Platform extends PlatformMacros {
   def threadLocalWithInitial[T](initial: () => T) = SingleThreadLocal.withInitial(initial)
 
   def allocPointerToPointer(implicit zone: sn.Zone): PointerToPointer = {
-    sn.alloc[Ptr[Byte]]
+    sn.alloc[Ptr[Byte]]()
   }
 
   def pointerToLong(pointer: Pointer): Long = if (pointer == null) 0 else {

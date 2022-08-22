@@ -1,13 +1,17 @@
 # Changelog
 ## vNEXT
+
+## v0.5.2
 ### Highlights :tada:
-+ Fix getting types of the facades methods arguments in the `native_impl` method implementation in Scala 3. Create new test class `SpecialCasesTest` ([PR #237](https://github.com/shadaj/scalapy/pull/237))
 + No longer try to load other Python library versions when the one specified by user fails to load ([PR #270](https://github.com/shadaj/scalapy/pull/270))
++ ScalaPy now tries to load the latest Python version first if no specific version was set by user ([PR #273](https://github.com/shadaj/scalapy/pull/273))
 
 ### Bug Fixes :bug:
++ Fix crashes in the `py.native` macro when taking lambda parameters in Scala 3 ([PR #237](https://github.com/shadaj/scalapy/pull/237))
 + Avoid compiler crashes when accessing dynamic fields and methods whose names collide with internal names ([PR #247](https://github.com/shadaj/scalapy/pull/247))
 + Fix instructions for `python-native-libs` in Getting Started guide ([PR 249](https://github.com/shadaj/scalapy/pull/249))
 + Fix implicit resolution bugs when converting Scala collections to Python ([PR #253](https://github.com/shadaj/scalapy/pull/253))
++ Fix Scala 3 compiler errors due to `@py.native` and `py.native` being defined in separate files ([PR #278](https://github.com/shadaj/scalapy/pull/278))
 
 ## v0.5.1
 ### Highlights :tada:

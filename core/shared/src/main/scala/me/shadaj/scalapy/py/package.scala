@@ -29,13 +29,13 @@ package object py extends PyMacros {
 
   def local[T](f: => T): T = {
     val myQueue = Queue.empty[PyValue]
-    PyValue.allocatedValues.get.push(myQueue)
+    PyValue.allocatedValues.get().push(myQueue)
 
     try {
       f
     } finally {
       myQueue.foreach(_.finalize())
-      assert(PyValue.allocatedValues.get.pop.eq(myQueue))
+      assert(PyValue.allocatedValues.get().pop.eq(myQueue))
     }
   }
 
