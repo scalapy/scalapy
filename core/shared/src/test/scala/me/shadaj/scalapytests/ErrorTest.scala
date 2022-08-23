@@ -54,4 +54,18 @@ class ErrorTest extends AnyFunSuite {
       assert(exp.getMessage.contains("NameError"))
     }
   }
+
+  test("PythonException contains a traceback") {
+    local {
+      val exp = intercept[PythonException] {
+        exec("raise Exception")
+      }
+      val msgLines = exp.getMessage.linesIterator.toVector
+      val expectedFirstLines = Seq(
+        "Traceback (most recent call last):",
+        """  File "<string>", line 1, in <module>"""
+      )
+      assert(msgLines.startsWith(expectedFirstLines))
+    }
+  }
 }
