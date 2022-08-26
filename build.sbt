@@ -41,8 +41,8 @@ lazy val macros = crossProject(JVMPlatform, NativePlatform)
         case _ => Seq.empty
       }
     },
-    unmanagedSourceDirectories in Compile += {
-      val sharedSourceDir = (baseDirectory in ThisBuild).value / "coreMacros/src/main"
+    Compile / unmanagedSourceDirectories += {
+      val sharedSourceDir = (ThisBuild / baseDirectory).value / "coreMacros/src/main"
       CrossVersion.partialVersion(scalaVersion.value) match {
         case Some((2, _)) => sharedSourceDir / "scala-2"
         case _ => sharedSourceDir / "scala-3"
@@ -65,8 +65,8 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
   .dependsOn(macros)
   .settings(
     name := "scalapy-core",
-    sourceGenerators in Compile += Def.task {
-      val fileToWrite = (sourceManaged in Compile).value / "TupleReaders.scala"
+    Compile / sourceGenerators += Def.task {
+      val fileToWrite = (Compile / sourceManaged).value / "TupleReaders.scala"
       val methods = (2 to 22).map { n =>
         val tupleElements = (1 to n).map(t => s"r$t.read(orArr(${t - 1}))")
           .mkString(", ")
@@ -90,8 +90,8 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
       IO.write(fileToWrite, toWrite)
       Seq(fileToWrite)
     },
-    sourceGenerators in Compile += Def.task  {
-      val fileToWrite = (sourceManaged in Compile).value / "TupleWriters.scala"
+    Compile / sourceGenerators += Def.task  {
+      val fileToWrite = (Compile / sourceManaged).value / "TupleWriters.scala"
       val methods = (2 to 22).map { n =>
         val seqArgs = (1 to n).map(t => s"r$t.write(v._" + t + ")").mkString(", ")
         s"""implicit def tuple${n}Writer[${(1 to n).map(t => s"T$t").mkString(", ")}](implicit ${(1 to n).map(t => s"r$t: Writer[T$t]").mkString(", ")}): Writer[(${(1 to n).map(t => s"T$t").mkString(", ")})] = {
@@ -113,8 +113,8 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
       IO.write(fileToWrite, toWrite)
       Seq(fileToWrite)
     },
-    sourceGenerators in Compile += Def.task {
-      val fileToWrite = (sourceManaged in Compile).value / "FunctionReaders.scala"
+    Compile / sourceGenerators += Def.task {
+      val fileToWrite = (Compile / sourceManaged).value / "FunctionReaders.scala"
       val methods = (0 to 22).map { n =>
         val functionArgs = (1 to n).map(t => s"w$t.write(i$t)")
           .mkString(", ")
@@ -139,8 +139,8 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
       IO.write(fileToWrite, toWrite)
       Seq(fileToWrite)
     },
-    sourceGenerators in Compile += Def.task  {
-      val fileToWrite = (sourceManaged in Compile).value / "FunctionWriters.scala"
+    Compile / sourceGenerators += Def.task  {
+      val fileToWrite = (Compile / sourceManaged).value / "FunctionWriters.scala"
       val methods = (0 to 22).map { n =>
         val seqArgs = (1 to n).map(t => s"r$t.read(args(${t - 1}))").mkString(", ")
         s"""implicit def function${n}Writer[${((1 to n).map(t => s"T$t") :+ "O").mkString(", ")}](implicit ${((1 to n).map(t => s"r$t: Reader[T$t]") :+ "oWriter: Writer[O]").mkString(", ")}): Writer[(${(1 to n).map(t => s"T$t").mkString(", ")}) => O] = {
@@ -172,13 +172,13 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
       }
     },
     libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.13" % Test,
-    unmanagedSourceDirectories in Compile += {
-      val sharedSourceDir = (baseDirectory in ThisBuild).value / "core/shared/src/main"
+    Compile / unmanagedSourceDirectories += {
+      val sharedSourceDir = (ThisBuild / baseDirectory).value / "core/shared/src/main"
       if (scalaVersion.value.startsWith("2.13.") || scalaVersion.value.startsWith("3")) sharedSourceDir / "scala-2.13"
       else sharedSourceDir / "scala-2.11_2.12"
     },
-    unmanagedSourceDirectories in Compile += {
-      val sharedSourceDir = (baseDirectory in ThisBuild).value / "core/shared/src/main"
+    Compile / unmanagedSourceDirectories += {
+      val sharedSourceDir = (ThisBuild / baseDirectory).value / "core/shared/src/main"
       CrossVersion.partialVersion(scalaVersion.value) match {
         case Some((2, _)) => sharedSourceDir / "scala-2"
         case _ => sharedSourceDir / "scala-3"
@@ -187,8 +187,8 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
     crossScalaVersions := supportedScalaVersions
   ).jvmSettings(
     libraryDependencies += "net.java.dev.jna" % "jna" % "5.11.0",
-    fork in Test := true,
-    javaOptions in Test ++= pythonJavaOptions,
+    Test / fork := true,
+    Test / javaOptions ++= pythonJavaOptions,
     unmanagedSources / excludeFilter := HiddenFileFilter || "*Native*"
   ).nativeSettings(
     nativeLinkStubs := true,
@@ -201,8 +201,8 @@ lazy val coreNative = core.native
 lazy val facadeGen = project.in(file("facadeGen"))
   .dependsOn(coreJVM)
   .settings(
-    fork in run := true,
-    javaOptions in run ++= pythonJavaOptions
+    run / fork := true,
+    run / javaOptions ++= pythonJavaOptions
   )
 
 lazy val docs = project
@@ -217,7 +217,7 @@ lazy val docs = project
     connectInput := true,
     javaOptions ++= pythonJavaOptions,
     docusaurusCreateSite := {
-      mdoc.in(Compile).toTask(" ").value
+      (Compile / mdoc).toTask(" ").value
       Process(List("yarn", "install"), cwd = DocusaurusPlugin.website.value).!
       Process(List("yarn", "run", "build"), cwd = DocusaurusPlugin.website.value).!
       val out = DocusaurusPlugin.website.value / "build"
