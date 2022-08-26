@@ -1,14 +1,16 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 import scala.sys.process._
 
-organization in ThisBuild := "me.shadaj"
+import ai.kien.python.Python
+
+ThisBuild / organization := "me.shadaj"
 
 lazy val scala212Version = "2.12.16"
 lazy val scala213Version = "2.13.8"
 lazy val scala3Version = "3.1.3"
 lazy val supportedScalaVersions = List(scala212Version, scala213Version, scala3Version)
 
-scalaVersion in ThisBuild := scala213Version
+ThisBuild / scalaVersion := scala213Version
 
 lazy val scalapy = project.in(file(".")).aggregate(
   macrosJVM, macrosNative,
@@ -52,19 +54,11 @@ lazy val macros = crossProject(JVMPlatform, NativePlatform)
 lazy val macrosJVM = macros.jvm
 lazy val macrosNative = macros.native
 
-lazy val pythonLdFlags = {
-  val withoutEmbed = "python3-config --ldflags".!!
-  if (withoutEmbed.contains("-lpython")) {
-    withoutEmbed.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
-  } else {
-    val withEmbed = "python3-config --ldflags --embed".!!
-    withEmbed.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
-  }
-}
-
-lazy val pythonLibsDir = {
-  pythonLdFlags.find(_.startsWith("-L")).get.drop("-L".length)
-}
+lazy val python = Python()
+lazy val pythonLdFlags = python.ldflags.get
+lazy val pythonJavaOptions = python.scalapyProperties.get.map {
+  case (k, v) => s"""-D$k=$v"""
+}.toSeq
 
 lazy val core = crossProject(JVMPlatform, NativePlatform)
   .in(file("core"))
@@ -194,7 +188,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
   ).jvmSettings(
     libraryDependencies += "net.java.dev.jna" % "jna" % "5.11.0",
     fork in Test := true,
-    javaOptions in Test += s"-Djna.library.path=$pythonLibsDir",
+    javaOptions in Test ++= pythonJavaOptions,
     unmanagedSources / excludeFilter := HiddenFileFilter || "*Native*"
   ).nativeSettings(
     nativeLinkStubs := true,
@@ -208,7 +202,7 @@ lazy val facadeGen = project.in(file("facadeGen"))
   .dependsOn(coreJVM)
   .settings(
     fork in run := true,
-    javaOptions in run += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib"
+    javaOptions in run ++= pythonJavaOptions
   )
 
 lazy val docs = project
@@ -221,7 +215,7 @@ lazy val docs = project
   .settings(
     fork := true,
     connectInput := true,
-    javaOptions += s"-Djna.library.path=$pythonLibsDir",
+    javaOptions ++= pythonJavaOptions,
     docusaurusCreateSite := {
       mdoc.in(Compile).toTask(" ").value
       Process(List("yarn", "install"), cwd = DocusaurusPlugin.website.value).!
@@ -239,7 +233,7 @@ lazy val bench = crossProject(JVMPlatform, NativePlatform)
     version := "0.1.0-SNAPSHOT",
     crossScalaVersions := supportedScalaVersions
   ).jvmSettings(
-    javaOptions += s"-Djna.library.path=$pythonLibsDir"
+    javaOptions ++= pythonJavaOptions
   ).nativeSettings(
     nativeLinkingOptions ++= pythonLdFlags,
     nativeMode := "release-fast"
