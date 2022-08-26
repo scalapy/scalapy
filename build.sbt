@@ -52,19 +52,11 @@ lazy val macros = crossProject(JVMPlatform, NativePlatform)
 lazy val macrosJVM = macros.jvm
 lazy val macrosNative = macros.native
 
-lazy val pythonLdFlags = {
-  val withoutEmbed = "python3-config --ldflags".!!
-  if (withoutEmbed.contains("-lpython")) {
-    withoutEmbed.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
-  } else {
-    val withEmbed = "python3-config --ldflags --embed".!!
-    withEmbed.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
-  }
-}
-
-lazy val pythonLibsDir = {
-  pythonLdFlags.find(_.startsWith("-L")).get.drop("-L".length)
-}
+lazy val python = Python()
+lazy val pythonLdFlags = python.ldflags.get
+lazy val pythonJavaOptions = python.scalapyProperties.get.map {
+  case (k, v) => s"""-D$k=$v"""
+}.toSeq
 
 lazy val core = crossProject(JVMPlatform, NativePlatform)
   .in(file("core"))
@@ -194,7 +186,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
   ).jvmSettings(
     libraryDependencies += "net.java.dev.jna" % "jna" % "5.11.0",
     Test / fork := true,
-    Test / javaOptions += s"-Djna.library.path=$pythonLibsDir",
+    Test / javaOptions ++= pythonJavaOptions,
     unmanagedSources / excludeFilter := HiddenFileFilter || "*Native*"
   ).nativeSettings(
     nativeConfig ~= {
@@ -210,7 +202,7 @@ lazy val facadeGen = project.in(file("facadeGen"))
   .dependsOn(coreJVM)
   .settings(
     run / fork := true,
-    run / javaOptions += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib"
+    run / javaOptions ++= pythonJavaOptions
   )
 
 lazy val docs = project
@@ -223,7 +215,7 @@ lazy val docs = project
   .settings(
     fork := true,
     connectInput := true,
-    javaOptions += s"-Djna.library.path=$pythonLibsDir",
+    javaOptions ++= pythonJavaOptions,
     docusaurusCreateSite := {
       (Compile / mdoc).toTask(" ").value
       Process(List("yarn", "install"), cwd = DocusaurusPlugin.website.value).!
@@ -241,7 +233,7 @@ lazy val bench = crossProject(JVMPlatform, NativePlatform)
     version := "0.1.0-SNAPSHOT",
     crossScalaVersions := supportedScalaVersions
   ).jvmSettings(
-    javaOptions += s"-Djna.library.path=$pythonLibsDir"
+    javaOptions ++= pythonJavaOptions
   ).nativeSettings(
     nativeConfig ~= {
       _.withLinkingOptions(pythonLdFlags)
@@ -251,3 +243,17 @@ lazy val bench = crossProject(JVMPlatform, NativePlatform)
 
 lazy val benchJVM = bench.jvm
 lazy val benchNative = bench.native
+
+lazy val pythonNativeLibs = ProjectRef(file("./python-native-libs"), "root")
+
+lazy val pythonNativeLibsTest = project
+  .in(file("python-native-libs-test"))
+  .dependsOn(
+    coreJVM,
+    pythonNativeLibs
+  )
+  .settings(
+    crossScalaVersions := supportedScalaVersions,
+    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.13" % Test,
+    Test / fork := true
+  )

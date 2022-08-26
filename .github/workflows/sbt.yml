@@ -32,6 +32,9 @@ jobs:
       - name: Test JVM and native
         run: sbt +coreJVM/test +coreNative/test
         shell: bash
+      - name: Test python-native-libs
+        run: sbt +pythonNativeLibsTest/test
+        shell: bash
       - name: Compile Benchmarks
         run: sbt benchJVM/compile benchNative/compile
         shell: bash
