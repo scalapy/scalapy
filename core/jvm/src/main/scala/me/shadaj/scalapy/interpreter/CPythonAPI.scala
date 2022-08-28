@@ -16,7 +16,12 @@ class CPythonAPIInterface {
         "python3.7", "python3.7m"
       ))
 
-  val loadAttempts = pythonLibrariesToTry.toStream.map(n => Try(Native.register(n)))
+  val loadAttempts = pythonLibrariesToTry.toStream.map(n => try {
+    Native.register(n)
+    Success(true)
+  } catch {
+    case t: Throwable => Failure(t)
+  })
 
   loadAttempts.find(_.isSuccess).getOrElse {
     loadAttempts.foreach(_.failed.get.printStackTrace())
