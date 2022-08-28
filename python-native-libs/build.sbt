@@ -23,8 +23,8 @@ lazy val supportedScalaVersions = List(scala212Version, scala213Version, scala3V
 
 ThisBuild / dynverTagPrefix := "python-native-libs-v"
 
-lazy val root = project
-  .in(file("."))
+lazy val pythonNativeLibs = project
+  .in(file("python-native-libs"))
   .settings(
     name               := "Python Native Libs",
     crossScalaVersions := supportedScalaVersions,
