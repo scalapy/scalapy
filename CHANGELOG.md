@@ -1,5 +1,7 @@
 # Changelog
 ## vNEXT
+### Highlights :tada:
++ Add `py.exec` method, allowing to execute a piece of Python code ([PR #299](https://github.com/scalapy/scalapy/pull/299))
 
 ## v0.5.2
 ### Highlights :tada:

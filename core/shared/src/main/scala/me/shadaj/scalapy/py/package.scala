@@ -53,6 +53,10 @@ package object py extends PyMacros {
     Any.populateWith(CPythonInterpreter.load(str)).as[Dynamic]
   }
 
+  def exec(str: String): Unit = {
+    CPythonInterpreter.execManyLines(str)
+  }
+
   final class PyQuotable(val variable: String) extends AnyVal {
     def cleanup() = CPythonInterpreter.cleanupVariableReference(variable)
   }
