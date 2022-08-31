@@ -14,7 +14,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ ubuntu-latest ]
+        os: [ ubuntu-latest, windows-latest ]
         python-version: [ 3.7, 3.8, 3.9, "3.10", "3.11", "3.12" ]
     steps:
       - uses: actions/checkout@master
@@ -27,10 +27,20 @@ jobs:
         with:
           python-version: ${{ matrix.python-version }}
       - name: Log Python Config
-        run: python3-config --ldflags && ls $(python3-config --prefix)/lib
+        run: |
+          if [ "$RUNNER_OS" != "Windows" ]; then
+            python3-config --ldflags && ls $(python3-config --prefix)/lib
+          else
+            python3 -m sysconfig
+          fi
         shell: bash
       - name: Test JVM and native
-        run: sbt +coreJVM/test +coreNative/test
+        run: |
+          if [ "$RUNNER_OS" != "Windows" ]; then
+            sbt +coreJVM/test +coreNative/test
+          else
+            sbt +coreJVM/test
+          fi
         shell: bash
       - name: Test python-native-libs
         run: sbt +pythonNativeLibsTest/test

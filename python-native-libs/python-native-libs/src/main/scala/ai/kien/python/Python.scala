@@ -80,10 +80,19 @@ class Python private[python] (
     */
   lazy val ldflags: Try[Seq[String]] = if (isWin) ldflagsWin else ldflagsNix
 
-  lazy val ldflagsWin = for {
-    nativeLibraryPaths <- nativeLibraryPaths
-    nativeLibrary      <- nativeLibrary
-  } yield ("-l" + nativeLibrary) +: nativeLibraryPaths.map("-L" + _)
+  lazy val ldflagsWin: Try[Seq[String]] =
+    (for {
+      nativeLibraryPaths <- nativeLibraryPaths
+      nativeLibrary      <- nativeLibrary
+    } yield (nativeLibrary, nativeLibraryPaths)).map {
+      case (nativeLibrary, nativeLibraryPaths) =>
+        "-fuse-ld=lld" +: nativeLibraryPaths
+          .headOption
+          .map(fs.getPath(_).resolve(nativeLibrary + ".dll"))
+          .filter(Files.exists(_))
+          .map(_.toString)
+          .toSeq
+    }
 
   lazy val ldflagsNix: Try[Seq[String]] = for {
     rawLdflags         <- rawLdflags
