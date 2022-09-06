@@ -51,6 +51,7 @@ jobs:
   publish:
     needs: [test]
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'release'
     steps:
     - uses: actions/checkout@master
     - name: Set up JDK 1.8 and SBT
@@ -60,7 +61,6 @@ jobs:
     - run: git fetch --unshallow
     - name: Publish with SBT
       run: export JAVA_OPTS="-Xmx4g" && bash ./publish.sh
-      if: github.ref == 'refs/heads/main' || github.event_name == 'release'
       env:
         encrypted_key: ${{ secrets.key }}
         encrypted_iv: ${{ secrets.iv }}
