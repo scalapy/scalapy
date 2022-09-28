@@ -34,7 +34,7 @@ package object py extends PyMacros {
     try {
       f
     } finally {
-      myQueue.foreach(_.finalize())
+      myQueue.foreach(_.cleanup(ignoreCleaned = true))
       assert(PyValue.allocatedValues.get().pop.eq(myQueue))
     }
   }

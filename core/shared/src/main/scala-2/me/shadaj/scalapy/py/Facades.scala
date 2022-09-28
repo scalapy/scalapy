@@ -8,10 +8,12 @@ class FacadeValueProvider(private[scalapy] val __scalapy__rawValue: PyValue) ext
 
 class StaticModule(name: String) extends Module {
   private[scalapy] val __scalapy__rawValue = module(name).__scalapy_value
+  __scalapy__rawValue.noCleanup = true
 }
 
 class StaticValue(value: Any) extends Any {
   private[scalapy] val __scalapy__rawValue = value.__scalapy_value
+  __scalapy__rawValue.noCleanup = true
 }
 
 abstract class FacadeCreator[F <: Any] {

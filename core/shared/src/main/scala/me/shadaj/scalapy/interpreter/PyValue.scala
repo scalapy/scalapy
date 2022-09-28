@@ -6,7 +6,9 @@ import scala.collection.mutable
 import scala.collection.mutable.Stack
 import scala.collection.mutable.Queue
 
-final class PyValue private[PyValue](var underlying: Platform.Pointer, safeGlobal: Boolean = false) {
+final class PyValue private[PyValue](var _underlying: Platform.Pointer, safeGlobal: Boolean = false) {
+  private[scalapy] var noCleanup: Boolean = false
+
   val myAllocatedValues = PyValue.allocatedValues.get()
   if (Platform.isNative && myAllocatedValues.isEmpty && !safeGlobal && !PyValue.disabledAllocationWarning) {
     System.err.println(s"Warning: the value ${this.getStringified} was allocated into a global space, which means it will not be garbage collected in Scala Native")
@@ -14,6 +16,14 @@ final class PyValue private[PyValue](var underlying: Platform.Pointer, safeGloba
 
   if (!safeGlobal && myAllocatedValues.nonEmpty) {
     myAllocatedValues.head.enqueue(this)
+  }
+
+  def underlying: Platform.Pointer = {
+    if (_underlying == null) {
+      throw new IllegalStateException("Cannot use a PyValue that has been cleaned up, was this value allocated in a local block?")
+    } else {
+      _underlying
+    }
   }
 
   override def equals(obj: scala.Any): Boolean = {
@@ -117,27 +127,29 @@ final class PyValue private[PyValue](var underlying: Platform.Pointer, safeGloba
     override def subtractOne(k: PyValue): this.type = ???
   }
 
-  def cleanup(): Unit = CPythonInterpreter.withGil {
-    if (underlying != null) {
-      CPythonAPI.Py_DecRef(underlying)
-      underlying = null
-    } else {
-      throw new IllegalStateException("This PyValue has already been cleaned up")
+  def cleanup(ignoreCleaned: Boolean = false): Unit = if (!noCleanup) {
+    CPythonInterpreter.withGil {
+      if (_underlying != null) {
+        CPythonAPI.Py_DecRef(_underlying)
+        _underlying = null
+      } else if (!ignoreCleaned) {
+        throw new IllegalStateException("This PyValue has already been cleaned up")
+      }
     }
   }
 
   private[scalapy] def dup(): PyValue = {
-    if (underlying != null) {
-      PyValue.fromBorrowed(underlying)
+    if (_underlying != null) {
+      PyValue.fromBorrowed(_underlying)
     } else {
       throw new IllegalStateException("Cannot dup a PyValue that has been cleaned")
     }
   }
 
   override def finalize(): Unit = CPythonInterpreter.withGil {
-    if (underlying != null) {
-      CPythonAPI.Py_DecRef(underlying)
-      underlying = null
+    if (_underlying != null) {
+      CPythonAPI.Py_DecRef(_underlying)
+      _underlying = null
     }
   }
 }

@@ -50,7 +50,7 @@ class SpecialSyntaxTest extends AnyFunSuite {
       val myClass = types.new_class("MyClass")
       
       val weakref = module("weakref")
-      val value =  myClass()
+      val value = myClass()
       var cleaned = false
       val reference = weakref.ref(value, (_: Any) => {
         cleaned = true
