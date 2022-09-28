@@ -1,7 +1,7 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 import scala.sys.process._
 
-ThisBuild / organization := "me.shadaj"
+ThisBuild / organization := "dev.scalapy"
 
 lazy val scala212Version = "2.12.16"
 lazy val scala213Version = "2.13.8"
