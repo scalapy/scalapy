@@ -23,6 +23,14 @@ class ModuleTest extends AnyFunSuite {
     }
   }
 
+  test("Calling an empty parens facade function does not read attributes") {
+    local {
+      assertThrows[PythonException] {
+        StringModuleStaticFacade.ascii_letters()
+      }
+    }
+  }
+
   test("Can import module attributes through subname") {
     local {
       assert(module("string", "digits").as[String] == "0123456789")

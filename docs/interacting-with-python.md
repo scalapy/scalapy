@@ -167,3 +167,5 @@ py.local {
 ```
 
 In this code, we can manipulate the values allocated inside the `py.local` block as long as we are still in its scope. If we try to access the values after the block ends, we will get an exception.
+
+**Note:** using `py.local` requires careful reasoning about where different Python values will be initialized, since ScalaPy only uses the stack to compute which values should be cleaned. For example, if an object is lazily initialized inside a `py.local` block, any Python values stored there will be cleaned because they will be seen as part of the local block.

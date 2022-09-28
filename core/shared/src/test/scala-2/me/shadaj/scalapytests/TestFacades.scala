@@ -9,6 +9,9 @@ import me.shadaj.scalapy.interpreter
 
 @native trait StringModuleFacade extends Module {
   def digits: String = native
+
+  // this is an attribute, not a method
+  def ascii_letters(): String = native
 }
 
 @native object StringModuleStaticFacade extends StaticModule("string") with StringModuleFacade

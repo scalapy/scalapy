@@ -100,8 +100,9 @@ object FacadeImpl {
     val methodName = methodSymbol.name
     val refss = methodSymbolParameterRefs(methodSymbol)
 
-    if refss.length > 1 then
-      report.throwError(s"method $methodName has curried parameter lists.")
+    if (refss.length > 1) {
+      report.throwError(s"Method $methodName has curried parameter lists, which are currently not supported in facades")
+    }
 
     val args = refss.headOption.toList.flatten
 
@@ -109,34 +110,30 @@ object FacadeImpl {
     if (Symbol.spliceOwner.owner.hasAnnotation(Symbol.requiredClass("me.shadaj.scalapy.py.PyBracketAccess"))) {
       if (args.size == 0) {
         report.throwError("PyBracketAccess functions require at least one parameter")
-      }
-      else if (args.size == 1) {
+      } else if (args.size == 1) {
         val bracketAccessAST = Apply(TypeApply(Select.unique(Apply(Select.unique(Apply(TypeApply(
           Select.unique(resolveThis,"as"),List(TypeIdent(Helper.classDynamicSymbol))),List(evidenceForDynamic)),  
           "bracketAccess"),List(constructASTforMethodFrom(args(0)))),"as"), List(TypeTree.of[T])),List(evidenceForTypeT))
 
         bracketAccessAST.asExprOf[T]
-      }
-      else if (args.size == 2) {
+      } else if (args.size == 2) {
         val bracketUpdateAST = Apply(Select.unique(Apply(TypeApply(
           Select.unique(resolveThis,"as"),List(TypeIdent(Helper.classDynamicSymbol))),List(evidenceForDynamic)),  
           "bracketUpdate"),List(constructASTforMethodFrom(args(0)), constructASTforMethodFrom(args(1))))
 
           bracketUpdateAST.asExprOf[T]
-      }
-      else {
+      } else {
         report.throwError("Too many parameters to PyBracketAccess function")
       }
     }
     else {
-      if (args.isEmpty) {
+      if (refss.isEmpty) {
         val selectDynamicAST = Apply(TypeApply(Select.unique(Apply(Select.unique(Apply(TypeApply(
           Select.unique(resolveThis,"as"),List(TypeIdent(Helper.classDynamicSymbol))),List(evidenceForDynamic)),  
           "selectDynamic"),List(Expr(methodName).asTerm)),"as"), List(TypeTree.of[T])),List(evidenceForTypeT))
 
         selectDynamicAST.asExprOf[T]
-      }
-      else {
+      } else {
         val typedVarargs = Typed(Inlined(None, Nil, Repeated(args.map(arg => constructASTforMethodFrom(arg)),
           TypeIdent(Helper.classAnySymbol))),Applied(TypeIdent(defn.RepeatedParamClass),List(TypeIdent(Helper.classAnySymbol))))
 
@@ -164,8 +161,9 @@ object FacadeImpl {
     val methodName = methodSymbol.name
     val refss = methodSymbolParameterRefs(methodSymbol)
 
-    if refss.length > 1 then
-      report.throwError(s"method $methodName has curried parameter lists.")
+    if (refss.length > 1) {
+      report.throwError(s"Method $methodName has curried parameter lists, which are currently not supported in facades")
+    }
 
     val args = refss.headOption.toList.flatten
     
@@ -175,8 +173,7 @@ object FacadeImpl {
         "selectDynamic"),List(Expr(methodName).asTerm)),"as"),List(TypeTree.of[T])),List(evidenceForTypeT))
 
       selectDynamicAST.asExprOf[T]
-    }
-    else {
+    } else {
       def constructASTforMethodFrom(arg: quotes.reflect.Term) = {
         val applyArgTypeToWriter = Helper.writerTypeRepr.appliedTo(arg.tpe.widen)
         val tree = Apply(Apply(TypeApply(Ref(Helper.methodFromSymbol),List(Inferred(arg.tpe.widen))),List(arg)),

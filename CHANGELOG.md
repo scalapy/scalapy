@@ -1,7 +1,12 @@
 # Changelog
 ## vNEXT
 ### Highlights :tada:
++ ScalaPy is now published under the `dev.scalapy` organization
 + Add `py.exec` method, allowing to execute a piece of Python code ([PR #299](https://github.com/scalapy/scalapy/pull/299))
+
+### Bug Fixes :bug:
++ Fix facades with methods taking empty-parens parameters reading an attribute instead of calling a function on Scala 3 ([PR #313](https://github.com/scalapy/scalapy/pull/313))
++ Fix crashes due to `py.local` cleaning up the underlying `PyValue` of static facades ([PR #313](https://github.com/scalapy/scalapy/pull/313))
 
 ## v0.5.2
 ### Highlights :tada:
