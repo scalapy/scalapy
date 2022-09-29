@@ -68,7 +68,10 @@ object FacadeImpl {
 
   def creator[T <: Any](using Type[T], Quotes): Expr[FacadeCreator[T]] = 
     import quotes.reflect.*
-    // new FacadeCreator[T] { def create: T = new T }
+    if(TypeRepr.of[T].typeSymbol.flags.is(Flags.Trait))
+      report.error(s"Facade definitions in Scala 3 must be classes, but ${TypeRepr.of[T].show} was defined as a trait")
+
+  // new FacadeCreator[T] { def create: T = new T }
     val creatorMaker = TypeIdent(Symbol.requiredClass("me.shadaj.scalapy.py.CreatorMaker"))
     val anonfunSym = Symbol.newMethod(Symbol.spliceOwner, "$anonfun", 
       MethodType(List())(_ => List(), _ => TypeTree.of[T].tpe))
