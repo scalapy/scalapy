@@ -1,6 +1,7 @@
 package me.shadaj.scalapy.interpreter
 
 import java.{util => ju}
+import java.util.concurrent.atomic.AtomicBoolean
 import scala.util.Properties
 
 import me.shadaj.scalapy.py.PythonException
@@ -309,6 +310,53 @@ object CPythonInterpreter {
     ), java.nio.charset.Charset.forName("UTF-8"))
   }
 
+  private object Traceback {
+
+    private val instance = new Traceback
+
+    private val inUse = new AtomicBoolean
+
+    // We only let one call use the traceback module instance at a time.
+    // That way, if a traceback use attempt fails, and we are getting called
+    // again to report that error, we don't use traceback again to report
+    // that second error (so that we don't go into an infinite loop).
+    def tryUse[T](f: Option[Traceback] => T): T =
+      if (inUse.compareAndSet(false, true))
+        try f(Some(instance))
+        finally inUse.set(false)
+      else
+        // Seems we're being called while the traceback object is already being used.
+        // We stop trying to use traceback, so that we don't go into
+        // an infinite loop because of an error using it that would repeat.
+        f(None)
+  }
+
+  private final class Traceback {
+    private var moduleOpt = Option.empty[PyValue]
+    private def module: PyValue = moduleOpt
+      .filter(_._underlying != null)
+      .getOrElse {
+        Platform.Zone { implicit zone =>
+          withGil {
+            val newModule = CPythonAPI.PyImport_ImportModule(Platform.toCString("traceback"))
+            throwErrorIfOccured()
+            val module = PyValue.fromNew(newModule, safeGlobal = true)
+            moduleOpt = Some(module)
+            module
+          }
+        }
+      }
+
+    def formatTb(traceback: PyValue): PyValue =
+      call(module, "format_tb", Seq(traceback), Seq())
+  }
+
+  private def pointerToPointerToPyValueOpt(ptr: Platform.PointerToPointer): Option[PyValue] = {
+    val value = Platform.dereferencePointerToPointer(ptr)
+    if (value == null) None
+    else Some(PyValue.fromBorrowed(value))
+  }
+
   def throwErrorIfOccured() = withGil {
     if (Platform.pointerToLong(CPythonAPI.PyErr_Occurred()) != 0) {
       Platform.Zone { implicit zone =>
@@ -318,6 +366,20 @@ object CPythonInterpreter {
 
         CPythonAPI.PyErr_Fetch(pType, pValue, pTraceback)
 
+        val tracebackStrOpt = Traceback.tryUse { tracebackOpt =>
+          for {
+            traceback <- tracebackOpt
+            pyTraceback <- pointerToPointerToPyValueOpt(pTraceback)
+          } yield {
+            "Traceback (most recent call last):" + System.lineSeparator() +
+              traceback.formatTb(pyTraceback)
+                .getSeq[PyValue](PyValue.fromBorrowed(_), null)
+                .toVector
+                .map(_.getStringified)
+                .mkString
+          }
+        }
+
         val pTypeStringified = pointerPointerToString(pType)
 
         val pValueObject = Platform.dereferencePointerToPointer(pValue)
@@ -325,7 +387,7 @@ object CPythonInterpreter {
           " " + pointerPointerToString(pValue)
         } else ""
 
-        throw new PythonException(pTypeStringified + pValueStringified)
+        throw new PythonException(tracebackStrOpt.getOrElse("") + pTypeStringified + pValueStringified)
       }
     }
   }
