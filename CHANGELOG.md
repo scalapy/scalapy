@@ -3,6 +3,7 @@
 ### Highlights :tada:
 + ScalaPy is now published under the `dev.scalapy` organization
 + Add `py.exec` method, allowing to execute a piece of Python code ([PR #299](https://github.com/scalapy/scalapy/pull/299))
++ Exceptions thrown by Python APIs are now printed with a stack trace that includes both Scala and Python components ([PR #297](https://github.com/scalapy/scalapy/pull/297))
 
 ### Bug Fixes :bug:
 + Fix facades with methods taking empty-parens parameters reading an attribute instead of calling a function on Scala 3 ([PR #313](https://github.com/scalapy/scalapy/pull/313))
