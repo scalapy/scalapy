@@ -168,7 +168,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
       IO.write(fileToWrite, toWrite)
       Seq(fileToWrite)
     },
-    libraryDependencies += "org.scala-lang.modules" %%% "scala-collection-compat" % "2.8.1",
+    libraryDependencies += "org.scala-lang.modules" %%% "scala-collection-compat" % "2.9.0",
     libraryDependencies ++= {
       CrossVersion.partialVersion(scalaVersion.value) match {
         case Some((2, _)) => Seq(
