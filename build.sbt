@@ -192,7 +192,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
     },
     crossScalaVersions := supportedScalaVersions
   ).jvmSettings(
-    libraryDependencies += "net.java.dev.jna" % "jna" % "5.11.0",
+    libraryDependencies += "net.java.dev.jna" % "jna" % "5.13.0",
     Test / fork := true,
     Test / javaOptions += s"-Djna.library.path=$pythonLibsDir",
     unmanagedSources / excludeFilter := HiddenFileFilter || "*Native*"
