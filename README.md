@@ -16,6 +16,8 @@ ScalaPy allows you to use any Python library from your Scala code with an intuit
 
 # Get Started at [scalapy.dev](https://scalapy.dev)
 
+**Note: The most up-to-date documentation is always available in github [docs](https://github.com/scalapy/scalapy/tree/main/docs) directory. The website might be a bit outdated sometimes.**
+
 ## Building
 To run the unit tests for ScalaPy, run `sbt coreJVM/test`. To run unit tests for Scala Native, run `sbt coreNative/test`.
 
