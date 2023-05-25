@@ -6,7 +6,7 @@ addSbtPlugin("com.jsuereth" % "sbt-pgp" % "2.0.2")
 
 addSbtPlugin("org.xerial.sbt" % "sbt-sonatype" % "3.9.13")
 
-addSbtPlugin("com.dwijnand" % "sbt-dynver" % "4.1.1")
+addSbtPlugin("com.github.sbt" % "sbt-dynver" % "5.0.1")
 
 addSbtPlugin("org.scalameta" % "sbt-mdoc" % "2.3.6")
 
