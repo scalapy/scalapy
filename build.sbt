@@ -1,6 +1,8 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 import scala.sys.process._
 
+import ai.kien.python.Python
+
 ThisBuild / organization := "dev.scalapy"
 
 lazy val scala212Version = "2.12.20"
