@@ -1,5 +1,6 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 import scala.sys.process._
+import java.nio.file.{Files, Paths}
 
 import ai.kien.python.Python
 
@@ -11,6 +12,8 @@ lazy val scala3Version = "3.5.0"
 lazy val supportedScalaVersions = List(scala212Version, scala213Version, scala3Version)
 
 ThisBuild / scalaVersion := scala213Version
+
+lazy val scalaTestVersion = "3.2.19"
 
 lazy val scalapy = project.in(file(".")).aggregate(
   macrosJVM, macrosNative,
@@ -171,7 +174,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
         case _ => Seq.empty
       }
     },
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.19" % Test,
+    libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % Test,
     Compile / unmanagedSourceDirectories += {
       val sharedSourceDir = (ThisBuild / baseDirectory).value / "core/shared/src/main"
       if (scalaVersion.value.startsWith("2.13.") || scalaVersion.value.startsWith("3")) sharedSourceDir / "scala-2.13"
@@ -248,14 +251,70 @@ lazy val benchNative = bench.native
 
 lazy val pythonNativeLibs = ProjectRef(file("./python-native-libs"), "root")
 
-lazy val pythonNativeLibsTest = project
+def runProcess(cmd: Seq[String]) = {
+  val output = new StringBuilder
+
+  val status = cmd ! ProcessLogger(output append _, output append _)
+
+  if (status != 0) {
+    scala.sys.error(output.toString)
+  }
+}
+
+lazy val virtualenv = taskKey[File]("virtualenv")
+lazy val pythonTestPackage = taskKey[String]("pythonTestPackage")
+lazy val createVirtualenv = taskKey[String]("create virtualenv")
+lazy val deleteVirtualenv = taskKey[Unit]("delete virtualenv")
+
+lazy val pythonNativeLibsTest = crossProject(JVMPlatform, NativePlatform)
+  .crossType(CrossType.Full)
   .in(file("python-native-libs-test"))
+  .settings(
+    crossScalaVersions := supportedScalaVersions,
+    virtualenv := IO.temporaryDirectory / "venv",
+    pythonTestPackage := "typing-extensions",
+    createVirtualenv := {
+      IO.delete(virtualenv.value)
+      val venv = virtualenv.value.getAbsolutePath().toString()
+      runProcess(Seq("python", "-m", "venv", venv))
+
+      val python = Paths.get(venv, "bin", "python").toString()
+      runProcess(Seq(python, "-m", "pip", "install", pythonTestPackage.value))
+
+      python
+    },
+    deleteVirtualenv := IO.delete(virtualenv.value),
+    Test / testOptions += Tests.Cleanup(() => deleteVirtualenv.value: @sbtUnchecked),
+    Test / sourceGenerators += Def.task {
+      val file = (Test / sourceManaged).value / "Config.scala"
+      val toWrite =
+        s"""package ai.kien.python
+           |object Config {
+           |  val pythonExecutable: String = "${createVirtualenv.value}"
+           |  val module: String = "${pythonTestPackage.value.replace('-', '_')}"
+           |}
+         """.stripMargin
+      IO.write(file, toWrite)
+      Seq(file)
+    }
+  )
+
+lazy val pythonNativeLibTestJVM = pythonNativeLibsTest.jvm
   .dependsOn(
     coreJVM,
     pythonNativeLibs
   )
   .settings(
-    crossScalaVersions := supportedScalaVersions,
-    libraryDependencies += "org.scalatest" %% "scalatest" % "3.2.13" % Test,
+    libraryDependencies += "org.scalatest" %% "scalatest" % scalaTestVersion % Test,
     Test / fork := true
+  )
+
+lazy val pythonNativeLibTestNative = pythonNativeLibsTest.native
+  .dependsOn(
+    coreNative
+  )
+  .settings(
+    libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % Test,
+    nativeLinkStubs := true,
+    nativeLinkingOptions ++= pythonLdFlags
   )

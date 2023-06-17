@@ -43,7 +43,12 @@ jobs:
           fi
         shell: bash
       - name: Test python-native-libs
-        run: sbt +pythonNativeLibsTest/test
+        run: |
+          if [ "$RUNNER_OS" != "Windows" ]; then
+            sbt +pythonNativeLibsTestJVM/test +pythonNativeLibsTestNative/test
+          else
+            sbt +pythonNativeLibsTestJVM/test
+          fi
         shell: bash
       - name: Compile Benchmarks
         run: sbt benchJVM/compile benchNative/compile
