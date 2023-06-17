@@ -246,7 +246,7 @@ lazy val bench = crossProject(JVMPlatform, NativePlatform)
 lazy val benchJVM = bench.jvm
 lazy val benchNative = bench.native
 
-lazy val pythonNativeLibs = ProjectRef(file("./python-native-libs"), "pythonNativeLibs")
+lazy val pythonNativeLibs = ProjectRef(file("./python-native-libs"), "root")
 
 lazy val pythonNativeLibsTest = project
   .in(file("python-native-libs-test"))
