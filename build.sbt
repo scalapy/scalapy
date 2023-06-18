@@ -1,5 +1,6 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 import scala.sys.process._
+import scala.util.Properties
 import java.nio.file.{Files, Paths}
 
 import ai.kien.python.Python
@@ -278,7 +279,12 @@ lazy val pythonNativeLibsTest = crossProject(JVMPlatform, NativePlatform)
       val venv = virtualenv.value.getAbsolutePath().toString()
       runProcess(Seq("python", "-m", "venv", venv))
 
-      val python = Paths.get(venv, "bin", "python").toString()
+      val python =
+        if (Properties.isWin)
+          Paths.get(venv, "Scripts", "python").toString()
+        else
+          Paths.get(venv, "bin", "python").toString()
+
       runProcess(Seq(python, "-m", "pip", "install", pythonTestPackage.value))
 
       python
