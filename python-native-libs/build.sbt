@@ -3,7 +3,7 @@ import Dependencies._
 inThisBuild(
   List(
     organization := "dev.scalapy",
-    homepage     := Some(url("https://github.com/kiendang/python-native-libs")),
+    homepage     := Some(url("https://github.com/scalapy/scalapy")),
     licenses     := List("BSD-3-Clause" -> url("https://opensource.org/licenses/BSD-3-Clause")),
     developers := List(
       Developer(
