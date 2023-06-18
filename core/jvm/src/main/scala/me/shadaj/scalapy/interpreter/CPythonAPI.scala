@@ -10,10 +10,11 @@ class CPythonAPIInterface {
       .map(Seq(_))
       .getOrElse(Seq(
         "python3",
+        "python3.11", "python3.11m",
         "python3.10", "python3.10m",
         "python3.9", "python3.9m",
         "python3.8", "python3.8m",
-        "python3.7", "python3.7m"
+        "python3.7", "python3.7m",
       ))
 
   val loadAttempts = pythonLibrariesToTry.toStream.map(n => try {
