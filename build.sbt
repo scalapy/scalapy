@@ -293,10 +293,11 @@ lazy val pythonNativeLibsTest = crossProject(JVMPlatform, NativePlatform)
     Test / testOptions += Tests.Cleanup(() => deleteVirtualenv.value: @sbtUnchecked),
     Test / sourceGenerators += Def.task {
       val file = (Test / sourceManaged).value / "Config.scala"
+      val tripleQuote = "\"\"\""
       val toWrite =
         s"""package ai.kien.python
            |object Config {
-           |  val pythonExecutable: String = "${createVirtualenv.value}"
+           |  val pythonExecutable: String = ${tripleQuote}${createVirtualenv.value}${tripleQuote}
            |  val module: String = "${pythonTestPackage.value.replace('-', '_')}"
            |}
          """.stripMargin
