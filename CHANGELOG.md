@@ -1,5 +1,7 @@
 # Changelog
 ## vNEXT
+### Highlights :tada:
++ Move the `python-native-libs` project which previously resided at [scalapy/python-native-libs](https://github.com/scalapy/python-native-libs) into the `scalapy` repo to ease testing and maintenance ([PR #303](https://github.com/scalapy/scalapy/pull/303))
 
 ## v0.5.3
 ### Highlights :tada:
