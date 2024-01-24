@@ -5,7 +5,7 @@ import Link from '@docusaurus/Link';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import useBaseUrl from '@docusaurus/useBaseUrl';
 import styles from './styles.module.css';
-import useWindowSize, { windowSizes } from '@theme/hooks/useWindowSize';
+import { useWindowSize } from '@docusaurus/theme-common';
 
 const features = [
   {
@@ -35,7 +35,7 @@ function Feature({imageUrl, imageAlign, title, description}) {
   const windowSize = useWindowSize();
 
   const imgUrl = useBaseUrl(imageUrl);
-  return ((imageAlign == "right" || windowSize == windowSizes.mobile) ? <>
+  return ((imageAlign == "right" || windowSize == "mobile") ? <>
     <div className={clsx('col col--4', styles.feature)}>
       <h2>{title}</h2>
       <p>{description}</p>
