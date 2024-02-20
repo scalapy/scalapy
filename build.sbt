@@ -177,7 +177,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
         case _ => Seq.empty
       }
     },
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.14" % Test,
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.18" % Test,
     Compile / unmanagedSourceDirectories += {
       val sharedSourceDir = (ThisBuild / baseDirectory).value / "core/shared/src/main"
       if (scalaVersion.value.startsWith("2.13.") || scalaVersion.value.startsWith("3")) sharedSourceDir / "scala-2.13"
