@@ -20,9 +20,23 @@ class ReaderTest extends AnyFunSuite {
     }
   }
 
+  test("Reading a byte bigger than Byte.MaxValue throws an Exception") {
+    local{
+      assertThrows[Exception](py"(${Byte.MaxValue.toLong + 1})".as[Byte])
+      assertThrows[Exception](py"(${Byte.MinValue.toLong - 1})".as[Byte])
+    }
+  }
+
   test("Reading an integer") {
     local {
       assert(py"123".as[Int] == 123)
+    }
+  }
+
+  test("Reading an integer bigger than Int.MaxValue throws an Exception") {
+    local{
+      assertThrows[Exception](py"(${Int.MaxValue.toLong + 1})".as[Int])
+      assertThrows[Exception](py"(${Int.MinValue.toLong - 1})".as[Int])
     }
   }
 

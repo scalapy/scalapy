@@ -39,22 +39,32 @@ object Reader extends TupleReaders with FunctionReaders {
   }
 
   implicit val byteReader: Reader[Byte] = new Reader[Byte] {
+    private val min: Long = Byte.MinValue.toLong
+    private val max: Long = Byte.MaxValue.toLong
     override def readNative(r: Platform.Pointer): Byte = {
       val res = CPythonAPI.PyLong_AsLongLong(r)
       if (res == -1) {
         CPythonInterpreter.throwErrorIfOccured()
       }
 
+      if(res > max || res < min)
+        throw new IllegalArgumentException("Cannot convert value outside of range to Byte")
+
       res.toByte
     }
   }
 
   implicit val intReader: Reader[Int] = new Reader[Int] {
+    private val min: Long = Int.MinValue.toLong
+    private val max: Long = Int.MaxValue.toLong
     override def readNative(r: Platform.Pointer): Int = {
       val res = CPythonAPI.PyLong_AsLongLong(r)
       if (res == -1) {
         CPythonInterpreter.throwErrorIfOccured()
       }
+
+      if(res > max || res < min)
+        throw new IllegalArgumentException("Cannot convert value outside of range to Int")
 
       res.toInt
     }
