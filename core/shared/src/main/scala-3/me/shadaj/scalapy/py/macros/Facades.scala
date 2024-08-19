@@ -1,14 +1,9 @@
-package me.shadaj.scalapy.py
+package me.shadaj.scalapy.py.macros
 
 import scala.quoted.*
 
-class FacadeCreator[T]
-
-trait Any
-
-class CreatorMaker[T <: Any](fImpl: () => T) extends FacadeCreator[T] {
-  def create: T = fImpl() 
-}
+import me.shadaj.scalapy.py.Any
+import me.shadaj.scalapy.py.FacadeCreator
 
 object Helper {
   def classDynamicSymbol(using Quotes) =
@@ -66,20 +61,22 @@ object FacadeImpl {
     }
   }
 
-  def creator[T <: Any](using Type[T], Quotes): Expr[FacadeCreator[T]] = 
+  def creator[T <: Any](using Type[T], Quotes): Expr[FacadeCreator[T]] =  {
     import quotes.reflect.*
-    if(TypeRepr.of[T].typeSymbol.flags.is(Flags.Trait))
+    if (TypeRepr.of[T].typeSymbol.flags.is(Flags.Trait))
       report.error(s"Facade definitions in Scala 3 must be classes, but ${TypeRepr.of[T].show} was defined as a trait")
 
-  // new FacadeCreator[T] { def create: T = new T }
-    val creatorMaker = TypeIdent(Symbol.requiredClass("me.shadaj.scalapy.py.CreatorMaker"))
-    val anonfunSym = Symbol.newMethod(Symbol.spliceOwner, "$anonfun", 
-      MethodType(List())(_ => List(), _ => TypeTree.of[T].tpe))
-    val anonfun = DefDef(anonfunSym, 
-      { case List(List()) => Some(Apply(Select.unique(New(TypeTree.of[T]),"<init>"),List())) })
-    val anonTerm = Ref(anonfunSym)
+    // new T{}
+    val newExpr: Expr[T] = Apply(Select.unique(New(TypeTree.of[T]), "<init>"), List()).asExprOf[T]
 
-    Apply(TypeApply(Select.unique(New(creatorMaker),"<init>"),List(TypeTree.of[T])),List(Block(List(anonfun),Closure(anonTerm, None)))).asExprOf[FacadeCreator[T]]
+    val facadeCreatorExpr = '{
+      new FacadeCreator[T]{
+        def create: T = ${newExpr}
+      }
+    }
+
+    facadeCreatorExpr.asExprOf[FacadeCreator[T]]
+  }
 
 
   def native_impl[T: Type](using Quotes): Expr[T] = {
