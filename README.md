@@ -4,8 +4,8 @@
   <a href="https://github.com/scalapy/scalapy/actions/workflows/sbt.yml">
     <img src="https://github.com/scalapy/scalapy/actions/workflows/sbt.yml/badge.svg"/>
   </a>
-    <a href="https://maven-central-latest.netlify.com/.netlify/functions/latest-link?org=dev.scalapy&name=scalapy-core_2.12&format=libraryDependencies%20%2B%3D%20%22dev.scalapy%22%20%25%25%20%22scalapy-core%22%20%25%20%22VERSION%22">
-    <img src="https://maven-central-latest.netlify.com/.netlify/functions/latest-link?org=dev.scalapy&name=scalapy-core_2.12&formatRedirect=https%3A%2F%2Fimg.shields.io%2Fbadge%2Fmaven--central-VERSIONDOUBLEDASHED-orange.svg"/>
+  <a href="https://mvnrepository.com/artifact/dev.scalapy/scalapy-core">
+    <img src="https://img.shields.io/maven-central/v/dev.scalapy/scalapy-core_2.13"/>
   </a>
   <a href="https://gitter.im/shadaj/scalapy?utm_source=badge&utm_medium=badge&utm_campaign=pr-badge">
     <img src="https://badges.gitter.im/shadaj/scalapy.svg"/>
