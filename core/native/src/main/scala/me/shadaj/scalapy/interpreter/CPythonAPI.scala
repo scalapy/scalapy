@@ -48,8 +48,6 @@ object CPythonAPI {
   def PyDict_Keys(dict: Platform.Pointer): Platform.Pointer = extern
 
   def PyList_New(size: Int): Platform.Pointer = extern
-  def PyList_Size(list: Platform.Pointer): CSize = extern
-  def PyList_GetItem(list: Platform.Pointer, index: CSize): Platform.Pointer = extern
   def PyList_SetItem(list: Platform.Pointer, index: CSize, item: Platform.Pointer): Int = extern
 
   def PyTuple_New(size: Int): Platform.Pointer = extern
@@ -67,11 +65,13 @@ object CPythonAPI {
   def PyObject_SetAttrString(obj: Platform.Pointer, name: CString, newValue: Platform.Pointer): Platform.Pointer = extern
   def PyObject_CallMethodObjArgs(obj: Platform.Pointer, name: Platform.Pointer, args: CVarArg*): Platform.Pointer = extern
   def PyObject_Call(obj: Platform.Pointer, args: Platform.Pointer, kwArgs: Platform.Pointer): Platform.Pointer = extern
-  def PyObject_Length(obj: Platform.Pointer): CSize = extern
+  def PyObject_GetIter(obj: Platform.Pointer): Platform.Pointer = extern
 
   def PySequence_GetItem(obj: Platform.Pointer, idx: Int): Platform.Pointer = extern
   def PySequence_SetItem(obj: Platform.Pointer, idx: Int, v: Platform.Pointer): Platform.Pointer = extern
   def PySequence_Length(obj: Platform.Pointer): CSize = extern
+
+  def PyIter_Next(obj: Platform.Pointer): Platform.Pointer = extern
 
   def PyErr_Occurred(): Platform.Pointer = extern
   def PyErr_Fetch(pType: Platform.PointerToPointer, pValue: Platform.PointerToPointer, pTraceback: Platform.PointerToPointer): Unit = extern

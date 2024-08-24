@@ -75,8 +75,6 @@ class CPythonAPIInterface {
   @scala.native def PyDict_Keys(dict: Platform.Pointer): Platform.Pointer
 
   @scala.native def PyList_New(size: Int): Platform.Pointer
-  @scala.native def PyList_Size(list: Platform.Pointer): NativeLong
-  @scala.native def PyList_GetItem(list: Platform.Pointer, index: NativeLong): Platform.Pointer
   @scala.native def PyList_SetItem(list: Platform.Pointer, index: NativeLong, item: Platform.Pointer): Int
 
   @scala.native def PyTuple_New(size: Int): Platform.Pointer
@@ -93,11 +91,13 @@ class CPythonAPIInterface {
   @scala.native def PyObject_SetAttr(obj: Platform.Pointer, name: Platform.Pointer, newValue: Platform.Pointer): Platform.Pointer
   @scala.native def PyObject_SetAttrString(obj: Platform.Pointer, name: String, newValue: Platform.Pointer): Platform.Pointer
   @scala.native def PyObject_Call(obj: Platform.Pointer, args: Platform.Pointer, kwArgs: Platform.Pointer): Platform.Pointer
-  @scala.native def PyObject_Length(obj: Platform.Pointer): NativeLong
+  @scala.native def PyObject_GetIter(obj: Platform.Pointer): Platform.Pointer
 
   @scala.native def PySequence_GetItem(obj: Platform.Pointer, idx: Int): Platform.Pointer
   @scala.native def PySequence_SetItem(obj: Platform.Pointer, idx: Int, v: Platform.Pointer): Platform.Pointer
   @scala.native def PySequence_Length(obj: Platform.Pointer): NativeLong
+
+  @scala.native def PyIter_Next(obj: Platform.Pointer): Platform.Pointer
 
   @scala.native def PyErr_Occurred(): Platform.Pointer
   @scala.native def PyErr_Fetch(pType: Platform.PointerToPointer, pValue: Platform.PointerToPointer, pTraceback: Platform.PointerToPointer): Unit
