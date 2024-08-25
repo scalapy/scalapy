@@ -1,7 +1,6 @@
 package me.shadaj.scalapy.readwrite
 
 import scala.reflect.ClassTag
-
 import me.shadaj.scalapy.interpreter.PyValue
 import me.shadaj.scalapy.py
 import me.shadaj.scalapy.py.FacadeCreator
@@ -161,10 +160,35 @@ object Reader extends TupleReaders with FunctionReaders {
   }
 
   implicit def mapReader[I, O](implicit readerI: Reader[I], readerO: Reader[O]): Reader[Map[I, O]] = new Reader[Map[I, O]] {
-    override def read(r: PyValue): Map[I, O] = {
-      r.dup().getMap.map { case (k, v) =>
-        readerI.read(k) -> readerO.read(v)
-      }.toMap
+    val readerT: Reader[(I, O)] = tuple2Reader
+
+    override def readNative(r: Platform.Pointer): Map[I, O] = {
+      val builder = Map.newBuilder[I, O]
+
+      val items = CPythonAPI.PyDict_Items(r)
+      CPythonInterpreter.throwErrorIfOccured()
+
+      try {
+        val iterator = CPythonAPI.PyObject_GetIter(items)
+        CPythonInterpreter.throwErrorIfOccured()
+
+        try {
+          var item = CPythonAPI.PyIter_Next(iterator)
+          CPythonInterpreter.throwErrorIfOccured()
+
+          while (item != null) {
+            builder += readerT.readNative(item)
+            item = CPythonAPI.PyIter_Next(iterator)
+            CPythonInterpreter.throwErrorIfOccured()
+          }
+        } finally {
+          CPythonAPI.Py_DecRef(iterator)
+        }
+      } finally  {
+        CPythonAPI.Py_DecRef(items)
+      }
+
+      builder.result()
     }
   }
 }

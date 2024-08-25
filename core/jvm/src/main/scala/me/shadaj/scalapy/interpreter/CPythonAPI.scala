@@ -65,6 +65,7 @@ class CPythonAPIInterface {
   @scala.native def PyFloat_AsDouble(float: Platform.Pointer): Double
 
   @scala.native def PyDict_New(): Platform.Pointer
+  @scala.native def PyDict_Items(dict: Platform.Pointer): Platform.Pointer
   @scala.native def PyDict_SetItem(dict: Platform.Pointer, key: Platform.Pointer, value: Platform.Pointer): Int
   @scala.native def PyDict_SetItemString(dict: Platform.Pointer, key: String, value: Platform.Pointer): Int
   @scala.native def PyDict_Contains(dict: Platform.Pointer, key: Platform.Pointer): Int

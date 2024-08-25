@@ -38,6 +38,7 @@ object CPythonAPI {
   def PyFloat_AsDouble(float: Platform.Pointer): Double = extern
 
   def PyDict_New(): Platform.Pointer = extern
+  def PyDict_Items(dict: Platform.Pointer): Platform.Pointer = extern
   def PyDict_SetItem(dict: Platform.Pointer, key: Platform.Pointer, value: Platform.Pointer): Int = extern
   def PyDict_SetItemString(dict: Platform.Pointer, key: CString, value: Platform.Pointer): Int = extern
   def PyDict_Contains(dict: Platform.Pointer, key: Platform.Pointer): Int = extern
