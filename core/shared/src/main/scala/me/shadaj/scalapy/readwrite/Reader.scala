@@ -147,7 +147,11 @@ object Reader extends TupleReaders with FunctionReaders {
 
       try {
         while (item != null) {
-          builder += reader.readNative(item)
+          try {
+            builder += reader.readNative(item)
+          } finally {
+            CPythonAPI.Py_DecRef(item)
+          }
           item = CPythonAPI.PyIter_Next(iterator)
           CPythonInterpreter.throwErrorIfOccured()
         }
@@ -177,7 +181,11 @@ object Reader extends TupleReaders with FunctionReaders {
           CPythonInterpreter.throwErrorIfOccured()
 
           while (item != null) {
-            builder += readerT.readNative(item)
+            try {
+              builder += readerT.readNative(item)
+            } finally {
+              CPythonAPI.Py_DecRef(item)
+            }
             item = CPythonAPI.PyIter_Next(iterator)
             CPythonInterpreter.throwErrorIfOccured()
           }
