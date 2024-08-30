@@ -137,15 +137,14 @@ object Reader extends TupleReaders with FunctionReaders {
 
   implicit def seqReader[T, C[A] <: Iterable[A]](implicit reader: Reader[T], bf: Factory[T, C[T]]): Reader[C[T]] = new Reader[C[T]] {
     override def readNative(r: Platform.Pointer) = {
+      val builder = bf.newBuilder
+
       val iterator = CPythonAPI.PyObject_GetIter(r)
       CPythonInterpreter.throwErrorIfOccured()
 
-      val builder = bf.newBuilder
-
-      var item = CPythonAPI.PyIter_Next(iterator)
-      CPythonInterpreter.throwErrorIfOccured()
-
       try {
+        var item = CPythonAPI.PyIter_Next(iterator)
+        CPythonInterpreter.throwErrorIfOccured()
         while (item != null) {
           try {
             builder += reader.readNative(item)
