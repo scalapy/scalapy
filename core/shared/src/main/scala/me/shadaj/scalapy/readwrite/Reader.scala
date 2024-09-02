@@ -1,7 +1,6 @@
 package me.shadaj.scalapy.readwrite
 
 import scala.reflect.ClassTag
-
 import me.shadaj.scalapy.interpreter.PyValue
 import me.shadaj.scalapy.py
 import me.shadaj.scalapy.py.FacadeCreator
@@ -138,20 +137,25 @@ object Reader extends TupleReaders with FunctionReaders {
 
   implicit def seqReader[T, C[A] <: Iterable[A]](implicit reader: Reader[T], bf: Factory[T, C[T]]): Reader[C[T]] = new Reader[C[T]] {
     override def readNative(r: Platform.Pointer) = {
-      val length = Platform.cSizeToLong(CPythonAPI.PySequence_Length(r)).toInt
+      val builder = bf.newBuilder
+
+      val iterator = CPythonAPI.PyObject_GetIter(r)
       CPythonInterpreter.throwErrorIfOccured()
 
-      val builder = bf.newBuilder
-      builder.sizeHint(length)
-
-      (0 until length).foreach { i =>
-        val ret = CPythonAPI.PySequence_GetItem(r, i)
+      try {
+        var item = CPythonAPI.PyIter_Next(iterator)
         CPythonInterpreter.throwErrorIfOccured()
-        try {
-          builder += reader.readNative(ret)
-        } finally {
-          CPythonAPI.Py_DecRef(ret)
+        while (item != null) {
+          try {
+            builder += reader.readNative(item)
+          } finally {
+            CPythonAPI.Py_DecRef(item)
+          }
+          item = CPythonAPI.PyIter_Next(iterator)
+          CPythonInterpreter.throwErrorIfOccured()
         }
+      } finally {
+        CPythonAPI.Py_DecRef(iterator)
       }
 
       builder.result()
@@ -159,10 +163,39 @@ object Reader extends TupleReaders with FunctionReaders {
   }
 
   implicit def mapReader[I, O](implicit readerI: Reader[I], readerO: Reader[O]): Reader[Map[I, O]] = new Reader[Map[I, O]] {
-    override def read(r: PyValue): Map[I, O] = {
-      r.dup().getMap.map { case (k, v) =>
-        readerI.read(k) -> readerO.read(v)
-      }.toMap
+    val readerT: Reader[(I, O)] = tuple2Reader
+
+    override def readNative(r: Platform.Pointer): Map[I, O] = {
+      val builder = Map.newBuilder[I, O]
+
+      val items = CPythonAPI.PyDict_Items(r)
+      CPythonInterpreter.throwErrorIfOccured()
+
+      try {
+        val iterator = CPythonAPI.PyObject_GetIter(items)
+        CPythonInterpreter.throwErrorIfOccured()
+
+        try {
+          var item = CPythonAPI.PyIter_Next(iterator)
+          CPythonInterpreter.throwErrorIfOccured()
+
+          while (item != null) {
+            try {
+              builder += readerT.readNative(item)
+            } finally {
+              CPythonAPI.Py_DecRef(item)
+            }
+            item = CPythonAPI.PyIter_Next(iterator)
+            CPythonInterpreter.throwErrorIfOccured()
+          }
+        } finally {
+          CPythonAPI.Py_DecRef(iterator)
+        }
+      } finally  {
+        CPythonAPI.Py_DecRef(items)
+      }
+
+      builder.result()
     }
   }
 }

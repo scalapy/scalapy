@@ -110,6 +110,14 @@ class ReaderTest extends AnyFunSuite {
     }
   }
 
+  test("Reading from a set works") {
+    local {
+      val arr = py"{1, 2, 3}"
+      assert(arr.as[Seq[Int]] == Seq(1, 2, 3))
+      assert(arr.as[Set[Int]] == Set(1, 2, 3))
+    }
+  }
+
   test("Reading as a mutable sequence lets us observe mutations and edit the sequence") {
     local {
       val list = py"[1, 2, 3]"
