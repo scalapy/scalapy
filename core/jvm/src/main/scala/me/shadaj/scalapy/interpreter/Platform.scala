@@ -81,4 +81,6 @@ object Platform {
   def setPtrByte(ptr: Pointer, offset: Int, value: Byte): Unit = ptr.setByte(offset, value)
 
   def toCWideString[T](str: String)(fn: jna.WString => T): T = fn(new jna.WString(str))
+
+  def getArrayStartPointer[A](array: Array[A]): Array[A] = array
 }

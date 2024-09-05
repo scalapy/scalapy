@@ -63,4 +63,9 @@ object Platform extends PlatformMacros {
     CPythonAPI.PyMem_RawFree(cwstr.asInstanceOf[Ptr[Byte]])
     t
   }
+
+  def getArrayStartPointer[A](array: Array[A]): Ptr[A] = {
+    import scala.scalanative.unsafe.UnsafeRichArray
+    array.at(0)
+  }
 }

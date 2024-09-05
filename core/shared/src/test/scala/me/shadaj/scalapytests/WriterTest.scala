@@ -144,4 +144,25 @@ class WriterTest extends AnyFunSuite {
       assert(Dynamic.global.tuple(tuple).toString == "(1, 2)")
     }
   }
+
+  test("Writing a byte array"){
+    local{
+      val data: Array[Byte] = (0 to 255).map(_.toByte).toArray
+      val written = Any.from(data)
+      assert(py"type($written)".toString == "<class 'bytes'>")
+
+      info(s"written: $written")
+
+      for(i <- 0 to 255)
+        assert(written.as[Dynamic].bracketAccess(i).toString == i.toString)
+
+      val expected = data.map{
+        byte =>
+          val padded = ("0" + java.lang.Byte.toUnsignedInt(byte).toHexString).takeRight(2)
+          s"\\x${padded}"
+      }.mkString("b'", "", "'")
+
+      assert(py"$written == ${eval(expected)}".toString == "True")
+    }
+  }
 }
