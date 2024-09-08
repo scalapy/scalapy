@@ -151,8 +151,6 @@ class WriterTest extends AnyFunSuite {
       val written = Any.from(data)
       assert(py"type($written)".toString == "<class 'bytes'>")
 
-      info(s"written: $written")
-
       for(i <- 0 to 255)
         assert(written.as[Dynamic].bracketAccess(i).toString == i.toString)
 

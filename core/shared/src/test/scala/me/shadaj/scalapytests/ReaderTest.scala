@@ -153,4 +153,13 @@ class ReaderTest extends AnyFunSuite {
       assert(py"(1, 2)".as[(Int, Int)] == (1, 2))
     }
   }
+
+  test("Reading bytes") {
+    local {
+      assert(py"b'123'".as[Array[Byte]].toList == List('1', '2', '3').map(_.toByte))
+
+      val data = Array.tabulate(256)(_.toByte)
+      assert(Any.from(data).as[Array[Byte]].toList == data.toList)
+    }
+  }
 }

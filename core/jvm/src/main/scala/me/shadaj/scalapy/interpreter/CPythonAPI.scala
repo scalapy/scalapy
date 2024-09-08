@@ -101,6 +101,7 @@ class CPythonAPIInterface {
   @scala.native def PyIter_Next(obj: Platform.Pointer): Platform.Pointer
 
   @scala.native def PyBytes_FromStringAndSize(string: Array[Byte], len: NativeLong): Platform.Pointer
+  @scala.native def PyBytes_AsStringAndSize(obj: Platform.Pointer, string: Platform.Pointer, len: Platform.Pointer): Int
 
   @scala.native def PyErr_Occurred(): Platform.Pointer
   @scala.native def PyErr_Fetch(pType: Platform.PointerToPointer, pValue: Platform.PointerToPointer, pTraceback: Platform.PointerToPointer): Unit
