@@ -12,7 +12,7 @@ import scala.scalanative.unsigned._
 object Platform extends PlatformMacros {
   final val isNative = true
 
-  def Zone[T](fn: sn.Zone => T): T = sn.Zone(fn)
+  def Zone[T](fn: sn.Zone => T): T = sn.Zone.acquire(fn)
 
   def fromCString(ptr: Pointer, charset: Charset): String = {
     sn.fromCString(ptr, charset)
@@ -37,16 +37,16 @@ object Platform extends PlatformMacros {
     pointer.toLong
   }
 
-  def cLongToLong(cLong: sn.CLong): Long = cLong
+  def cLongToLong(cLong: sn.CLong): Long = cLong.toLong
   def cSizeToLong(cSize: sn.CSize): Long = cSize.toLong
 
   def intToCLong(int: Int): sn.CLong = int
-  def intToCSize(int: Int): sn.CSize = int.toULong
+  def intToCSize(int: Int): sn.CSize = int.toCSize
 
   def dereferencePointerToPointer(pointer: PointerToPointer): Pointer = !pointer
   
   def alloc(size: Int): Pointer = {
-    lc.stdlib.malloc(size.toULong)
+    lc.stdlib.malloc(size)
   }
 
   def ptrSize: Int = sn.sizeof[Ptr[Byte]].toInt

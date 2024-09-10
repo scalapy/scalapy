@@ -3,9 +3,9 @@ import scala.sys.process._
 
 ThisBuild / organization := "dev.scalapy"
 
-lazy val scala212Version = "2.12.16"
-lazy val scala213Version = "2.13.8"
-lazy val scala3Version = "3.1.3"
+lazy val scala212Version = "2.12.20"
+lazy val scala213Version = "2.13.14"
+lazy val scala3Version = "3.5.0"
 lazy val supportedScalaVersions = List(scala212Version, scala213Version, scala3Version)
 
 ThisBuild / scalaVersion := scala213Version
@@ -168,7 +168,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
       IO.write(fileToWrite, toWrite)
       Seq(fileToWrite)
     },
-    libraryDependencies += "org.scala-lang.modules" %%% "scala-collection-compat" % "2.8.1",
+    libraryDependencies += "org.scala-lang.modules" %%% "scala-collection-compat" % "2.12.0",
     libraryDependencies ++= {
       CrossVersion.partialVersion(scalaVersion.value) match {
         case Some((2, _)) => Seq(
@@ -177,7 +177,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
         case _ => Seq.empty
       }
     },
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.14" % Test,
+    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.19" % Test,
     Compile / unmanagedSourceDirectories += {
       val sharedSourceDir = (ThisBuild / baseDirectory).value / "core/shared/src/main"
       if (scalaVersion.value.startsWith("2.13.") || scalaVersion.value.startsWith("3")) sharedSourceDir / "scala-2.13"
@@ -197,8 +197,10 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
     Test / javaOptions += s"-Djna.library.path=$pythonLibsDir",
     unmanagedSources / excludeFilter := HiddenFileFilter || "*Native*"
   ).nativeSettings(
-    nativeLinkStubs := true,
-    nativeLinkingOptions ++= pythonLdFlags
+    nativeConfig ~= {
+      _.withLinkingOptions(pythonLdFlags)
+        .withLinkStubs(true)
+    }
   )
 
 lazy val coreJVM = core.jvm
@@ -241,8 +243,10 @@ lazy val bench = crossProject(JVMPlatform, NativePlatform)
   ).jvmSettings(
     javaOptions += s"-Djna.library.path=$pythonLibsDir"
   ).nativeSettings(
-    nativeLinkingOptions ++= pythonLdFlags,
-    nativeMode := "release-fast"
+    nativeConfig ~= {
+      _.withLinkingOptions(pythonLdFlags)
+        .withMode(scala.scalanative.build.Mode.releaseFast)
+    }
   ).dependsOn(core)
 
 lazy val benchJVM = bench.jvm

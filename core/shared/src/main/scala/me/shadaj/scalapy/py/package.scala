@@ -19,7 +19,8 @@ package object py extends PyMacros {
   type NoneOr[T] = PyNone.None | T
 
   def `with`[T <: py.Any, O](ref: T)(withValue: T => O): O = {
-    ref.as[Dynamic](Reader.facadeReader[Dynamic](FacadeCreator.getCreator[Dynamic])).__enter__()
+    implicit val facadeReader: Reader[Dynamic] = Reader.facadeReader[Dynamic](FacadeCreator.getCreator[Dynamic])
+    ref.as[Dynamic].__enter__()
     try {
       withValue(ref)
     } finally {
