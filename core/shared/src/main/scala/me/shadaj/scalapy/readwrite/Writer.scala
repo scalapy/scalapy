@@ -8,7 +8,7 @@ import me.shadaj.scalapy.py
 import me.shadaj.scalapy.py.|
 import me.shadaj.scalapy.py.PyQuote
 import me.shadaj.scalapy.interpreter.CPythonAPI
-import CPythonInterpreter.withGil
+import CPythonInterpreter.{throwErrorIfOccured, withGil}
 
 abstract class Writer[T] {
   // no guarantees about references
@@ -83,6 +83,14 @@ object Writer extends TupleWriters with FunctionWriters {
       }
 
       obj
+    }
+  }
+
+  implicit val bytesWriter: Writer[Array[Byte]] = new Writer[Array[Byte]] {
+    override def writeNative(v: Array[Byte]): Platform.Pointer = {
+      val buffer = CPythonAPI.PyBytes_FromStringAndSize(Platform.getArrayStartPointer(v), Platform.intToCSize(v.length))
+      throwErrorIfOccured()
+      buffer
     }
   }
 }

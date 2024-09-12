@@ -25,9 +25,9 @@ object Platform {
 
   def threadLocalWithInitial[T](initial: () => T) = java.lang.ThreadLocal.withInitial(() => initial())
 
-  def allocPointerToPointer: PointerToPointer = {
-    new jna.Memory(Native.POINTER_SIZE)
-  }
+  def allocPointer[To]: Pointer = new jna.Memory(Native.POINTER_SIZE)
+
+  def allocPointerToPointer: PointerToPointer = allocPointer
 
   def pointerToLong(pointer: Pointer): Long = {
     jna.Pointer.nativeValue(pointer)
@@ -38,6 +38,13 @@ object Platform {
 
   def intToCLong(int: Int): jna.NativeLong = new jna.NativeLong(int)
   def intToCSize(int: Int): jna.NativeLong = new jna.NativeLong(int)
+
+  def dereferenceAsLong(pointer: Pointer): Long = pointer.getLong(0)
+
+  // this `from` pointer is a **char
+  def copyBytes(from: Pointer, size: Int): Array[Byte] = {
+    from.getPointer(0).getByteArray(0, size)
+  }
 
   def dereferencePointerToPointer(pointer: PointerToPointer): Pointer = pointer.getPointer(0)
 
@@ -81,4 +88,6 @@ object Platform {
   def setPtrByte(ptr: Pointer, offset: Int, value: Byte): Unit = ptr.setByte(offset, value)
 
   def toCWideString[T](str: String)(fn: jna.WString => T): T = fn(new jna.WString(str))
+
+  def getArrayStartPointer[A](array: Array[A]): Array[A] = array
 }

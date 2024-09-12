@@ -198,4 +198,19 @@ object Reader extends TupleReaders with FunctionReaders {
       builder.result()
     }
   }
+
+  implicit val bytesReader: Reader[Array[Byte]] = new Reader[Array[Byte]]{
+    override def readNative(r: Platform.Pointer): Array[Byte] =
+      Platform.Zone{ implicit zone =>
+        val outputPointerData = Platform.allocPointer[Platform.Pointer]
+        val outputPointerSize = Platform.allocPointer[Long]
+        CPythonAPI.PyBytes_AsStringAndSize(r, outputPointerData, outputPointerSize)
+        CPythonInterpreter.throwErrorIfOccured()
+
+        val size: Long = Platform.dereferenceAsLong(outputPointerSize)
+        if(size > Int.MaxValue.toLong) throw new IllegalArgumentException("Only arrays up to size Integer.MaxValue can be read")
+
+        Platform.copyBytes(outputPointerData, size.toInt)
+      }
+  }
 }

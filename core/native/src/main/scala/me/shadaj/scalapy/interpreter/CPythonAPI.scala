@@ -74,6 +74,9 @@ object CPythonAPI {
 
   def PyIter_Next(obj: Platform.Pointer): Platform.Pointer = extern
 
+  def PyBytes_FromStringAndSize(string: CString, len: CSize): Platform.Pointer = extern
+  def PyBytes_AsStringAndSize(obj: Platform.Pointer, string: Ptr[CString], len: Ptr[Long]): CInt = extern
+
   def PyErr_Occurred(): Platform.Pointer = extern
   def PyErr_Fetch(pType: Platform.PointerToPointer, pValue: Platform.PointerToPointer, pTraceback: Platform.PointerToPointer): Unit = extern
   def PyErr_Print(): Unit = extern
