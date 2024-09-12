@@ -1,10 +1,8 @@
 package me.shadaj.scalapy.interpreter
 
-import scala.scalanative.{unsafe => sn, libc => lc}
-import scala.scalanative.unsafe.{CWideChar, Ptr}
+import scala.scalanative.{libc => lc, unsafe => sn}
+import scala.scalanative.unsafe.{CQuote, CWideChar, Ptr, Tag, UnsafeRichArray}
 import java.nio.charset.Charset
-import scala.scalanative.unsafe.CQuote
-
 import scala.scalanative.runtime
 import scala.scalanative.runtime.Intrinsics
 import scala.scalanative.unsigned._
@@ -29,6 +27,9 @@ object Platform extends PlatformMacros {
 
   def threadLocalWithInitial[T](initial: () => T) = SingleThreadLocal.withInitial(initial)
 
+  def allocPointer[To](implicit zone: sn.Zone, tag: Tag[To]): Ptr[To] =
+    sn.alloc[To]()
+
   def allocPointerToPointer(implicit zone: sn.Zone): PointerToPointer = {
     sn.alloc[Ptr[Byte]]()
   }
@@ -44,7 +45,16 @@ object Platform extends PlatformMacros {
   def intToCSize(int: Int): sn.CSize = int.toCSize
 
   def dereferencePointerToPointer(pointer: PointerToPointer): Pointer = !pointer
-  
+
+  def dereferenceAsLong(pointer: Ptr[Long]): Long = !pointer
+
+  def copyBytes(from: Ptr[CString], size: Int): Array[Byte] = {
+    val output = new Array[Byte](size)
+    lc.string.memcpy(output.at(0), !from, size.toCSize)
+    output
+  }
+
+
   def alloc(size: Int): Pointer = {
     lc.stdlib.malloc(size)
   }
@@ -62,5 +72,10 @@ object Platform extends PlatformMacros {
     val t = fn(cwstr)
     CPythonAPI.PyMem_RawFree(cwstr.asInstanceOf[Ptr[Byte]])
     t
+  }
+
+  def getArrayStartPointer[A](array: Array[A]): Ptr[A] = {
+    import scala.scalanative.unsafe.UnsafeRichArray
+    array.at(0)
   }
 }
