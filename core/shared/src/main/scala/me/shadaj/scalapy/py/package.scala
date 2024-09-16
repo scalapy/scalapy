@@ -14,9 +14,9 @@ package object py extends PyMacros {
   def module(name: String) = Module(name)
   def module(name: String, subname: String) = Module(name, subname)
 
-  val None = Any.populateWith(CPythonInterpreter.noneValue).as[PyNone.None]
+  val None = PyNone.None
 
-  type NoneOr[T] = PyNone.None | T
+  type NoneOr[T] = PyNone.None.type | T
 
   def `with`[T <: py.Any, O](ref: T)(withValue: T => O): O = {
     ref.as[Dynamic](Reader.facadeReader[Dynamic](FacadeCreator.getCreator[Dynamic])).__enter__()
