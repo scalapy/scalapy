@@ -14,7 +14,7 @@ package object py extends PyMacros {
   def module(name: String) = Module(name)
   def module(name: String, subname: String) = Module(name, subname)
 
-  val None = Any.populateWith(CPythonInterpreter.noneValue).as[PyNone.None]
+  lazy val None = Any.populateWith(CPythonInterpreter.noneValue).as[PyNone.None]
 
   type NoneOr[T] = PyNone.None | T
 
