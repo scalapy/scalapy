@@ -4,13 +4,13 @@ import scala.scalanative.{libc => lc, unsafe => sn}
 import scala.scalanative.unsafe.{CQuote, CWideChar, Ptr, Tag, UnsafeRichArray}
 import java.nio.charset.Charset
 import scala.scalanative.runtime
-import scala.scalanative.runtime.{Intrinsics, libc}
+import scala.scalanative.runtime.Intrinsics
 import scala.scalanative.unsigned._
 
 object Platform extends PlatformMacros {
   final val isNative = true
 
-  def Zone[T](fn: sn.Zone => T): T = sn.Zone(fn)
+  def Zone[T](fn: sn.Zone => T): T = sn.Zone.acquire(fn)
 
   def fromCString(ptr: Pointer, charset: Charset): String = {
     sn.fromCString(ptr, charset)
@@ -38,11 +38,11 @@ object Platform extends PlatformMacros {
     pointer.toLong
   }
 
-  def cLongToLong(cLong: sn.CLong): Long = cLong
+  def cLongToLong(cLong: sn.CLong): Long = cLong.toLong
   def cSizeToLong(cSize: sn.CSize): Long = cSize.toLong
 
   def intToCLong(int: Int): sn.CLong = int
-  def intToCSize(int: Int): sn.CSize = int.toULong
+  def intToCSize(int: Int): sn.CSize = int.toCSize
 
   def dereferencePointerToPointer(pointer: PointerToPointer): Pointer = !pointer
 
@@ -50,13 +50,13 @@ object Platform extends PlatformMacros {
 
   def copyBytes(from: Ptr[CString], size: Int): Array[Byte] = {
     val output = new Array[Byte](size)
-    libc.memcpy(output.at(0), !from, size.toULong)
+    lc.string.memcpy(output.at(0), !from, size.toCSize)
     output
   }
 
 
   def alloc(size: Int): Pointer = {
-    lc.stdlib.malloc(size.toULong)
+    lc.stdlib.malloc(size)
   }
 
   def ptrSize: Int = sn.sizeof[Ptr[Byte]].toInt
