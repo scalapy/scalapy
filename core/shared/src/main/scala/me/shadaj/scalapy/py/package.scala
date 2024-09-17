@@ -1,14 +1,10 @@
 package me.shadaj.scalapy
 
-import scala.collection.mutable
 import scala.language.implicitConversions
-
-import scala.concurrent.Future
 
 import me.shadaj.scalapy.interpreter.{CPythonInterpreter, PyValue}
 import me.shadaj.scalapy.readwrite.{Reader, Writer}
 import scala.collection.mutable.Queue
-import me.shadaj.scalapy.interpreter.Platform
 
 package object py extends PyMacros {
   def module(name: String) = Module(name)
@@ -40,14 +36,12 @@ package object py extends PyMacros {
     }
   }
 
-  implicit class SeqConverters[T, C](seq: C)(implicit ev: C => scala.collection.Seq[T]) {
-    def toPythonCopy(implicit elemWriter: ConvertableToSeqElem[T]): Any = {
-      Any.populateWith(PyValue.fromNew(implicitly[ConvertableToSeqElem[C]].convertCopy(seq)))
-    }
+  implicit class AnyConverters[C](value: C) {
+    def toPythonCopy(implicit writer: Writer[C]): Any =
+      Any.from(value)
 
-    def toPythonProxy(implicit elemWriter: ConvertableToSeqElem[T]): Any = {
-      Any.populateWith(implicitly[ConvertableToSeqElem[C]].convertProxy(seq))
-    }
+    def toPythonProxy(implicit writer: ProxyWriter[C]): Any =
+      Any.proxyFrom(value)
   }
 
   def eval(str: String): Dynamic = {

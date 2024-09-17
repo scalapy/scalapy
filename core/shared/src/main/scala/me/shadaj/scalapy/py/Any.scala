@@ -35,7 +35,11 @@ trait Any extends AnyRawValue { self =>
 }
 
 object Any extends AnyPopulateWith {
-  implicit def from[T](v: T)(implicit writer: Writer[T]): Any = {
-    Any.populateWith(writer.write(v))
+  implicit def from[T: Writer](v: T): Any = {
+    Any.populateWith(Writer.write(v))
+  }
+
+  def proxyFrom[T: ProxyWriter](v: T): Any = {
+    Any.populateWith(ProxyWriter.writeProxy(v))
   }
 }

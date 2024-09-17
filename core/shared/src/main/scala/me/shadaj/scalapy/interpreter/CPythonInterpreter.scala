@@ -131,27 +131,6 @@ object CPythonInterpreter {
   Platform.setPtrInt(lambdaMethodDef, Platform.ptrSize + Platform.ptrSize, 0x0001) // ml_flags (https://github.com/python/cpython/blob/master/Include/methodobject.h)
   Platform.setPtrLong(lambdaMethodDef, Platform.ptrSize + Platform.ptrSize + 4, Platform.pointerToLong(emptyStrPtr)) // ml_doc
 
-  Platform.Zone { implicit zone =>
-    CPythonAPI.PyRun_String(
-      Platform.toCString(
-        """import collections.abc
-          |class SequenceProxy(collections.abc.Sequence):
-          |  def __init__(self, len_fn, get_fn):
-          |    self.len_fn = len_fn
-          |    self.get_fn = get_fn
-          |  def __len__(self):
-          |    return self.len_fn()
-          |  def __getitem__(self, idx):
-          |    return self.get_fn(idx)""".stripMargin
-      ),
-      257,
-      globals,
-      globals
-    )
-
-    throwErrorIfOccured()
-  }
-
   CPythonAPI.PyEval_SaveThread() // release the lock created by Py_Initialize
 
   @inline private[scalapy] def withGil[T](fn: => T): T = {
@@ -265,21 +244,6 @@ object CPythonInterpreter {
     }
 
     retPtr
-  }
-
-  val seqProxyClass = selectGlobal("SequenceProxy", safeGlobal = true)
-  def createListProxy[T](seq: scala.collection.Seq[T], elemConv: T => PyValue): PyValue = {
-    call(seqProxyClass, Seq(
-      createLambda(_ => valueFromLong(seq.size)),
-      createLambda(args => {
-        val index = args(0).getLong.toInt
-        if (index < seq.size) {
-          elemConv(seq(index))
-        } else {
-          throw new IndexError(s"Scala sequence proxy index out of range: $index")
-        }
-      })
-    ), Seq())
   }
 
   def createTuple(seq: Seq[PyValue], safeGlobal: Boolean = false): PyValue = {
