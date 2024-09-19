@@ -322,6 +322,7 @@ lazy val pythonNativeLibTestNative = pythonNativeLibsTest.native
   )
   .settings(
     libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % Test,
-    nativeLinkStubs := true,
-    nativeLinkingOptions ++= pythonLdFlags
+    nativeConfig ~= {
+      _.withLinkingOptions(pythonLdFlags)
+    }
   )
