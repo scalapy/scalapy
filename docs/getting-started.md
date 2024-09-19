@@ -71,7 +71,9 @@ Manually,
 ```scala
 lazy val pythonLdFlags = ... // same as above
 
-nativeLinkingOptions ++= pythonLdFlags
+nativeConfig ~= {
+  _.withLinkingOptions(pythonLdFlags)
+}
 ```
 
 Using `python-native-libs`,
@@ -83,7 +85,9 @@ lazy val python = Python("<optional-path-to-a-python-interpreter-executable>")
 
 lazy val pythonLdFlags = python.ldflags.get
 
-nativeLinkingOptions ++= pythonLdFlags
+nativeConfig ~= {
+  _.withLinkingOptions(pythonLdFlags)
+}
 ```
 
 ## Hello World!

@@ -15,15 +15,17 @@ jobs:
       fail-fast: false
       matrix:
         os: [ ubuntu-latest ]
-        python-version: [ 3.7, 3.8, 3.9, "3.10", "3.11", "3.12" ]
+        python-version: [ 3.9, "3.10", "3.11", "3.12" ]
     steps:
       - uses: actions/checkout@master
+      - uses: coursier/cache-action@v6
       - name: Set up JDK 1.8 and SBT
-        uses: olafurpg/setup-scala@v13
+        uses: coursier/setup-action@v1
         with:
-          java-version: openjdk@1.16
+          jvm: adopt:1.16
+          apps: sbt
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
       - name: Log Python Config
@@ -32,22 +34,26 @@ jobs:
       - name: Test JVM and native
         run: sbt +coreJVM/test +coreNative/test
         shell: bash
+      - name: Test python-native-libs
+        run: sbt +pythonNativeLibsTestJVM/test +pythonNativeLibsTestNative/test
+        shell: bash
       - name: Compile Benchmarks
         run: sbt benchJVM/compile benchNative/compile
         shell: bash
   publish:
     needs: [test]
     runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main' || github.event_name == 'release'
     steps:
     - uses: actions/checkout@master
     - name: Set up JDK 1.8 and SBT
-      uses: olafurpg/setup-scala@v13
+      uses: coursier/setup-action@v1
       with:
-        java-version: openjdk@1.16
+        jvm: adopt:1.16
+        apps: sbt
     - run: git fetch --unshallow
     - name: Publish with SBT
       run: export JAVA_OPTS="-Xmx4g" && bash ./publish.sh
-      if: github.ref == 'refs/heads/main' || github.event_name == 'release'
       env:
         encrypted_key: ${{ secrets.key }}
         encrypted_iv: ${{ secrets.iv }}
