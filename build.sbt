@@ -5,7 +5,7 @@ ThisBuild / organization := "dev.scalapy"
 
 lazy val scala212Version = "2.12.20"
 lazy val scala213Version = "2.13.14"
-lazy val scala3Version = "3.5.0"
+lazy val scala3Version = "3.5.1"
 lazy val supportedScalaVersions = List(scala212Version, scala213Version, scala3Version)
 
 ThisBuild / scalaVersion := scala213Version
