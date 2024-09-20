@@ -29,7 +29,7 @@ object ProxyWriter {
     }
 
   implicit def sequenceProxy[T:PreferProxyWriter, C[_]]
-    (implicit ev: C[T] <:< scala.collection.Seq[T]): ProxyWriter[C[T]] =
+    (implicit ev: C[T] => scala.collection.Seq[T]): ProxyWriter[C[T]] =
     new ProxyWriter[C[T]] {
       def writeProxy(v: C[T]): PyValue =
         SequenceProxy.createListProxy(ev(v))

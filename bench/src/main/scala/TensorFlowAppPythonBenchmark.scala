@@ -1,7 +1,7 @@
 import me.shadaj.scalapy.py
 import me.shadaj.scalapy.interpreter.PyValue
 import me.shadaj.scalapy.interpreter.CPythonInterpreter
-import me.shadaj.scalapy.py.SeqConverters
+import me.shadaj.scalapy.py.AnyConverters
 
 object TensorFlowAppPythonBenchmark extends communitybench.Benchmark {
   PyValue.disableAllocationWarning()

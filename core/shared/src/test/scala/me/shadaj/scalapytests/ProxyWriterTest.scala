@@ -121,6 +121,24 @@ class ProxyWriterTest extends AnyFunSuite {
     assert(py"$proxy[90]".as[Int] == 1338)
   }
 
+  test("arrays can be proxied") {
+    val array: Array[Int] = Array.fill(100)(-1)
+
+    ProxyWriter.sequenceProxy[Int, Array]
+
+    val proxy = array.toPythonProxy
+
+    assert(py"len($proxy)".as[Int] == 100)
+
+    array.update(0, 1337)
+    assert(py"$proxy[0]".as[Int] == 1337)
+    assert(py"$proxy[90]".as[Int] == -1)
+
+    array.update(90, 1338)
+    assert(py"$proxy[90]".as[Int] == 1338)
+  }
+
+
   test("Writing an empty sequence as a proxy") {
     local {
       assert(Dynamic.global.list(Seq.empty[Int].toPythonProxy).toString == "[]")
