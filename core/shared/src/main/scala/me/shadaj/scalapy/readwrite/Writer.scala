@@ -1,14 +1,12 @@
 package me.shadaj.scalapy.readwrite
 
-import scala.collection.mutable
 import scala.reflect.ClassTag
-
-import me.shadaj.scalapy.interpreter.{CPythonInterpreter, PyValue, Platform}
+import me.shadaj.scalapy.interpreter.{CPythonInterpreter, Platform, PyValue}
 import me.shadaj.scalapy.py
 import me.shadaj.scalapy.py.|
-import me.shadaj.scalapy.py.PyQuote
 import me.shadaj.scalapy.interpreter.CPythonAPI
 import CPythonInterpreter.{throwErrorIfOccured, withGil}
+import me.shadaj.scalapy.interpreter.Platform.Pointer
 
 abstract class Writer[T] {
   // no guarantees about references
@@ -24,6 +22,9 @@ abstract class Writer[T] {
 }
 
 object Writer extends TupleWriters with FunctionWriters {
+  @inline def write[A](value: A)(implicit writer: Writer[A]): PyValue = writer.write(value)
+  @inline def writeNative[A](value: A)(implicit writer: Writer[A]): Platform.Pointer = writer.writeNative(value)
+
   implicit def anyWriter[T <: py.Any]: Writer[T] = new Writer[T] {
     override def writeNative(v: T): Platform.Pointer = {
       CPythonAPI.Py_IncRef(v.__scalapy_value.underlying)
@@ -73,6 +74,10 @@ object Writer extends TupleWriters with FunctionWriters {
 
   implicit val stringWriter: Writer[String] = new Writer[String] {
     override def writeNative(v: String): Platform.Pointer = CPythonInterpreter.toNewString(v)
+  }
+
+  implicit def seqWriter[A, CC[_]](implicit elemWriter: Writer[A], ev: CC[A] => Seq[A]): Writer[CC[A]] = new Writer[CC[A]] {
+    override def writeNative(v: CC[A]): Pointer = CPythonInterpreter.createListCopy(ev(v), elemWriter.writeNative)
   }
 
   implicit def mapWriter[K, V](implicit kWriter: Writer[K], vWriter: Writer[V]): Writer[Map[K, V]] = new Writer[Map[K, V]] {

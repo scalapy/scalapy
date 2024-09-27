@@ -1,6 +1,7 @@
 import me.shadaj.scalapy.py
 import me.shadaj.scalapy.interpreter.PyValue
-import me.shadaj.scalapy.py.SeqConverters
+import me.shadaj.scalapy.py.AnyConverters
+
 import scala.collection.immutable
 
 object SumPythonCopyBenchmark extends communitybench.Benchmark {

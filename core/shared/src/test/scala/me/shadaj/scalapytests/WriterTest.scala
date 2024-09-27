@@ -61,65 +61,54 @@ class WriterTest extends AnyFunSuite {
     }
   }
 
-  test("Writing an empty sequence as a proxy") {
+
+  test("Writing an empty sequence as a copy") {
     local {
-      assert(Dynamic.global.list(Seq.empty[Int].toPythonProxy).toString == "[]")
+      assert(Seq.empty[Int].toPythonCopy.toString == "[]")
+      assert(Any.from(Seq.empty[Int]).toString == "[]")
     }
   }
 
-  test("Writing a sequence of ints as a proxy") {
+  test("Writing a sequence of ints as a copy") {
     local {
-      assert(Dynamic.global.list(Seq[Int](1, 2, 3).toPythonProxy).toString == "[1, 2, 3]")
+      val data = Seq(1, 2, 3)
+      assert(data.toPythonCopy.toString == "[1, 2, 3]")
+      assert(Any.from(data).toString == "[1, 2, 3]")
     }
   }
 
-  test("Writing a sequence of doubles as a proxy") {
+
+  test("Writing a sequence of doubles as a copy") {
     local {
-      assert(Dynamic.global.list(Seq[Double](1.1, 2.2, 3.3).toPythonProxy).toString == "[1.1, 2.2, 3.3]")
+      val data = Seq(1.1, 2.2, 3.3)
+      assert(data.toPythonCopy.toString == "[1.1, 2.2, 3.3]")
+      assert(Any.from(data).toString == "[1.1, 2.2, 3.3]")
     }
   }
 
-  test("Writing a sequence of strings as a proxy") {
+
+  test("Writing a sequence of strings as a copy") {
     local {
-      assert(Dynamic.global.list(Seq[String]("hello", "world").toPythonProxy).toString == "['hello', 'world']")
+      val data = Seq("hello", "world")
+      assert(data.toPythonCopy.toString == "['hello', 'world']")
+      assert(Any.from(data).toString == "['hello', 'world']")
     }
   }
 
   test("Writing a sequence of arrays as a copy") {
     local {
-      assert(Dynamic.global.list(
-        Dynamic.global.map(
-          Dynamic.global.list,
-          Seq[Array[Int]](Array(1), Array(2)).toPythonCopy
-        )
-      ).toString == "[[1], [2]]")
+      val data: Seq[Array[Int]] = Seq(Array(1), Array(2))
+      assert(data.toPythonCopy.toString == "[[1], [2]]")
+      assert(Any.from(data).toString == "[[1], [2]]")
     }
   }
 
-  test("Writing a sequence of arrays as a proxy") {
-    local {
-      val seq = Seq[Array[Int]](Array(1), Array(2))
-      val proxy = seq.toPythonProxy
-      assert(Dynamic.global.list(
-        Dynamic.global.map(Dynamic.global.list, proxy)
-      ).toString == "[[1], [2]]")
-
-      seq(0)(0) = 100
-
-      assert(Dynamic.global.list(
-        Dynamic.global.map(Dynamic.global.list, proxy)
-      ).toString == "[[100], [2]]")
-    }
-  }
 
   test("Writing a sequence of sequences as a copy") {
     local {
-      assert(Dynamic.global.list(
-        Dynamic.global.map(
-          Dynamic.global.list,
-          Seq[Seq[Int]](Seq(1), Seq(2)).toPythonCopy
-        )
-      ).toString == "[[1], [2]]")
+      val data: Seq[Seq[Int]] = Seq(Seq(1), Seq(2))
+      assert(data.toPythonCopy.toString == "[[1], [2]]")
+      assert(Any.from(data).toString == "[[1], [2]]")
     }
   }
 
