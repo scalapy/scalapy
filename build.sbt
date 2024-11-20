@@ -1,5 +1,9 @@
 import sbtcrossproject.CrossPlugin.autoImport.{crossProject, CrossType}
 import scala.sys.process._
+import scala.util.Properties
+import java.nio.file.{Files, Paths}
+
+import ai.kien.python.Python
 
 ThisBuild / organization := "dev.scalapy"
 
@@ -9,6 +13,8 @@ lazy val scala3Version = "3.5.0"
 lazy val supportedScalaVersions = List(scala212Version, scala213Version, scala3Version)
 
 ThisBuild / scalaVersion := scala213Version
+
+lazy val scalaTestVersion = "3.2.19"
 
 lazy val scalapy = project.in(file(".")).aggregate(
   macrosJVM, macrosNative,
@@ -52,19 +58,11 @@ lazy val macros = crossProject(JVMPlatform, NativePlatform)
 lazy val macrosJVM = macros.jvm
 lazy val macrosNative = macros.native
 
-lazy val pythonLdFlags = {
-  val withoutEmbed = "python3-config --ldflags".!!
-  if (withoutEmbed.contains("-lpython")) {
-    withoutEmbed.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
-  } else {
-    val withEmbed = "python3-config --ldflags --embed".!!
-    withEmbed.split(' ').map(_.trim).filter(_.nonEmpty).toSeq
-  }
-}
-
-lazy val pythonLibsDir = {
-  pythonLdFlags.find(_.startsWith("-L")).get.drop("-L".length)
-}
+lazy val python = Python()
+lazy val pythonLdFlags = python.ldflags.get
+lazy val pythonJavaOptions = python.scalapyProperties.get.map {
+  case (k, v) => s"""-D$k=$v"""
+}.toSeq
 
 lazy val core = crossProject(JVMPlatform, NativePlatform)
   .in(file("core"))
@@ -177,7 +175,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
         case _ => Seq.empty
       }
     },
-    libraryDependencies += "org.scalatest" %%% "scalatest" % "3.2.19" % Test,
+    libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % Test,
     Compile / unmanagedSourceDirectories += {
       val sharedSourceDir = (ThisBuild / baseDirectory).value / "core/shared/src/main"
       if (scalaVersion.value.startsWith("2.13.") || scalaVersion.value.startsWith("3")) sharedSourceDir / "scala-2.13"
@@ -194,7 +192,7 @@ lazy val core = crossProject(JVMPlatform, NativePlatform)
   ).jvmSettings(
     libraryDependencies += "net.java.dev.jna" % "jna" % "5.11.0",
     Test / fork := true,
-    Test / javaOptions += s"-Djna.library.path=$pythonLibsDir",
+    Test / javaOptions ++= pythonJavaOptions,
     unmanagedSources / excludeFilter := HiddenFileFilter || "*Native*"
   ).nativeSettings(
     nativeConfig ~= {
@@ -210,7 +208,7 @@ lazy val facadeGen = project.in(file("facadeGen"))
   .dependsOn(coreJVM)
   .settings(
     run / fork := true,
-    run / javaOptions += s"-Djna.library.path=${"python3-config --prefix".!!.trim}/lib"
+    run / javaOptions ++= pythonJavaOptions
   )
 
 lazy val docs = project
@@ -223,7 +221,7 @@ lazy val docs = project
   .settings(
     fork := true,
     connectInput := true,
-    javaOptions += s"-Djna.library.path=$pythonLibsDir",
+    javaOptions ++= pythonJavaOptions,
     docusaurusCreateSite := {
       (Compile / mdoc).toTask(" ").value
       Process(List("yarn", "install"), cwd = DocusaurusPlugin.website.value).!
@@ -241,7 +239,7 @@ lazy val bench = crossProject(JVMPlatform, NativePlatform)
     version := "0.1.0-SNAPSHOT",
     crossScalaVersions := supportedScalaVersions
   ).jvmSettings(
-    javaOptions += s"-Djna.library.path=$pythonLibsDir"
+    javaOptions ++= pythonJavaOptions
   ).nativeSettings(
     nativeConfig ~= {
       _.withLinkingOptions(pythonLdFlags)
@@ -251,3 +249,80 @@ lazy val bench = crossProject(JVMPlatform, NativePlatform)
 
 lazy val benchJVM = bench.jvm
 lazy val benchNative = bench.native
+
+lazy val pythonNativeLibs = ProjectRef(file("./python-native-libs"), "root")
+
+def runProcess(cmd: Seq[String]) = {
+  val output = new StringBuilder
+
+  val status = cmd ! ProcessLogger(output append _, output append _)
+
+  if (status != 0) {
+    scala.sys.error(output.toString)
+  }
+}
+
+lazy val virtualenv = taskKey[File]("virtualenv")
+lazy val pythonTestPackage = taskKey[String]("pythonTestPackage")
+lazy val createVirtualenv = taskKey[String]("create virtualenv")
+lazy val deleteVirtualenv = taskKey[Unit]("delete virtualenv")
+
+lazy val pythonNativeLibsTest = crossProject(JVMPlatform, NativePlatform)
+  .crossType(CrossType.Full)
+  .in(file("python-native-libs-test"))
+  .settings(
+    crossScalaVersions := supportedScalaVersions,
+    virtualenv := IO.temporaryDirectory / "venv",
+    pythonTestPackage := "typing-extensions",
+    createVirtualenv := {
+      IO.delete(virtualenv.value)
+      val venv = virtualenv.value.getAbsolutePath().toString()
+      runProcess(Seq("python", "-m", "venv", venv))
+
+      val python =
+        if (Properties.isWin)
+          Paths.get(venv, "Scripts", "python").toString()
+        else
+          Paths.get(venv, "bin", "python").toString()
+
+      runProcess(Seq(python, "-m", "pip", "install", pythonTestPackage.value))
+
+      python
+    },
+    deleteVirtualenv := IO.delete(virtualenv.value),
+    Test / testOptions += Tests.Cleanup(() => deleteVirtualenv.value: @sbtUnchecked),
+    Test / sourceGenerators += Def.task {
+      val file = (Test / sourceManaged).value / "Config.scala"
+      val tripleQuote = "\"\"\""
+      val toWrite =
+        s"""package ai.kien.python
+           |object Config {
+           |  val pythonExecutable: String = ${tripleQuote}${createVirtualenv.value}${tripleQuote}
+           |  val module: String = "${pythonTestPackage.value.replace('-', '_')}"
+           |}
+         """.stripMargin
+      IO.write(file, toWrite)
+      Seq(file)
+    }
+  )
+
+lazy val pythonNativeLibTestJVM = pythonNativeLibsTest.jvm
+  .dependsOn(
+    coreJVM,
+    pythonNativeLibs
+  )
+  .settings(
+    libraryDependencies += "org.scalatest" %% "scalatest" % scalaTestVersion % Test,
+    Test / fork := true
+  )
+
+lazy val pythonNativeLibTestNative = pythonNativeLibsTest.native
+  .dependsOn(
+    coreNative
+  )
+  .settings(
+    libraryDependencies += "org.scalatest" %%% "scalatest" % scalaTestVersion % Test,
+    nativeConfig ~= {
+      _.withLinkingOptions(pythonLdFlags)
+    }
+  )

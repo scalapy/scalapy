@@ -11,3 +11,5 @@ addSbtPlugin("com.dwijnand" % "sbt-dynver" % "4.1.1")
 addSbtPlugin("org.scalameta" % "sbt-mdoc" % "2.3.6")
 
 addSbtPlugin("com.eed3si9n" % "sbt-assembly" % "1.1.1")
+
+dependsOn(ProjectRef(file("../python-native-libs"), "root"))

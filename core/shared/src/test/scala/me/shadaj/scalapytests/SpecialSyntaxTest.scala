@@ -13,7 +13,8 @@ class SpecialSyntaxTest extends AnyFunSuite {
         Dynamic.global.open("./README.md", "r")
       } else Dynamic.global.open("../../README.md", "r")
       `with`(opened) { file =>
-        assert(file.as[Dynamic].encoding.as[String] == "UTF-8")
+        if (!System.getProperty("os.name").startsWith("Windows"))
+          assert(file.as[Dynamic].encoding.as[String] == "UTF-8")
       }
     }
   }
@@ -48,7 +49,7 @@ class SpecialSyntaxTest extends AnyFunSuite {
     local {
       val types = module("types")
       val myClass = types.new_class("MyClass")
-      
+
       val weakref = module("weakref")
       val value = myClass()
       var cleaned = false

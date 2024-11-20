@@ -9,6 +9,7 @@ lowered.hnir
 .vscode/
 facadeGen/.mypy_cache
 .metals/
+metals.sbt
 .bsp/
 .bloop/
 **/.DS_store
