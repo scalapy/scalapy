@@ -10,6 +10,8 @@ class CPythonAPIInterface {
       .map(Seq(_))
       .getOrElse(Seq(
         "python3",
+        "python3.14", "python3.14m",
+        "python3.13", "python3.13m",
         "python3.12", "python3.12m",
         "python3.11", "python3.11m",
         "python3.10", "python3.10m",
