@@ -28,4 +28,34 @@ class ReferenceCountStressTest extends AnyFunSuite {
       assertReferenceCountSettles(slice, 1)
     }
   }
+
+  test("Repeated bracket access on a list maintains constant reference counts") {
+    val element = Dynamic.global.slice(0)
+
+    val list = Dynamic.global.list()
+    list.append(element)
+    // one reference held by `element` itself, one by the list
+    assertReferenceCountSettles(element, 2)
+
+    (1 to 500).foreach { _ =>
+      list.bracketAccess(0)
+    }
+
+    assertReferenceCountSettles(element, 2)
+  }
+
+  test("Repeated bracket access on a dict maintains constant reference counts") {
+    val element = Dynamic.global.slice(0)
+
+    val dict = Dynamic.global.dict()
+    dict.bracketUpdate("key", element)
+    // one reference held by `element` itself, one by the dict
+    assertReferenceCountSettles(element, 2)
+
+    (1 to 500).foreach { _ =>
+      dict.bracketAccess("key")
+    }
+
+    assertReferenceCountSettles(element, 2)
+  }
 }
