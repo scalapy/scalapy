@@ -599,7 +599,7 @@ object CPythonInterpreter {
 
     throwErrorIfOccured()
 
-    PyValue.fromBorrowed(ret)
+    PyValue.fromNew(ret)
   }
 
   def updateBracket(on: PyValue, key: PyValue, newValue: PyValue): Unit = {
